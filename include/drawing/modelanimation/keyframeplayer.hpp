@@ -11,6 +11,7 @@ enum KeyframeType{
     KEYFRAME_ROTATE,
     KEYFRAME_SCALE,
     KEYFRAME_RESET,
+    KEYFRAME_COLOR,
 
     KEYFRAME_TYPE_LAST,
 };
@@ -20,28 +21,31 @@ const std::map<std::string, KeyframeType> KeyframeTypeMap = {
     {"rotate", KEYFRAME_ROTATE},
     {"scale", KEYFRAME_SCALE},
     {"reset", KEYFRAME_RESET},
+    {"color", KEYFRAME_COLOR},
 };
 
 class Keyframe{
     public:
-    Keyframe():type(KEYFRAME_NONE),playAt(0),deltaToNext(0.0f),value(0.0f, 0.0f),center(0.0f,0.0f),ignoreInterpolation(false), dynamicCenter(false){};
-    Keyframe(KeyframeType mode, uint32_t at, Vec2f val, Vec2f cntr = Vec2(0.0f, 0.0f), bool igInterp = false, bool dynamicCenterP=false):type(mode),playAt(at),value(val),center(cntr),ignoreInterpolation(igInterp), dynamicCenter(dynamicCenterP){};
+    Keyframe():type(KEYFRAME_NONE),playAt(0),deltaToNext(0),interpolationStartedAt(0),value(0.0f, 0.0f),center(0.0f,0.0f),ignoreInterpolation(false), dynamicCenter(false){};
+    Keyframe(KeyframeType mode, uint32_t at, Vec2f val, Vec2f cntr = Vec2(0.0f, 0.0f), uint16_t ccolor = 0, bool igInterp = false, bool dynamicCenterP=false):type(mode),playAt(at),value(val),center(cntr),color(ccolor),ignoreInterpolation(igInterp), dynamicCenter(dynamicCenterP){};
 
 
-    static Keyframe KeyFrameMaker(int mode, uint32_t at, Vec2f val, Vec2f cntr = Vec2(0.0f, 0.0f), bool igInterp = false, bool dynamicCenterP=false);
+    static Keyframe KeyFrameMaker(int mode, uint32_t at, Vec2f val, Vec2f cntr = Vec2(0.0f, 0.0f), uint16_t ccolor = 0, bool igInterp = false, bool dynamicCenterP=false);
     
     KeyframeType type;
     uint32_t playAt;
     uint32_t deltaToNext;
+    uint32_t interpolationStartedAt;
 
     Vec2f value;
     Vec2f center;
+    uint16_t color;
     bool ignoreInterpolation, dynamicCenter;
 };
 
 class KeyframeTrack{
     public:
-        KeyframeTrack(){Reserve();};
+        KeyframeTrack():startColor(0),colorInterpolationStarted(false){Reserve();};
         
         void Reserve();
 
@@ -51,7 +55,7 @@ class KeyframeTrack{
         void UpdateTrack(uint32_t dt, uint32_t prevDt);
         void Reset();
 
-        void applyTransformations(uint32_t remaining, Keyframe &nextKf, bool instant);
+        void applyTransformations(uint32_t remaining, uint32_t frameSum, Keyframe &nextKf, bool instant);
         
 
         bool usingModel;
@@ -60,6 +64,9 @@ class KeyframeTrack{
         uint32_t frameId;
         std::vector<int> currentFrameByType;
         std::vector<Keyframe> keyframes;
+
+        uint16_t startColor;
+        bool colorInterpolationStarted;
         
 };
 

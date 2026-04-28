@@ -6,12 +6,13 @@
 
 
 
-Keyframe Keyframe::KeyFrameMaker(int mode, uint32_t at, Vec2f val, Vec2f cntr, bool igInterp, bool dynamicCenterP){
+Keyframe Keyframe::KeyFrameMaker(int mode, uint32_t at, Vec2f val, Vec2f cntr, uint16_t color , bool igInterp, bool dynamicCenterP){
     Keyframe kf;
     kf.type = (KeyframeType)mode;
     kf.playAt = at;
     kf.value = val;
     kf.center = cntr;
+    kf.color = color;
     kf.ignoreInterpolation = igInterp;
     kf.dynamicCenter = dynamicCenterP;
     return kf;
@@ -112,6 +113,7 @@ void KeyframeAnimation::AddTrack(KeyframeTrack t){
     for (auto &track : t.keyframes){
         uint32_t aux = lastDtByType[track.type];
         lastDtByType[track.type] = track.playAt;
+        track.interpolationStartedAt = aux;
         track.deltaToNext =  track.playAt - aux;
     }
     m_tracks.emplace_back(t); 
@@ -216,13 +218,11 @@ bool KeyframePlayer::Update(uint32_t dt){
 
 
 void KeyframeTrack::UpdateTrack(uint32_t dt, uint32_t prevDt){
-    //Yeah, start at 1. Zero is KEYFRAME_NONE
-  
     for (int operationType=KEYFRAME_TRANSLATE;operationType<KEYFRAME_TYPE_LAST;operationType++){
 
         int frameId = currentFrameByType[operationType];
         if (frameId >= 0){
-            uint32_t sumLocal = prevDt;
+            uint32_t sumLocal = prevDt; //current time
             uint32_t remaining = dt;
 
             Keyframe nextKf = keyframes[frameId];
@@ -237,7 +237,7 @@ void KeyframeTrack::UpdateTrack(uint32_t dt, uint32_t prevDt){
                         remaining = nextKf.deltaToNext;
                         currentStepDt += diff;
                     }
-                    applyTransformations(currentStepDt, nextKf, true);
+                    applyTransformations(currentStepDt, sumLocal, nextKf, true);
                     //interpolations[operationName](track.r, currentStepDt, nextKf, true)
                     sumLocal += currentStepDt;
                     bool found = false;
@@ -256,7 +256,8 @@ void KeyframeTrack::UpdateTrack(uint32_t dt, uint32_t prevDt){
                     }
                 }else{
                     //Logger::Info("[%d / %d] MINI STEP %d with step %d   AT %d  (sum %d)", maxIter, dt, frameId, remaining, nextKf.playAt, sumLocal);
-                    applyTransformations(remaining, nextKf, false);
+                    uint32_t currentStepDt = nextKf.playAt-sumLocal;
+                    applyTransformations(remaining, sumLocal, nextKf, false);
                     //interpolations[operationName](track.r, remaining, nextKf, false)
                     sumLocal += remaining;
                     remaining = 0;
@@ -270,12 +271,12 @@ void KeyframeTrack::UpdateTrack(uint32_t dt, uint32_t prevDt){
     }
 }
 
-void KeyframeTrack::applyTransformations(uint32_t remaining, Keyframe &nextKf, bool lastIteration){
+void KeyframeTrack::applyTransformations(uint32_t dt, uint32_t frameSum, Keyframe &nextKf, bool lastIteration){
     switch (nextKf.type){
         case KEYFRAME_TRANSLATE:{
             float delta = 0.0f;
             if (nextKf.deltaToNext != 0){
-                delta = (float)remaining/(float)nextKf.deltaToNext;
+                delta = (float)dt/(float)nextKf.deltaToNext;
             }else{
                 delta = 1.0f;
             }
@@ -296,7 +297,7 @@ void KeyframeTrack::applyTransformations(uint32_t remaining, Keyframe &nextKf, b
             }
             float delta = 0;
             if (nextKf.deltaToNext != 0){
-                delta = (float)remaining/(float)nextKf.deltaToNext;
+                delta = (float)dt/(float)nextKf.deltaToNext;
             }else{
                 delta = 1.0f;
             }
@@ -322,7 +323,7 @@ void KeyframeTrack::applyTransformations(uint32_t remaining, Keyframe &nextKf, b
 
             float delta = 0;
             if (nextKf.deltaToNext != 0){
-                delta = (float)remaining/(float)nextKf.deltaToNext;
+                delta = (float)dt/(float)nextKf.deltaToNext;
             }else{
                 delta = 1.0f;
             }
@@ -349,6 +350,40 @@ void KeyframeTrack::applyTransformations(uint32_t remaining, Keyframe &nextKf, b
             if (lastIteration){
                 obj->Reset();
             }
+            break;
+        }
+        case KEYFRAME_COLOR:{
+            if (lastIteration){
+                obj->SetColor(nextKf.color);
+                colorInterpolationStarted = false;
+                break;
+            }
+
+
+            if (!colorInterpolationStarted) {
+                startColor = obj->color[0];
+                colorInterpolationStarted = true;
+            }
+
+            float delta = 0;
+            if (nextKf.deltaToNext != 0){
+                delta = ((float)(frameSum-nextKf.interpolationStartedAt))/(float)nextKf.deltaToNext;
+            }else{
+                delta = 1.0f;
+            }
+
+            uint8_t startR, startG, startB;
+            uint8_t endR, endG, endB;
+            Devices::Display->color565to888(startColor, startR, startG, startB);
+            Devices::Display->color565to888(nextKf.color, endR, endG, endB);
+
+            uint8_t currentR = startR + (endR - startR) * delta;
+            uint8_t currentG = startG + (endG - startG) * delta;
+            uint8_t currentB = startB + (endB - startB) * delta;
+
+            uint16_t interpolatedColor = Devices::Display->color565(currentR, currentG, currentB);
+            obj->SetColor(interpolatedColor);
+
             break;
         }
     

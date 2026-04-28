@@ -51,6 +51,7 @@ class Model {
         void Rotate(Vec2f center, float angle);
         void Translate(Vec2f delta);
         void Scale(Vec2f center, Vec2f scaleFactors);
+        void SetColor(uint16_t col);
 
         int AddPointGroup(PointList points);
         bool hasPointGroup(uint32_t groupid);
@@ -88,6 +89,7 @@ class Model {
         float *aux2;
         float *aux3;
 
+        uint16_t *originalColor;
         uint16_t *color;
         VecAligned2<float, 2> originalBoundaries;
         VecAligned2<float, 2> boundaries;

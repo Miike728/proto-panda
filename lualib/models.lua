@@ -35,7 +35,7 @@ local keyframeTypeMap = {
     	if type(obj.cy) ~= 'number' then 
     		return nil, "cy is not a number"
     	end
-    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_ROTATE, obj.at, {x=obj.a, y=0}, {x=obj.cx,y=obj.cy}, false, obj.umc == true)) 
+    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_ROTATE, obj.at, {x=obj.a, y=0}, {x=obj.cx,y=obj.cy}, 0, false, obj.umc == true)) 
     end,
 
     ["scale"] = function(tr, obj) 
@@ -55,10 +55,16 @@ local keyframeTypeMap = {
     	if type(obj.cy) ~= 'number' then 
     		return nil, "cy is not a number"
     	end
-    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_SCALE, obj.at, {x=obj.sx, y=obj.sy}, {x=obj.cx,y=obj.cy}, false, obj.umc == true)) 
+    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_SCALE, obj.at, {x=obj.sx, y=obj.sy}, {x=obj.cx,y=obj.cy}, 0, false, obj.umc == true)) 
     end,
     ["reset"] = function(tr, obj) 
     	return tr:AddKeyFrame(KeyFrame(KEYFRAME_RESET, obj.at, {x=0, y=0})) 
+	end,
+	["color"] = function(tr, obj) 
+		if type(obj.color) ~= 'number' then  
+			return nil, 'color is not a number'
+		end	
+    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_COLOR, obj.at, {x=0, y=0}, {x=0,y=0}, obj.color)) 
 	end
 }
 

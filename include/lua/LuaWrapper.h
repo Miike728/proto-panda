@@ -408,6 +408,10 @@ template<> struct GenericLuaGetter<Keyframe> {
         keyframe.deltaToNext = static_cast<uint32_t>(luaL_optinteger(L, -1, 0));
         lua_pop(L, 1);
 
+        lua_getfield(L, stackPos, "color");
+        keyframe.color = static_cast<uint32_t>(luaL_optinteger(L, -1, 0));
+        lua_pop(L, 1);
+
         // Get value field (Vec2f)
         lua_getfield(L, stackPos, "value");
         if (lua_istable(L, -1)) {
@@ -774,6 +778,9 @@ template<> struct GenericLuaReturner<Keyframe> {
         // Push deltaToNext field
         lua_pushinteger(L, static_cast<lua_Integer>(keyframe.deltaToNext));
         lua_setfield(L, -2, "deltaToNext");
+
+        lua_pushinteger(L, static_cast<lua_Integer>(keyframe.color));
+        lua_setfield(L, -2, "color");
         
         // Push value field using Vec2f returner
         GenericLuaReturner<Vec2f>::Ret(keyframe.value, L);

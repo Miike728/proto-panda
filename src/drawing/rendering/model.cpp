@@ -151,17 +151,18 @@ bool Model::Begin(int sz){
     aux2 = aux1 + (((triangleCount * 3) * 1));
     aux3 = aux1 + (((triangleCount * 3) * 2));
 
-    color = (uint16_t*)heap_caps_malloc(sizeof(uint16_t) * triangleCount, MALLOC_CAP_SPIRAM);
-    if (color == nullptr){
+    originalColor = (uint16_t*)heap_caps_malloc(sizeof(uint16_t) * triangleCount  * 2, MALLOC_CAP_SPIRAM);
+    if (originalColor == nullptr){
         rasterPoints.Deallocate();
         originalPoints.Deallocate();
         points.Deallocate();
         heap_caps_free(aux1);
         triangleCount = 0;
         aux1 = aux2 = aux3 = nullptr;
-        color = nullptr;
+        originalColor = color = nullptr;
         return false;
     }
+    color = originalColor +  triangleCount;
 
     originalBoundaries.x[1] = 999999.0f;
     originalBoundaries.y[1] = 999999.0f;
@@ -178,10 +179,11 @@ void Model::Free(){
     rasterPoints.Deallocate();
     points.Deallocate();
     heap_caps_free(aux1);
-    heap_caps_free(color);
+    heap_caps_free(originalColor);
     triangleCount = 0;
     aux1 = aux2 = aux3 = nullptr;
     color = nullptr;
+    originalColor = nullptr;
 }
 
 
@@ -253,6 +255,7 @@ void Model::Reset() {
     const int vecSize = triangleCount * 3;
     dsps_addc_f32(this->originalPoints.x, this->points.x, vecSize, 0, 1, 1);
     dsps_addc_f32(this->originalPoints.y, this->points.y, vecSize, 0, 1, 1);
+    memcpy(this->color, this->originalColor, triangleCount * sizeof(uint16_t) );
     if (!batchOperations){
         Recalculate();
     }
@@ -271,6 +274,17 @@ void Model::CopyToRaster() {
     const int vecSize = triangleCount * 3;
     dsps_addc_f32(this->points.x, this->rasterPoints.x, vecSize, 0, 1, 1);
     dsps_addc_f32(this->points.y, this->rasterPoints.y, vecSize, 0, 1, 1);
+}
+
+void Model::SetColor(uint16_t col) {
+    if (triangleCount == 0) {
+        return;
+    }
+    for (int i=0;i<triangleCount;i++){
+        color[i] = col;
+    }
+    //memset(this->color, col, sizeof(uint16_t) * triangleCount);
+    
 }
 
 void Model::Scale(Vec2f center, Vec2f scaleFactors) {
@@ -355,7 +369,7 @@ TriangleData Model::GetTriangle(int i){
     aux.p2.y = originalPoints.y[localIndex+1];
     aux.p3.x = originalPoints.x[localIndex+2];
     aux.p3.y  = originalPoints.y[localIndex+2];
-    aux.color = color[i];
+    aux.color = originalColor[i];
     return aux;
 };
 
@@ -370,6 +384,7 @@ void Model::SetTriangleF(int i, Vec2f p1, Vec2f p2, Vec2f p3, uint16_t color){
     originalPoints.y[localIndex+1]          = p2.y;
     originalPoints.x[localIndex+2]          = p3.x;
     originalPoints.y[localIndex+2]          = p3.y;
+    this->originalColor[i] = color;
     this->color[i] = color;
 
     for (int idx = localIndex; idx < localIndex+3; idx++ ){
@@ -403,6 +418,7 @@ void Model::SetTriangle(int i, TriangleData aux){
     originalPoints.y[localIndex+1]          = aux.p2.y;
     originalPoints.x[localIndex+2]          = aux.p3.x;
     originalPoints.y[localIndex+2]          = aux.p3.y;
+    originalColor[i] = aux.color;
     color[i] = aux.color;
 }
 

@@ -847,6 +847,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("KEYFRAME_ROTATE",     (int)KEYFRAME_ROTATE);
   m_lua->setConstant("KEYFRAME_SCALE",      (int)KEYFRAME_SCALE);
   m_lua->setConstant("KEYFRAME_RESET",      (int)KEYFRAME_RESET);
+  m_lua->setConstant("KEYFRAME_COLOR",      (int)KEYFRAME_COLOR);
 
 
   m_lua->setConstant("MODEL_FRAME_ID_OFFSET",      (int)MODEL_FRAME_ID_OFFSET);
@@ -958,7 +959,7 @@ bool LuaInterface::Start()
   ClassRegister<KeyframeTrack>::RegisterClassMethod(_state,"KeyframeTrack","AddKeyFrame", &KeyframeTrack::AddKeyFrame);
 
 
-  m_lua->FuncRegisterOptional("KeyFrame",  Keyframe::KeyFrameMaker, false, false, Vec2f(0.0f, 0.0f));
+  m_lua->FuncRegisterOptional("KeyFrame",  Keyframe::KeyFrameMaker, false, false, (uint16_t)0,  Vec2f(0.0f, 0.0f));
  
 
   lastError = "";
