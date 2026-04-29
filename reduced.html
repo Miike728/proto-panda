@@ -771,6 +771,7 @@
             min-width: 0;
             position: relative;
             min-height: 0;
+            gap: 10px;
         }
 
         .canvas-container {
@@ -787,7 +788,7 @@
             resize: vertical;
             overflow: auto;
             min-height: 200px;
-            max-height: 80vh;
+            flex-shrink: 0;
         }
 
         .canvas-container::-webkit-resizer {
@@ -932,47 +933,6 @@
         .create-group-btn:active {
             transform: translateY(0px);
             box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .code-output-container {
-            margin-top: 10px;
-            background: #1e1e1e;
-            padding: 8px;
-            border-radius: 5px;
-            transition: opacity 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        :not(.animation-mode) .code-output-container {
-            height: 200px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .animation-mode .code-output-container {
-            display: none;
-        }
-
-        .code-label {
-            color: #9cdcfe;
-            font-weight: bold;
-            margin-bottom: 6px;
-            font-size: 12px;
-        }
-
-        .code-output {
-            max-height: 150px;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 8px;
-            border-radius: 6px;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            border: 1px solid #555;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            overflow: hidden;;
-
         }
 
         .selection-rect {
@@ -1576,1006 +1536,885 @@
             transform: translateY(-2px);
         }
 
-        
-
-/*  ANIMMMMMMMMMMMMMMMMM */
-/*  ANIMMMMMMMMMMMMMMMMM */
-/*  ANIMMMMMMMMMMMMMMMMM */
-/*  ANIMMMMMMMMMMMMMMMMM */
-/*  ANIMMMMMMMMMMMMMMMMM */
-/*  ANIMMMMMMMMMMMMMMMMM */
-/*  ANIMMMMMMMMMMMMMMMMM */
-/*  ANIMMMMMMMMMMMMMMMMM */
-
-/* Timeline Container - FIXED HEIGHT WITH PROPER FLEX LAYOUT */
-.timeline-container {
-    margin-top: 10px;
-    background: #1e1e1e;
-    padding: 12px;
-    border-radius: 5px;
-    border: 1px solid #555;
-    display: none;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    height: auto;
-    flex: 1;
-    min-height: 0;
-    box-sizing: border-box;
-    overflow: hidden;
-}
-
-
-.animation-mode .timeline-container {
-    display: flex;
-}
-
-/* Timeline Header */
-.timeline-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    flex-shrink: 0;
-}
-
-.timeline-controls {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.timeline-btn {
-    background: #3c3c3c;
-    border: 1px solid #555;
-    border-radius: 4px;
-    padding: 4px 8px;
-    color: #ccc;
-    cursor: pointer;
-    font-size: 11px;
-    transition: all 0.1s ease;
-    min-width: 40px;
-}
-
-.timeline-btn:hover {
-    background: #4a4a4a;
-    border-color: #ff9900;
-    color: #ff9900;
-}
-
-/* Compact Tools */
-.timeline-tools-compact {
-    display: flex;
-    gap: 4px;
-}
-
-.compact-tool {
-    background: #3c3c3c;
-    border: 1px solid #555;
-    border-radius: 4px;
-    padding: 3px 6px;
-    cursor: grab;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 10px;
-    transition: all 0.1s ease;
-}
-
-.compact-tool:active {
-    cursor: grabbing;
-}
-
-.compact-tool:hover {
-    background: #4a4a4a;
-    border-color: #ff9900;
-}
-
-.compact-icon {
-    font-size: 10px;
-}
-
-.compact-name {
-    color: #ffaa66;
-    font-weight: bold;
-    font-size: 9px;
-}
-
-
-/* Tool colors */
-.compact-tool[data-action="move"] { border-left: 3px solid #4CAF50; }
-.compact-tool[data-action="move"] .compact-name { color: #4CAF50; }
-
-.compact-tool[data-action="rotate"] { border-left: 3px solid #2196F3; }
-.compact-tool[data-action="rotate"] .compact-name { color: #2196F3; }
-
-.compact-tool[data-action="scale"] { border-left: 3px solid #FF9800; }
-.compact-tool[data-action="scale"] .compact-name { color: #FF9800; }
-
-.compact-tool[data-action="color"] { border-left: 3px solid #E91E63; }
-.compact-tool[data-action="color"] .compact-name { color: #E91E63; }
-
-/* Keyframe colors by type */
-.keyframe-marker[data-action="move"] { background: #4CAF50; border-color: #6dcc70; box-shadow: 0 0 4px #4CAF50; }
-.keyframe-marker[data-action="rotate"] { background: #2196F3; border-color: #64b5f6; box-shadow: 0 0 4px #2196F3; }
-.keyframe-marker[data-action="scale"] { background: #FF9800; border-color: #ffb74d; box-shadow: 0 0 4px #FF9800; }
-.keyframe-marker[data-action="color"] { background: #E91E63; border-color: #f06292; box-shadow: 0 0 4px #E91E63; }
-
-
-/* Keyframe hover effects by action type */
-.keyframe-marker[data-action="move"]:hover { background: #6dcc70; transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 8px #4CAF50; }
-.keyframe-marker[data-action="rotate"]:hover { background: #64b5f6; transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 8px #2196F3; }
-.keyframe-marker[data-action="scale"]:hover { background: #ffb74d; transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 8px #FF9800; }
-.keyframe-marker[data-action="color"]:hover { background: #f06292; transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 8px #E91E63; }
-
-/* Compact tool hover effects */
-.compact-tool[data-action="move"]:hover { background: #4CAF50; color: #111; }
-.compact-tool[data-action="move"]:hover .compact-name { color: #111; }
-
-.compact-tool[data-action="rotate"]:hover { background: #2196F3; color: #111; }
-.compact-tool[data-action="rotate"]:hover .compact-name { color: #111; }
-
-.compact-tool[data-action="scale"]:hover { background: #FF9800; color: #111; }
-.compact-tool[data-action="scale"]:hover .compact-name { color: #111; }
-
-.compact-tool[data-action="color"]:hover { background: #E91E63; color: #111; }
-.compact-tool[data-action="color"]:hover .compact-name { color: #111; }
-
-/* Ruler wrapper - aligns with timeline rows */
-/* Timeline alignment fixes */
-
-/* Ruler labels - horizontal text */
-.ruler-label {
-    position: absolute;
-    bottom: 12px;
-    font-size: 8px;
-    color: #888;
-    transform: translateX(-50%);
-    white-space: nowrap;
-    writing-mode: horizontal-tb;
-    text-orientation: mixed;
-}
-
-.ruler-marker {
-    position: absolute;
-    bottom: 0;
-    width: 1px;
-    height: 10px;
-    background: #555;
-}
-
-.ruler-track {
-    position: relative;
-    height: 28px;
-    min-width: 2000px;
-    width: 100%;
-    overflow: visible;
-}
-
-.ruler-wrapper {
-    display: flex;
-    align-items: stretch;
-    width: 100%;
-    overflow-x: auto;
-}
-
-.ruler-label-space {
-    width: 160px;
-    flex-shrink: 0;
-    background: #2d2d2d;
-    border-right: 1px solid #444;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 8px;
-}
-
-.ruler-track-container {
-    flex: 1;
-    overflow-x: auto;
-    overflow-y: visible;
-    background: #2d2d2d;
-
-    position: relative;
-}
-
-.timeline-ruler {
-    background: #2d2d2d;
-    border-bottom: 1px solid #444;
-    position: relative;
-    width: 100%;
-}
-
-.ruler-track {
-    position: relative;
-    height: 28px;
-    min-width: 2000px;
-    width: 100%;
-}
-
-#timelineRulerCanvas {
-    display: block;
-    width: 100%;
-    height: 28px;
-    background: #2d2d2d;
-    cursor: pointer;
-}
-
-.timeline-row {
-    display: flex;
-    align-items: stretch;
-    border-bottom: 1px solid #2a2a2a;
-    min-height: 32px;
-    width: max-content;  /* Change from 100% to max-content */
-    min-width: 100%;
-}
-
-
-.timeline-label {
-    width: 160px;
-    flex-shrink: 0;
-    padding: 4px 8px;
-    font-size: 10px;
-    font-weight: bold;
-    color: #ffaa66;
-    background: #1e1e1e;
-    border-right: 1px solid #2a2a2a;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.timeline-row.selected .timeline-label {
-    background: #3a6a6a;
-}
-
-.timeline-row.selected .timeline-label {
-    width: 157px;
-}
-
-.timeline-canvas {
-    flex: 1;
-    position: relative;
-    height: 32px;
-    background: #1a1a1a;
-    cursor: crosshair;
-    min-width: 800px;  /* Minimum width */
-    width: auto;
-}
-
-.timeline-canvas:active {
-    cursor: grabbing;
-}
-
-
-.playhead {
-    position: absolute;
-    top: 0;
-    width: 2px;
-    cursor: ew-resize;
-    height: 100%;
-    background: #ff9900;
-    pointer-events: none;
-    z-index: 20;
-    box-shadow: 0 0 3px #ff9900;
-}
-
-.playhead::before {
-    content: '▼';
-    position: absolute;
-    top: -10px;
-    left: -4px;
-    font-size: 7px;
-    color: #ff9900;
-}
-
-.keyframe-marker {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: #ff9900;
-    border: 1px solid #ffaa33;
-    border-radius: 50%;
-    transform: scale(1.2);
-    top: 50%;
-    cursor: grab;
-    z-index: 10;
-    transition: transform 0.05s ease;
-}
-
-.keyframe-marker:hover {
-    transform: translate(-50%, -50%) scale(1.2);
-    background: #ffaa33;
-}
-
-.keyframe-marker:active {
-    cursor: grabbing;
-}
-
-.keyframe-marker.dragging {
-    transform: translate(-50%, -50%) scale(1.3);
-    cursor: grabbing;
-}
-
-.add-timeline-btn-inline {
-    background: #ff9900;
-    border: none;
-    border-radius: 3px;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-    color: #111;
-    transition: all 0.1s;
-}
-
-.add-timeline-btn-inline:hover {
-    background: #ffaa33;
-    transform: scale(1.05);
-}
-
-/* Timeline Info */
-.timeline-time-info {
-    display: flex;
-    justify-content: space-between;
-    padding-top: 6px;
-    border-top: 1px solid #333;
-    font-size: 10px;
-    color: #888;
-    flex-shrink: 0;
-}
-
-.current-time-display {
-    color: #ffaa66;
-    font-family: monospace;
-}
-
-.timelines-container {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: auto;
-    background: #1a1a1a;
-    min-height: 0;
-    width: 100%;
-}
-
-
-/* Custom scrollbar */
-.timelines-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.timelines-container::-webkit-scrollbar-track {
-    background: #2a2a2a;
-    border-radius: 3px;
-}
-
-.timelines-container::-webkit-scrollbar-thumb {
-    background: #ff9900;
-    border-radius: 3px;
-}
-
-.timelines-container::-webkit-scrollbar-thumb:hover {
-    background: #ffaa33;
-}
-
-.empty-timelines-message {
-    text-align: center;
-    padding: 20px;
-    color: #666;
-    font-style: italic;
-    font-size: 12px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-
-.timeline-label {
-    width: 160px;
-    flex-shrink: 0;
-    padding: 4px 8px;
-    font-size: 10px;
-    font-weight: bold;
-    color: #ffaa66;
-    background: #1e1e1e;
-    border-right: 1px solid #2a2a2a;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-family: monospace;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.timeline-label-icon {
-    font-size: 10px;
-    flex-shrink: 0;
-}
-
-.timeline-label-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1;
-}
-
-.timeline-delete-btn {
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
-    font-size: 10px;
-    padding: 2px 4px;
-    margin-left: auto;
-    opacity: 0;
-    transition: all 0.1s;
-    border-radius: 3px;
-    flex-shrink: 0;
-}
-
-.timeline-row:hover .timeline-delete-btn {
-    opacity: 0.7;
-}
-
-.timeline-delete-btn:hover {
-    color: #ff6666;
-    opacity: 1;
-    background: #3a3a3a;
-}
-
-.timeline-canvas {
-    flex: 1;
-    position: relative;
-    height: 32px;
-    background: #1a1a1a;
-    cursor: crosshair;
-    min-width: 0;
-}
-
-/* Keyframe Markers */
-.keyframe-marker {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: #ff9900;
-    border: 1px solid #ffaa33;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    top: 50%;
-    cursor: grab;
-    z-index: 10;
-    transition: transform 0.1s, width 0.1s, height 0.1s;
-}
-
-.keyframe-marker:hover {
-    transform: translate(-50%, -50%) scale(1.2);
-    background: #ffaa33;
-}
-
-.keyframe-marker.dragging {
-    cursor: grabbing;
-    transform: translate(-50%, -50%) scale(1.25);
-}
-
-/* Playhead */
-.playhead {
-    position: absolute;
-    top: 0;
-    width: 2px;
-    height: 100%;
-    background: #ff9900;
-    pointer-events: none;
-    z-index: 20;
-    box-shadow: 0 0 3px #ff9900;
-}
-
-.playhead::before {
-    content: '▼';
-    position: absolute;
-    top: -10px;
-    left: -4px;
-    font-size: 7px;
-    color: #ff9900;
-}
-
-/* Add Timeline Button - at bottom, always visible */
-.add-timeline-bottom {
-    flex-shrink: 0;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-}
-
-.add-timeline-bottom-btn {
-    width: 100%;
-    background: #2c2c2c;
-    border: 1px dashed #ff9900;
-    border-radius: 4px;
-    padding: 6px;
-    color: #ffaa66;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: bold;
-    transition: all 0.1s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.add-timeline-bottom-btn:hover {
-    background: #ff9900;
-    color: #111;
-    border: 1px solid #ffaa33;
-}
-
-/* Timeline Info */
-.timeline-time-info {
-    display: flex;
-    justify-content: space-between;
-    padding-top: 6px;
-    border-top: 1px solid #333;
-    font-size: 10px;
-    color: #888;
-    flex-shrink: 0;
-}
-
-.current-time-display {
-    color: #ffaa66;
-    font-family: monospace;
-}
-
-/* Modal */
-.create-timeline-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 20000;
-    justify-content: center;
-    align-items: center;
-}
-
-.create-timeline-modal.active {
-    display: flex;
-}
-
-.create-timeline-modal-content {
-    background: #2d2d2d;
-    border: 2px solid #ff9900;
-    border-radius: 8px;
-    width: 380px;
-    max-width: 90%;
-}
-
-.create-timeline-modal-header {
-    padding: 10px 14px;
-    background: #3c3c3c;
-    border-bottom: 1px solid #ff9900;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.create-timeline-modal-header h3 {
-    margin: 0;
-    color: #ff9900;
-    font-size: 13px;
-}
-
-.create-timeline-modal-close {
-    background: none;
-    border: none;
-    color: #aaa;
-    font-size: 18px;
-    cursor: pointer;
-}
-
-.create-timeline-modal-close:hover {
-    color: #ff9900;
-}
-
-.create-timeline-modal-body {
-    padding: 14px;
-}
-
-.modal-select {
-    width: 100%;
-    padding: 8px;
-    background: #1e1e1e;
-    border: 1px solid #555;
-    color: #fff;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 11px;
-}
-
-.create-timeline-modal-footer {
-    padding: 10px 14px;
-    background: #252525;
-    border-top: 1px solid #444;
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-}
-
-.modal-btn {
-    padding: 5px 12px;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 11px;
-}
-
-.modal-btn.create {
-    background: #ff9900;
-    color: #111;
-}
-
-.modal-btn.create:hover {
-    background: #ffaa33;
-}
-
-.modal-btn.cancel {
-    background: #666;
-    color: #eee;
-}
-
-.modal-btn.cancel:hover {
-    background: #888;
-}
-
-/* Keyframe Dialog */
-.keyframe-dialog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #2d2d2d;
-    border: 2px solid #ff9900;
-    border-radius: 8px;
-    padding: 14px;
-    z-index: 20001;
-    display: none;
-    min-width: 240px;
-}
-
-.keyframe-dialog.active {
-    display: block;
-}
-
-.keyframe-dialog h3 {
-    margin: 0 0 10px 0;
-    color: #ff9900;
-    font-size: 13px;
-}
-
-.keyframe-dialog select,
-.keyframe-dialog input {
-    width: 100%;
-    padding: 5px;
-    background: #1e1e1e;
-    border: 1px solid #555;
-    color: #fff;
-    border-radius: 4px;
-    margin-bottom: 8px;
-    font-size: 11px;
-    box-sizing: border-box;
-}
-
-.dialog-buttons {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    margin-top: 10px;
-}
-
-.dialog-btn {
-    padding: 4px 10px;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 10px;
-}
-
-.dialog-btn.create {
-    background: #ff9900;
-    color: #111;
-}
-
-.dialog-btn.create:hover {
-    background: #ffaa33;
-}
-
-.dialog-btn.cancel {
-    background: #666;
-    color: #eee;
-}
-
-.dialog-btn.cancel:hover {
-    background: #888;
-}
-
-
-.repeat-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.repeat-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    color: #aaa;
-    font-size: 11px;
-    cursor: pointer;
-}
-
-.repeat-checkbox input {
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
-    accent-color: #ff9900;
-}
-
-.repeat-select {
-    background: #3c3c3c;
-    border: 1px solid #555;
-    color: #fff;
-    padding: 3px 6px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-family: monospace;
-    cursor: pointer;
-}
-
-.repeat-select:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-
-
-.animation-item { transition: all 0.1s; }
-.animation-item:hover { background: #4a4a4a !important; }
-.animation-item.selected { border: 2px solid #ff9900 !important; background: #4a4a4a !important; }
-.anim-delete-btn:hover { background: #ff4444 !important; transform: scale(1.05); }
-
-
-/* Keyframe Editor - Make sure it appears above everything */
-.keyframe-editor {
-    position: fixed !important;
-    background: rgba(30, 30, 30, 0.2) !important;
-    backdrop-filter: blur(8px) !important;
-    border: 2px solid #ff9900 !important;
-    border-radius: 8px !important;
-    padding: 12px !important;
-    min-width: 160px !important;
-    max-width: 200px !important;
-    width: auto !important;
-    z-index: 100000 !important;
-    font-family: 'Courier New', monospace !important;
-    font-size: 11px !important;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important;
-}
-
-.keyframe-editor-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    padding: 6px 8px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    cursor: move;
-}
-
-.keyframe-editor-header span {
-    cursor: move;
-    color: #ff9900;
-    font-weight: bold;
-}
-
-.keyframe-editor-header button {
-    cursor: pointer;
-    background: none;
-    border: none;
-    color: #aaa;
-    font-size: 18px;
-    padding: 0 6px;
-}
-
-.keyframe-editor-header button:hover {
-    color: #ff9900;
-}
-
-.keyframe-editor-content {
-    cursor: default;
-}
-
-.keyframe-editor-content input,
-.keyframe-editor-content select {
-    background: rgba(20, 20, 20, 0.9);
-    border: 1px solid #555;
-    color: #fff;
-    padding: 6px 8px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 11px;
-    width: 100%;
-    margin-top: 4px;
-    box-sizing: border-box;
-}
-
-.keyframe-editor-content input:focus,
-.keyframe-editor-content select:focus {
-    outline: none;
-    border-color: #ff9900;
-}
-
-.keyframe-editor-content .param-row {
-    margin-bottom: 10px;
-}
-
-.keyframe-editor-content .param-label {
-    color: #ffaa66;
-    font-size: 10px;
-    font-weight: bold;
-    display: block;
-    margin-bottom: 2px;
-}
-
-.keyframe-editor-content .delete-btn {
-    background: #ff6666;
-    color: #111;
-    border: none;
-    border-radius: 4px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: bold;
-    margin-top: 10px;
-    width: 100%;
-}
-
-.keyframe-editor-content .delete-btn:hover {
-    background: #ff4444;
-}
-
-.keyframe-editor-content .instant-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    padding: 6px;
-    background: rgba(30, 30, 30, 0.6);
-    border-radius: 4px;
-}
-
-.keyframe-editor-content .instant-checkbox input {
-    width: auto;
-    margin: 0;
-}
-
-.keyframe-editor-content .instant-checkbox label {
-    color: #ff9900;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.keyframe-editor input, .keyframe-editor select {
-    background: #1e1e1e;
-    border: 1px solid #555;
-    color: #fff;
-    padding: 6px 8px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 11px;
-    width: 100%;
-    margin-top: 4px;
-    box-sizing: border-box;
-}
-
-.keyframe-editor input:focus, .keyframe-editor select:focus {
-    outline: none;
-    border-color: #ff9900;
-}
-
-.keyframe-editor .param-row {
-    margin-bottom: 10px;
-}
-
-.keyframe-editor .param-label {
-    color: #ffaa66;
-    font-size: 10px;
-    font-weight: bold;
-    display: block;
-    margin-bottom: 2px;
-}
-
-.keyframe-editor .delete-btn {
-    background: #ff6666;
-    color: #111;
-    border: none;
-    border-radius: 4px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: bold;
-    margin-top: 10px;
-    width: 100%;
-}
-
-.keyframe-editor .delete-btn:hover {
-    background: #ff4444;
-}
-
-.keyframe-editor .instant-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    padding: 6px;
-    background: #1e1e1e;
-    border-radius: 4px;
-}
-
-.keyframe-editor .instant-checkbox input {
-    width: auto;
-    margin: 0;
-}
-
-.keyframe-editor .instant-checkbox label {
-    color: #ff9900;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-#saveKeyframeBtn {
-    background: #ff9900;
-    color: #111;
-    border: none;
-    border-radius: 4px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-weight: bold;
-    width: 100%;
-    margin-top: 10px;
-    font-size: 11px;
-}
-
-#saveKeyframeBtn:hover {
-    background: #ffaa33;
-}
-
-#closeKeyframeEditor {
-    background: none;
-    border: none;
-    color: #aaa;
-    cursor: pointer;
-    font-size: 18px;
-    padding: 0 4px;
-}
-
-#closeKeyframeEditor:hover {
-    color: #ff9900;
-}
-
-
-
+        /* Timeline Container - ALWAYS VISIBLE */
+        .timeline-container {
+            margin-top: 10px;
+            background: #1e1e1e;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            height: auto;
+            flex: 1;
+            min-height: 200px;
+            box-sizing: border-box;
+            overflow: hidden;
+            transition: opacity 0.2s ease, filter 0.2s ease;
+            position: relative;
+        }
+
+        /* Disabled/Inactive state for Editor Mode */
+        .timeline-container.editor-mode {
+            opacity: 0.4;
+            pointer-events: none;
+            filter: grayscale(0.3);
+        }
+
+        /* Disabled overlay text */
+        .timeline-container.editor-mode::before {
+            content: "EDITOR MODE - TIMELINE INACTIVE";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: #ff9900;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+            border: 1px solid #ff9900;
+        }
+
+        /* Timeline Header */
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .timeline-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .timeline-btn {
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.1s ease;
+            min-width: 40px;
+        }
+
+        .timeline-btn:hover {
+            background: #4a4a4a;
+            border-color: #ff9900;
+            color: #ff9900;
+        }
+
+        /* Compact Tools */
+        .timeline-tools-compact {
+            display: flex;
+            gap: 4px;
+        }
+
+        .compact-tool {
+            background: #3c3c3c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 3px 6px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 10px;
+            transition: all 0.1s ease;
+        }
+
+        .compact-tool:active {
+            cursor: grabbing;
+        }
+
+        .compact-tool:hover {
+            background: #4a4a4a;
+            border-color: #ff9900;
+        }
+
+        .compact-icon {
+            font-size: 10px;
+        }
+
+        .compact-name {
+            color: #ffaa66;
+            font-weight: bold;
+            font-size: 9px;
+        }
+
+        /* Tool colors */
+        .compact-tool[data-action="move"] { border-left: 3px solid #4CAF50; }
+        .compact-tool[data-action="move"] .compact-name { color: #4CAF50; }
+
+        .compact-tool[data-action="rotate"] { border-left: 3px solid #2196F3; }
+        .compact-tool[data-action="rotate"] .compact-name { color: #2196F3; }
+
+        .compact-tool[data-action="scale"] { border-left: 3px solid #FF9800; }
+        .compact-tool[data-action="scale"] .compact-name { color: #FF9800; }
+
+        .compact-tool[data-action="color"] { border-left: 3px solid #E91E63; }
+        .compact-tool[data-action="color"] .compact-name { color: #E91E63; }
+
+        /* Keyframe colors by type */
+        .keyframe-marker[data-action="move"] { background: #4CAF50; border-color: #6dcc70; box-shadow: 0 0 4px #4CAF50; }
+        .keyframe-marker[data-action="rotate"] { background: #2196F3; border-color: #64b5f6; box-shadow: 0 0 4px #2196F3; }
+        .keyframe-marker[data-action="scale"] { background: #FF9800; border-color: #ffb74d; box-shadow: 0 0 4px #FF9800; }
+        .keyframe-marker[data-action="color"] { background: #E91E63; border-color: #f06292; box-shadow: 0 0 4px #E91E63; }
+
+        /* Keyframe hover effects by action type */
+        .keyframe-marker[data-action="move"]:hover { background: #6dcc70; transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 8px #4CAF50; }
+        .keyframe-marker[data-action="rotate"]:hover { background: #64b5f6; transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 8px #2196F3; }
+        .keyframe-marker[data-action="scale"]:hover { background: #ffb74d; transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 8px #FF9800; }
+        .keyframe-marker[data-action="color"]:hover { background: #f06292; transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 8px #E91E63; }
+
+        /* Compact tool hover effects */
+        .compact-tool[data-action="move"]:hover { background: #4CAF50; color: #111; }
+        .compact-tool[data-action="move"]:hover .compact-name { color: #111; }
+
+        .compact-tool[data-action="rotate"]:hover { background: #2196F3; color: #111; }
+        .compact-tool[data-action="rotate"]:hover .compact-name { color: #111; }
+
+        .compact-tool[data-action="scale"]:hover { background: #FF9800; color: #111; }
+        .compact-tool[data-action="scale"]:hover .compact-name { color: #111; }
+
+        .compact-tool[data-action="color"]:hover { background: #E91E63; color: #111; }
+        .compact-tool[data-action="color"]:hover .compact-name { color: #111; }
+
+        /* Ruler wrapper - aligns with timeline rows */
+        .ruler-wrapper {
+            display: flex;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        .ruler-label-space {
+            width: 160px;
+            flex-shrink: 0;
+            background: #2d2d2d;
+            border-right: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+        }
+
+        .ruler-track-container {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: visible;
+            background: #2d2d2d;
+            position: relative;
+        }
+
+        .timeline-ruler {
+            background: #2d2d2d;
+            border-bottom: 1px solid #444;
+            position: relative;
+            width: 100%;
+        }
+
+        .ruler-track {
+            position: relative;
+            height: 28px;
+            min-width: 2000px;
+            width: 100%;
+        }
+
+        #timelineRulerCanvas {
+            display: block;
+            width: 100%;
+            height: 28px;
+            background: #2d2d2d;
+            cursor: pointer;
+        }
+
+        .timeline-row {
+            display: flex;
+            align-items: stretch;
+            border-bottom: 1px solid #2a2a2a;
+            min-height: 32px;
+            width: max-content;
+            min-width: 100%;
+        }
+
+        .timeline-label {
+            width: 160px;
+            flex-shrink: 0;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #ffaa66;
+            background: #1e1e1e;
+            border-right: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .timeline-row.selected .timeline-label {
+            background: #3a6a6a;
+        }
+
+        .timeline-row.selected .timeline-label {
+            width: 157px;
+        }
+
+        .timeline-canvas {
+            flex: 1;
+            position: relative;
+            height: 32px;
+            background: #1a1a1a;
+            cursor: crosshair;
+            min-width: 800px;
+            width: auto;
+        }
+
+        .timeline-canvas:active {
+            cursor: grabbing;
+        }
+
+        .playhead {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            cursor: ew-resize;
+            height: 100%;
+            background: #ff9900;
+            pointer-events: none;
+            z-index: 20;
+            box-shadow: 0 0 3px #ff9900;
+        }
+
+        .playhead::before {
+            content: '▼';
+            position: absolute;
+            top: -10px;
+            left: -4px;
+            font-size: 7px;
+            color: #ff9900;
+        }
+
+        .keyframe-marker {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff9900;
+            border: 1px solid #ffaa33;
+            border-radius: 50%;
+            transform: scale(1.2);
+            top: 50%;
+            cursor: grab;
+            z-index: 10;
+            transition: transform 0.05s ease;
+        }
+
+        .keyframe-marker:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            background: #ffaa33;
+        }
+
+        .keyframe-marker:active {
+            cursor: grabbing;
+        }
+
+        .keyframe-marker.dragging {
+            transform: translate(-50%, -50%) scale(1.3);
+            cursor: grabbing;
+        }
+
+        .add-timeline-btn-inline {
+            background: #ff9900;
+            border: none;
+            border-radius: 3px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            color: #111;
+            transition: all 0.1s;
+        }
+
+        .add-timeline-btn-inline:hover {
+            background: #ffaa33;
+            transform: scale(1.05);
+        }
+
+        /* Timeline Info */
+        .timeline-time-info {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 6px;
+            border-top: 1px solid #333;
+            font-size: 10px;
+            color: #888;
+            flex-shrink: 0;
+        }
+
+        .current-time-display {
+            color: #ffaa66;
+            font-family: monospace;
+        }
+
+        .timelines-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: auto;
+            background: #1a1a1a;
+            min-height: 0;
+            width: 100%;
+        }
+
+        /* Custom scrollbar */
+        .timelines-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .timelines-container::-webkit-scrollbar-track {
+            background: #2a2a2a;
+            border-radius: 3px;
+        }
+
+        .timelines-container::-webkit-scrollbar-thumb {
+            background: #ff9900;
+            border-radius: 3px;
+        }
+
+        .timelines-container::-webkit-scrollbar-thumb:hover {
+            background: #ffaa33;
+        }
+
+        .empty-timelines-message {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+            font-size: 12px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .timeline-label-icon {
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+
+        .timeline-label-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .timeline-delete-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 10px;
+            padding: 2px 4px;
+            margin-left: auto;
+            opacity: 0;
+            transition: all 0.1s;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .timeline-row:hover .timeline-delete-btn {
+            opacity: 0.7;
+        }
+
+        .timeline-delete-btn:hover {
+            color: #ff6666;
+            opacity: 1;
+            background: #3a3a3a;
+        }
+
+        /* Add Timeline Button - at bottom, always visible */
+        .add-timeline-bottom {
+            flex-shrink: 0;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+
+        .add-timeline-bottom-btn {
+            width: 100%;
+            background: #2c2c2c;
+            border: 1px dashed #ff9900;
+            border-radius: 4px;
+            padding: 6px;
+            color: #ffaa66;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .add-timeline-bottom-btn:hover {
+            background: #ff9900;
+            color: #111;
+            border: 1px solid #ffaa33;
+        }
+
+        /* Modal */
+        .create-timeline-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 20000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .create-timeline-modal.active {
+            display: flex;
+        }
+
+        .create-timeline-modal-content {
+            background: #2d2d2d;
+            border: 2px solid #ff9900;
+            border-radius: 8px;
+            width: 380px;
+            max-width: 90%;
+        }
+
+        .create-timeline-modal-header {
+            padding: 10px 14px;
+            background: #3c3c3c;
+            border-bottom: 1px solid #ff9900;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .create-timeline-modal-header h3 {
+            margin: 0;
+            color: #ff9900;
+            font-size: 13px;
+        }
+
+        .create-timeline-modal-close {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .create-timeline-modal-close:hover {
+            color: #ff9900;
+        }
+
+        .create-timeline-modal-body {
+            padding: 14px;
+        }
+
+        .modal-select {
+            width: 100%;
+            padding: 8px;
+            background: #1e1e1e;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .create-timeline-modal-footer {
+            padding: 10px 14px;
+            background: #252525;
+            border-top: 1px solid #444;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .modal-btn.create {
+            background: #ff9900;
+            color: #111;
+        }
+
+        .modal-btn.create:hover {
+            background: #ffaa33;
+        }
+
+        .modal-btn.cancel {
+            background: #666;
+            color: #eee;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #888;
+        }
+
+        /* Keyframe Dialog */
+        .keyframe-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2d2d2d;
+            border: 2px solid #ff9900;
+            border-radius: 8px;
+            padding: 14px;
+            z-index: 20001;
+            display: none;
+            min-width: 240px;
+        }
+
+        .keyframe-dialog.active {
+            display: block;
+        }
+
+        .keyframe-dialog h3 {
+            margin: 0 0 10px 0;
+            color: #ff9900;
+            font-size: 13px;
+        }
+
+        .keyframe-dialog select,
+        .keyframe-dialog input {
+            width: 100%;
+            padding: 5px;
+            background: #1e1e1e;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            box-sizing: border-box;
+        }
+
+        .dialog-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .dialog-btn {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .dialog-btn.create {
+            background: #ff9900;
+            color: #111;
+        }
+
+        .dialog-btn.create:hover {
+            background: #ffaa33;
+        }
+
+        .dialog-btn.cancel {
+            background: #666;
+            color: #eee;
+        }
+
+        .dialog-btn.cancel:hover {
+            background: #888;
+        }
+
+        .repeat-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .repeat-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #aaa;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .repeat-checkbox input {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            accent-color: #ff9900;
+        }
+
+        .repeat-select {
+            background: #3c3c3c;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: monospace;
+            cursor: pointer;
+        }
+
+        .repeat-select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .animation-item { transition: all 0.1s; }
+        .animation-item:hover { background: #4a4a4a !important; }
+        .animation-item.selected { border: 2px solid #ff9900 !important; background: #4a4a4a !important; }
+        .anim-delete-btn:hover { background: #ff4444 !important; transform: scale(1.05); }
+
+        /* Keyframe Editor */
+        .keyframe-editor {
+            position: fixed !important;
+            background: rgba(30, 30, 30, 0.2) !important;
+            backdrop-filter: blur(8px) !important;
+            border: 2px solid #ff9900 !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
+            min-width: 160px !important;
+            max-width: 200px !important;
+            width: auto !important;
+            z-index: 100000 !important;
+            font-family: 'Courier New', monospace !important;
+            font-size: 11px !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important;
+        }
+
+        .keyframe-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 6px 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            cursor: move;
+        }
+
+        .keyframe-editor-header span {
+            cursor: move;
+            color: #ff9900;
+            font-weight: bold;
+        }
+
+        .keyframe-editor-header button {
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 18px;
+            padding: 0 6px;
+        }
+
+        .keyframe-editor-header button:hover {
+            color: #ff9900;
+        }
+
+        .keyframe-editor-content {
+            cursor: default;
+        }
+
+        .keyframe-editor-content input,
+        .keyframe-editor-content select {
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid #555;
+            color: #fff;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            width: 100%;
+            margin-top: 4px;
+            box-sizing: border-box;
+        }
+
+        .keyframe-editor-content input:focus,
+        .keyframe-editor-content select:focus {
+            outline: none;
+            border-color: #ff9900;
+        }
+
+        .keyframe-editor-content .param-row {
+            margin-bottom: 10px;
+        }
+
+        .keyframe-editor-content .param-label {
+            color: #ffaa66;
+            font-size: 10px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .keyframe-editor-content .delete-btn {
+            background: #ff6666;
+            color: #111;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .keyframe-editor-content .delete-btn:hover {
+            background: #ff4444;
+        }
+
+        .keyframe-editor-content .instant-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding: 6px;
+            background: rgba(30, 30, 30, 0.6);
+            border-radius: 4px;
+        }
+
+        .keyframe-editor-content .instant-checkbox input {
+            width: auto;
+            margin: 0;
+        }
+
+        .keyframe-editor-content .instant-checkbox label {
+            color: #ff9900;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .keyframe-editor input, .keyframe-editor select {
+            background: #1e1e1e;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            width: 100%;
+            margin-top: 4px;
+            box-sizing: border-box;
+        }
+
+        .keyframe-editor input:focus, .keyframe-editor select:focus {
+            outline: none;
+            border-color: #ff9900;
+        }
+
+        .keyframe-editor .param-row {
+            margin-bottom: 10px;
+        }
+
+        .keyframe-editor .param-label {
+            color: #ffaa66;
+            font-size: 10px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .keyframe-editor .delete-btn {
+            background: #ff6666;
+            color: #111;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .keyframe-editor .delete-btn:hover {
+            background: #ff4444;
+        }
+
+        .keyframe-editor .instant-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding: 6px;
+            background: #1e1e1e;
+            border-radius: 4px;
+        }
+
+        .keyframe-editor .instant-checkbox input {
+            width: auto;
+            margin: 0;
+        }
+
+        .keyframe-editor .instant-checkbox label {
+            color: #ff9900;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #saveKeyframeBtn {
+            background: #ff9900;
+            color: #111;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 11px;
+        }
+
+        #saveKeyframeBtn:hover {
+            background: #ffaa33;
+        }
+
+        #closeKeyframeEditor {
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0 4px;
+        }
+
+        #closeKeyframeEditor:hover {
+            color: #ff9900;
+        }
     </style>
 </head>
 <body>
@@ -2705,14 +2544,6 @@
                 <div class="group-button-container" id="groupButtonContainer"></div>
             </div>
                                     
-            <div class="code-output-container" id="codeOutputContainer">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <div class="code-label">baka data</div>
-                    <button id="copyCodeBtn" style="background: #ff9900; color: #111; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-family: 'Courier New', monospace; font-size: 12px; font-weight: bold;">📋 COPY ALL</button>
-                </div>
-                <div id="codeDisplay" class="code-output">wah</div>
-            </div>
-            
             <!-- TIMELINE SECTION - Complete -->
 
             <!-- TIMELINE SECTION - Fixed alignment with button left, text right -->
@@ -2970,6 +2801,87 @@
 
     
     <script>
+
+        
+        // ===========================================
+        // ANIMATION ACTION TYPES CONFIGURATION
+        // ===========================================
+
+        const animationActionTypes = {
+            "reset": {
+                name: "Reset",
+                description: "Reset target to original position and orientation",
+                icon: "↺",
+                color: "#9E9E9E",
+                fields: [],
+                useModelCenter: false,
+                isInstant: true
+            },
+            "translate": {
+                name: "Translate",
+                description: "Move target by offset",
+                icon: "✏️",
+                color: "#4CAF50",
+                fields: [
+                    { name: "x", label: "X Offset", default: 0, type: "number", min: -100, max: 100, step: 1, unit: "px" },
+                    { name: "y", label: "Y Offset", default: 0, type: "number", min: -100, max: 100, step: 1, unit: "px" }
+                ],
+                useModelCenter: false
+            },
+            "rotate": {
+                name: "Rotate",
+                description: "Rotate target around center",
+                icon: "🔄",
+                color: "#2196F3",
+                fields: [
+                    { name: "angle", label: "Angle", default: 0, type: "number", min: -360, max: 360, step: 15, unit: "°" },
+                    { name: "centerX", label: "Center X", default: 32, type: "number", min: -100, max: 164, step: 1, unit: "px", optional: true },
+                    { name: "centerY", label: "Center Y", default: 16, type: "number", min: -100, max: 132, step: 1, unit: "px", optional: true },
+                    { name: "useModelCenter", label: "Model center", default: false, type: "checkbox" }
+                ],
+                useModelCenter: true
+            },
+            "scale": {
+                name: "Scale",
+                description: "Scale target relative to center",
+                icon: "🔍",
+                color: "#FF9800",
+                fields: [
+                    { name: "scaleX", label: "Scale X", default: 1.0, type: "number", min: 0.01, max: 100, step: 0.1 },
+                    { name: "scaleY", label: "Scale Y", default: 1.0, type: "number", min: 0.01, max: 100, step: 0.1 },
+                    { name: "centerX", label: "Center X", default: 32, type: "number", min: -100, max: 164, step: 1, unit: "px", optional: true },
+                    { name: "centerY", label: "Center Y", default: 16, type: "number", min: -100, max: 132, step: 1, unit: "px", optional: true },
+                    { name: "useModelCenter", label: "Model center", default: false, type: "checkbox" }
+                ],
+                useModelCenter: true
+            },
+            "color": {
+                name: "Color",
+                description: "Change color of all triangles in the target",
+                icon: "🎨",
+                color: "#E91E63",
+                fields: [
+                    { name: "color", label: "Target Color", default: "#ffffff", type: "color", autoSave: true }
+                ],
+                useModelCenter: false
+            },
+            "visibility": {
+                name: "Visibility",
+                description: "Show or hide the target",
+                icon: "👁️",
+                color: "#9C27B0",
+                fields: [
+                    { name: "visible", label: "Visible", default: true, type: "checkbox" }
+                ],
+                useModelCenter: false,
+                isInstant: findTriangleUnderMouse
+            }
+        };
+
+
+        const ACTION_TYPES = Object.keys(animationActionTypes);
+
+
         // Canvas setup
         var c = document.getElementById("meuCanvas");
         var ctx = c.getContext("2d");
@@ -3245,7 +3157,6 @@
                 applyAnimationAtTime(currentAnimationTime);
             } else {
                 renderModelList();
-                updateCodeDisplay();
             }
             
             draw();
@@ -3301,7 +3212,6 @@
                 applyAnimationAtTime(currentAnimationTime);
             } else {
                 renderModelList();
-                updateCodeDisplay();
             }
             
             draw();
@@ -3317,7 +3227,6 @@
             const modelLabel = document.getElementById('modelModeLabel');
             const animLabel = document.getElementById('animModeLabel');
             const editingTools = document.getElementById('editingToolsSection');
-            const codeOutput = document.getElementById('codeOutputContainer');
             const timeline = document.getElementById('timelineContainer');
             
             if (isAnimPlaying) {
@@ -3331,11 +3240,13 @@
                 animLabel.style.color = '#ff9900';
                 editingTools.classList.add('hidden');
                 
-                if (codeOutput) codeOutput.style.display = 'none';
-                if (timeline) timeline.style.display = 'flex';
+                // Remove editor-mode class to enable timeline
+                if (timeline) {
+                    timeline.classList.remove('editor-mode');
+                }
                 
                 // COPY models to animationModels
-                console.log("RESETTTEDEDED111");
+                
                 animationModels = JSON.parse(JSON.stringify(models));
                 
                 selectedVertices = [];
@@ -3346,6 +3257,7 @@
                 document.querySelectorAll('.tool-icon').forEach(el => el.classList.remove('active'));
                 document.getElementById('overlayPanel').classList.remove('active');
                 document.getElementById('shapesWindow').classList.remove('active');
+                storePristineModels()
                 shapesWindowActive = false;
                 shapePlacementMode = false;
                 overlayActive = false;
@@ -3357,7 +3269,7 @@
                 draw();
                 
             } else {
-                // EXITING ANIMATION MODE
+                // EXITING ANIMATION MODE (entering Editor Mode)
 
                 const editor = document.getElementById('keyframeEditor');
                 if (editor){
@@ -3371,8 +3283,10 @@
                 animLabel.style.color = '#aaa';
                 editingTools.classList.remove('hidden');
                 
-                if (codeOutput) codeOutput.style.display = 'block';
-                if (timeline) timeline.style.display = 'none';
+                // Add editor-mode class to disable timeline visually
+                if (timeline) {
+                    timeline.classList.add('editor-mode');
+                }
                 
                 document.getElementById('toolMovePoints').classList.add('active');
                 currentTool = 'move';
@@ -3384,7 +3298,6 @@
                 accumulatedBaseModels = null;
                 
                 renderModelList();
-                updateCodeDisplay();
                 draw();
             }
             
@@ -3392,7 +3305,6 @@
                 updateCanvasScale();
             }, 50);
         }
-
 
         function getCanvasScale() {
             const windowWidth = window.innerWidth;
@@ -4398,14 +4310,14 @@
                 
                 newMarker.style.cursor = 'grab';
             });
-            console.log("weh")
+
         }
      
      
      
      
         function attachKeyframeEvents() {
-            console.log("Attaching keyframe events, found markers:", document.querySelectorAll('.keyframe-marker').length);
+            
             
             document.querySelectorAll('.keyframe-marker').forEach(marker => {
                 // Remove any existing listeners to avoid duplicates
@@ -4415,7 +4327,7 @@
                 // Create click handler
                 const clickHandler = (e) => {
                     e.stopPropagation();
-                    console.log("Keyframe clicked!");
+                  
                     const trackId = marker.getAttribute('data-track-id');
                     const kfIdx = parseInt(marker.getAttribute('data-kf-idx'));
                     const anim = getSelectedAnimation();
@@ -4653,447 +4565,624 @@
         // ANIMATION APPLICATION
         // ===========================================
 
-        function applyAnimationAtTime(time) {
-            const anim = getSelectedAnimation();
+// Global animation state to track progress between frames
+let animationFrameState = {
+    lastTime: 0,
+    frameSum: 0,
+    trackStates: new Map() // Stores currentFrameByType per track
+};
+
+// Store pristine original models for reset
+let pristineOriginalModels = [];
+
+function storePristineModels() {
+    pristineOriginalModels = JSON.parse(JSON.stringify(models));
+}
+
+// Call this whenever models are created or loaded
+function updatePristineModels() {
+    pristineOriginalModels = JSON.parse(JSON.stringify(models));
+}
+
+function resetTrackStateAfterReset(trackState, currentTime, keyframesByType) {
+    // For each operation type, find the first keyframe at or after currentTime
+    for (const opType of ['translate', 'rotate', 'scale', 'color', 'visibility']) {
+        const kfList = keyframesByType[opType] || [];
+        let found = false;
+        for (let i = 0; i < kfList.length; i++) {
+            if (kfList[i].time >= currentTime) {
+                trackState.currentFrameByType[opType] = i;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            trackState.currentFrameByType[opType] = -1;
+        }
+    }
+}
+
+function resetAnimationState() {
+    animationFrameState.lastTime = 0;
+    animationFrameState.frameSum = 0;
+    animationFrameState.trackStates.clear();
+}
+
+function applyAnimationAtTime(targetTime) {
+    const anim = getSelectedAnimation();
+    if (!anim || anim.tracks.length === 0) {
+        draw();
+        return;
+    }
+    
+    // Reset if going backwards or at time 0
+    if (targetTime < animationFrameState.lastTime || targetTime === 0) {
+        animationFrameState.lastTime = 0;
+        animationFrameState.frameSum = 0;
+        animationFrameState.trackStates.clear();
+        
+        // Reset to original models
+        if (accumulatedBaseModels && anim.repeatEnabled && anim.repeatBehavior === 'accumulate') {
+            animationModels = JSON.parse(JSON.stringify(accumulatedBaseModels));
+        } else {
+            animationModels = JSON.parse(JSON.stringify(models));
+        }
+    }
+    
+    // If we're at the same time, just draw
+    if (Math.abs(targetTime - animationFrameState.lastTime) < 0.1) {
+        draw();
+        return;
+    }
+    
+    let dt = targetTime - animationFrameState.lastTime;
+    
+    // Process each track with the delta time
+    for (const track of anim.tracks) {
+        const model = animationModels[track.modelIndex];
+        if (!model) continue;
+        
+        // Ensure keyframes have deltaToNext calculated
+        updateKeyframeDeltasForTrack(track);
+        
+        const trackKey = `${track.type}_${track.modelIndex}_${track.groupIndex || 0}`;
+        
+        // Get or create track state
+        let trackState = animationFrameState.trackStates.get(trackKey);
+        if (!trackState) {
+            trackState = {
+                currentFrameByType: {
+                    translate: -1,
+                    rotate: -1,
+                    scale: -1,
+                    color: -1,
+                    visibility: -1,
+                    reset: -1
+                },
+                colorInterpolationStarted: false,
+                startColor: null
+            };
+            animationFrameState.trackStates.set(trackKey, trackState);
+        }
+        
+        // Get group indices if this is a group track
+        let groupIndices = null;
+        if (track.type === 'group') {
+            const group = models[track.modelIndex].pointGroups?.[track.groupIndex];
+            if (group) {
+                groupIndices = new Set(group.pointIndices);
+            }
+        }
+        
+   
+        // Process each operation type
+        const operationTypes = ['translate', 'rotate', 'scale', 'color', 'visibility', 'reset'];
+
+        for (const opType of operationTypes) {
+            const keyframes = track.keyframes.filter(kf => kf.action === opType).sort((a, b) => a.time - b.time);
+
+            if (keyframes.length === 0) continue;
             
-            // Start from fresh copy of original models
-            if (accumulatedBaseModels && anim && anim.repeatEnabled && anim.repeatBehavior === 'accumulate') {
-                animationModels = JSON.parse(JSON.stringify(accumulatedBaseModels));
-            } else {
-                animationModels = JSON.parse(JSON.stringify(models));
+            let frameId = trackState.currentFrameByType[opType];
+            let remainingDt = dt;
+            let currentTime = animationFrameState.frameSum;
+            
+            // Special handling for color when we're before the first keyframe
+            if (opType === 'color' && (frameId === -1 || (keyframes.length > 0 && currentTime < keyframes[0].time))) {
+                const firstKf = keyframes[0];
+                if (currentTime < firstKf.time) {
+                    // Get original color
+                    let originalColor = "#ffffff";
+                    if (track.type === 'model') {
+                        originalColor = models[track.modelIndex].triangles[0]?.color || "#ffffff";
+                    } else if (track.type === 'group' && groupIndices) {
+                        let pointIdx = 0;
+                        for (let tri of models[track.modelIndex].triangles) {
+                            for (let v = 0; v < 3; v++) {
+                                if (groupIndices.has(pointIdx)) {
+                                    originalColor = tri.color;
+                                    break;
+                                }
+                                pointIdx++;
+                            }
+                        }
+                    }
+                    
+                    // Calculate progress towards first keyframe (0 to 1)
+                    let progress = currentTime / firstKf.time;
+                    progress = Math.min(1, Math.max(0, progress));
+                    
+                    const targetColor = firstKf.params.color || "#ffffff";
+                    
+                    const r1 = parseInt(originalColor.slice(1,3), 16);
+                    const g1 = parseInt(originalColor.slice(3,5), 16);
+                    const b1 = parseInt(originalColor.slice(5,7), 16);
+                    const r2 = parseInt(targetColor.slice(1,3), 16);
+                    const g2 = parseInt(targetColor.slice(3,5), 16);
+                    const b2 = parseInt(targetColor.slice(5,7), 16);
+                    
+                    const r = Math.round(r1 + (r2 - r1) * progress);
+                    const g = Math.round(g1 + (g2 - g1) * progress);
+                    const b = Math.round(b1 + (b2 - b1) * progress);
+                    
+                    const interpolatedColor = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                    
+                    if (track.type === 'model') {
+                        for (let tri of model.triangles) {
+                            tri.color = interpolatedColor;
+                        }
+                    } else if (track.type === 'group' && groupIndices) {
+                        let pointIdx = 0;
+                        for (let tri of model.triangles) {
+                            for (let v = 0; v < 3; v++) {
+                                if (groupIndices.has(pointIdx)) {
+                                    tri.color = interpolatedColor;
+                                    break;
+                                }
+                                pointIdx++;
+                            }
+                        }
+                    }
+                    continue;
+                }
             }
             
-            if (!anim || anim.tracks.length === 0) {
-                draw();
-                return;
-            }
-            
-            const fixedCenter = { x: 32, y: 16 };
-            
-            // Helper function to get interpolated value with reset support
-            function getValueWithReset(keyframes, currentTime, actionType, isGroup = false) {
-                const typeKeyframes = keyframes.filter(kf => kf.action === actionType);
-                if (typeKeyframes.length === 0) return null;
-                
-                // Find the last reset keyframe before or at current time
-                let lastResetTime = -1;
-                const resetKeyframes = keyframes.filter(kf => kf.action === 'reset');
-                
-                for (let i = 0; i < resetKeyframes.length; i++) {
-                    if (resetKeyframes[i].time <= currentTime) {
-                        lastResetTime = resetKeyframes[i].time;
-                    }
-                }
-                
-                // Get keyframes after the last reset
-                let relevantKeyframes = typeKeyframes;
-                if (lastResetTime >= 0) {
-                    relevantKeyframes = typeKeyframes.filter(kf => kf.time >= lastResetTime);
-                }
-                
-                if (relevantKeyframes.length === 0) {
-                    if (actionType === 'translate') return { x: 0, y: 0 };
-                    if (actionType === 'rotate') return { angle: 0, useModelCenter: false, centerX: 32, centerY: 16 };
-                    if (actionType === 'scale') return { scaleX: 1, scaleY: 1, useModelCenter: false, centerX: 32, centerY: 16 };
-                    return null;
-                }
-                
-                let prevKf = null;
-                let nextKf = null;
-                
-                for (let i = 0; i < relevantKeyframes.length; i++) {
-                    if (relevantKeyframes[i].time <= currentTime) {
-                        prevKf = relevantKeyframes[i];
-                    }
-                    if (relevantKeyframes[i].time > currentTime && !nextKf) {
-                        nextKf = relevantKeyframes[i];
+            // Find starting frame if not set
+            if (frameId === -1 && keyframes.length > 0) {
+                for (let i = 0; i < keyframes.length; i++) {
+                    if (keyframes[i].time >= currentTime) {
+                        frameId = i;
+                        trackState.currentFrameByType[opType] = frameId;
                         break;
                     }
                 }
-                
-                // Before first keyframe after reset
-                if (!prevKf && relevantKeyframes.length > 0) {
-                    const firstKf = relevantKeyframes[0];
-                    if (currentTime <= firstKf.time) {
-                        if (currentTime === lastResetTime || currentTime === 0) {
-                            if (actionType === 'translate') return { x: 0, y: 0 };
-                            if (actionType === 'rotate') return { angle: 0, useModelCenter: false, centerX: 32, centerY: 16 };
-                            if (actionType === 'scale') return { scaleX: 1, scaleY: 1, useModelCenter: false, centerX: 32, centerY: 16 };
-                        }
-                        const t = Math.min(1, Math.max(0, (currentTime - lastResetTime) / (firstKf.time - lastResetTime)));
-                        if (actionType === 'translate') {
-                            return { x: firstKf.params.x * t, y: firstKf.params.y * t };
-                        } else if (actionType === 'rotate') {
-                            return {
-                                angle: firstKf.params.angle * t,
-                                useModelCenter: firstKf.params.useModelCenter || false,
-                                centerX: firstKf.params.centerX !== undefined ? firstKf.params.centerX : 32,
-                                centerY: firstKf.params.centerY !== undefined ? firstKf.params.centerY : 16
-                            };
-                        } else if (actionType === 'scale') {
-                            return {
-                                scaleX: 1 + (firstKf.params.scaleX - 1) * t,
-                                scaleY: 1 + (firstKf.params.scaleY - 1) * t,
-                                useModelCenter: firstKf.params.useModelCenter || false,
-                                centerX: firstKf.params.centerX !== undefined ? firstKf.params.centerX : 32,
-                                centerY: firstKf.params.centerY !== undefined ? firstKf.params.centerY : 16
-                            };
-                        }
-                    }
-                    return null;
-                }
-                
-                if (!prevKf) {
-                    if (actionType === 'translate') return { x: 0, y: 0 };
-                    if (actionType === 'rotate') return { angle: 0, useModelCenter: false, centerX: 32, centerY: 16 };
-                    if (actionType === 'scale') return { scaleX: 1, scaleY: 1, useModelCenter: false, centerX: 32, centerY: 16 };
-                    return null;
-                }
-                
-                // Check if at exact time and instant
-                if (Math.abs(prevKf.time - currentTime) < 0.1 && prevKf.instant === true) {
-                    return prevKf.params;
-                }
-                
-                // Calculate cumulative after last reset
-                if (actionType === 'translate') {
-                    let cumulativeX = 0, cumulativeY = 0;
-                    for (let kf of relevantKeyframes) {
-                        if (kf.time <= currentTime) {
-                            cumulativeX += kf.params.x;
-                            cumulativeY += kf.params.y;
-                        }
-                    }
-                    
-                    if (!nextKf) {
-                        return { x: cumulativeX, y: cumulativeY };
-                    }
-                    
-                    if (nextKf.instant === true) {
-                        return prevKf.params;
-                    }
-                    
-                    let cumPrevX = 0, cumPrevY = 0;
-                    for (let kf of relevantKeyframes) {
-                        if (kf.time <= prevKf.time) {
-                            cumPrevX += kf.params.x;
-                            cumPrevY += kf.params.y;
-                        }
-                    }
-                    
-                    let cumNextX = cumPrevX + nextKf.params.x;
-                    let cumNextY = cumPrevY + nextKf.params.y;
-                    const t = (currentTime - prevKf.time) / (nextKf.time - prevKf.time);
-                    
-                    return {
-                        x: cumPrevX + (cumNextX - cumPrevX) * t,
-                        y: cumPrevY + (cumNextY - cumPrevY) * t
-                    };
-                    
-                } else if (actionType === 'rotate') {
-                    let totalAngle = 0;
-                    for (let kf of relevantKeyframes) {
-                        if (kf.time <= currentTime) {
-                            totalAngle += kf.params.angle;
-                        }
-                    }
-                    
-                    if (nextKf && currentTime > prevKf.time && !prevKf.instant && !nextKf.instant) {
-                        const t = (currentTime - prevKf.time) / (nextKf.time - prevKf.time);
-                        totalAngle += nextKf.params.angle * t;
-                    }
-                    
-                    return {
-                        angle: totalAngle,
-                        useModelCenter: nextKf?.params.useModelCenter || prevKf?.params.useModelCenter || false,
-                        centerX: nextKf?.params.centerX !== undefined ? nextKf.params.centerX : (prevKf?.params.centerX !== undefined ? prevKf.params.centerX : 32),
-                        centerY: nextKf?.params.centerY !== undefined ? nextKf.params.centerY : (prevKf?.params.centerY !== undefined ? prevKf.params.centerY : 16)
-                    };
-                    
-                } else if (actionType === 'scale') {
-                    let cumulativeScaleX = 1, cumulativeScaleY = 1;
-                    for (let kf of relevantKeyframes) {
-                        if (kf.time <= currentTime) {
-                            cumulativeScaleX *= kf.params.scaleX;
-                            cumulativeScaleY *= kf.params.scaleY;
-                        }
-                    }
-                    
-                    if (nextKf && currentTime > prevKf.time && !prevKf.instant && !nextKf.instant) {
-                        const t = (currentTime - prevKf.time) / (nextKf.time - prevKf.time);
-                        let cumPrevX = 1, cumPrevY = 1;
-                        for (let kf of relevantKeyframes) {
-                            if (kf.time <= prevKf.time) {
-                                cumPrevX *= kf.params.scaleX;
-                                cumPrevY *= kf.params.scaleY;
-                            }
-                        }
-                        const interpMultiplierX = prevKf.params.scaleX + (nextKf.params.scaleX - prevKf.params.scaleX) * t;
-                        const interpMultiplierY = prevKf.params.scaleY + (nextKf.params.scaleY - prevKf.params.scaleY) * t;
-                        cumulativeScaleX = cumPrevX / prevKf.params.scaleX * interpMultiplierX;
-                        cumulativeScaleY = cumPrevY / prevKf.params.scaleY * interpMultiplierY;
-                    }
-                    
-                    return {
-                        scaleX: cumulativeScaleX,
-                        scaleY: cumulativeScaleY,
-                        useModelCenter: nextKf?.params.useModelCenter || prevKf?.params.useModelCenter || false,
-                        centerX: nextKf?.params.centerX !== undefined ? nextKf.params.centerX : (prevKf?.params.centerX !== undefined ? prevKf.params.centerX : 32),
-                        centerY: nextKf?.params.centerY !== undefined ? nextKf.params.centerY : (prevKf?.params.centerY !== undefined ? prevKf.params.centerY : 16)
-                    };
-                }
-                
-                return null;
+                if (frameId === -1) continue;
             }
             
-            // Process model tracks
-            const modelTracksByModel = new Map();
-            anim.tracks.forEach(track => {
-                if (track.type === 'model') {
-                    if (!modelTracksByModel.has(track.modelIndex)) {
-                        modelTracksByModel.set(track.modelIndex, []);
-                    }
-                    modelTracksByModel.get(track.modelIndex).push(track);
-                }
-            });
+            if (frameId >= keyframes.length) continue;
             
-            for (const [modelIndex, tracks] of modelTracksByModel) {
-                const model = animationModels[modelIndex];
-                if (!model) continue;
-                
-                const originalModel = models[modelIndex];
-                const originalPoints = [];
-                for (let i = 0; i < originalModel.triangles.length; i++) {
-                    const tri = originalModel.triangles[i];
-                    originalPoints.push({ x: tri.v1.x, y: tri.v1.y });
-                    originalPoints.push({ x: tri.v2.x, y: tri.v2.y });
-                    originalPoints.push({ x: tri.v3.x, y: tri.v3.y });
-                }
-                
-                let targetPoints = [];
-                let globalIdx = 0;
-                for (let i = 0; i < model.triangles.length; i++) {
-                    const tri = model.triangles[i];
-                    targetPoints.push({ point: tri.v1, originalPoint: originalPoints[globalIdx++] });
-                    targetPoints.push({ point: tri.v2, originalPoint: originalPoints[globalIdx++] });
-                    targetPoints.push({ point: tri.v3, originalPoint: originalPoints[globalIdx++] });
-                }
-                
-                let totalTranslate = { x: 0, y: 0 };
-                let totalRotate = { angle: 0, useModelCenter: false, centerX: 32, centerY: 16 };
-                let totalScale = { scaleX: 1, scaleY: 1, useModelCenter: false, centerX: 32, centerY: 16 };
-                
-                for (const track of tracks) {
-                    const translateVal = getValueWithReset(track.keyframes, time, 'translate');
-                    const rotateVal = getValueWithReset(track.keyframes, time, 'rotate');
-                    const scaleVal = getValueWithReset(track.keyframes, time, 'scale');
+            let nextKf = keyframes[frameId];
+            let remaining = remainingDt;
+            let stepTime = currentTime;
+            let maxIter = 10;
+            
+            while (remaining > 0 && maxIter-- > 0) {
+                const timeToKeyframe = nextKf.time - stepTime;
+                                
+                if (stepTime + remaining >= nextKf.time) {
+                    let stepDt = timeToKeyframe;
+                    remaining -= stepDt;
                     
-                    if (translateVal) {
-                        totalTranslate.x += translateVal.x;
-                        totalTranslate.y += translateVal.y;
+                    if (remaining > 0 && nextKf.deltaToNext && nextKf.deltaToNext > 0 && remaining > nextKf.deltaToNext) {
+                        const diff = remaining - nextKf.deltaToNext;
+                        remaining = nextKf.deltaToNext;
+                        stepDt += diff;
                     }
-                    if (rotateVal) {
-                        totalRotate.angle += rotateVal.angle;
-                        if (rotateVal.useModelCenter) totalRotate.useModelCenter = true;
-                        if (rotateVal.centerX !== undefined) totalRotate.centerX = rotateVal.centerX;
-                        if (rotateVal.centerY !== undefined) totalRotate.centerY = rotateVal.centerY;
-                    }
-                    if (scaleVal) {
-                        totalScale.scaleX *= scaleVal.scaleX;
-                        totalScale.scaleY *= scaleVal.scaleY;
-                        if (scaleVal.useModelCenter) totalScale.useModelCenter = true;
-                        if (scaleVal.centerX !== undefined) totalScale.centerX = scaleVal.centerX;
-                        if (scaleVal.centerY !== undefined) totalScale.centerY = scaleVal.centerY;
-                    }
-                }
-                
-                let currentCenter = { x: 32, y: 16 };
-                const useDynamicCenter = totalRotate.useModelCenter || totalScale.useModelCenter;
-                
-                if (useDynamicCenter) {
-                    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-                    targetPoints.forEach(tp => {
-                        minX = Math.min(minX, tp.point.x);
-                        maxX = Math.max(maxX, tp.point.x);
-                        minY = Math.min(minY, tp.point.y);
-                        maxY = Math.max(maxY, tp.point.y);
-                    });
-                    currentCenter = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
-                }
-                
-                targetPoints.forEach(tp => {
-                    let x = tp.originalPoint.x;
-                    let y = tp.originalPoint.y;
+
+                    applyTransformationStep(
+                        track, opType, nextKf, stepDt, stepTime, true,
+                        trackState, animationModels, track.modelIndex, groupIndices
+                    );
                     
-                    if (totalScale.scaleX !== 1 || totalScale.scaleY !== 1) {
-                        let centerToUse;
-                        if (totalScale.useModelCenter && useDynamicCenter) {
-                            centerToUse = currentCenter;
-                        } else if (totalScale.centerX !== undefined && totalScale.centerY !== undefined) {
-                            centerToUse = { x: totalScale.centerX, y: totalScale.centerY };
-                        } else {
-                            centerToUse = fixedCenter;
+                    stepTime += stepDt;
+                    
+                    let found = false;
+                    for (let i = frameId + 1; i < keyframes.length; i++) {
+                        if (keyframes[i].action === opType) {
+                            frameId = i;
+                            nextKf = keyframes[i];
+                            trackState.currentFrameByType[opType] = frameId;
+
+                            found = true;
+                            break;
                         }
-                        x = centerToUse.x + (x - centerToUse.x) * totalScale.scaleX;
-                        y = centerToUse.y + (y - centerToUse.y) * totalScale.scaleY;
                     }
-                    
-                    if (totalRotate.angle !== 0) {
-                        const rad = totalRotate.angle * Math.PI / 180;
-                        let centerToUse;
-                        if (totalRotate.useModelCenter && useDynamicCenter) {
-                            centerToUse = currentCenter;
-                        } else if (totalRotate.centerX !== undefined && totalRotate.centerY !== undefined) {
-                            centerToUse = { x: totalRotate.centerX, y: totalRotate.centerY };
-                        } else {
-                            centerToUse = fixedCenter;
-                        }
-                        const dx = x - centerToUse.x;
-                        const dy = y - centerToUse.y;
-                        x = centerToUse.x + dx * Math.cos(rad) - dy * Math.sin(rad);
-                        y = centerToUse.y + dx * Math.sin(rad) + dy * Math.cos(rad);
+                    if (!found) {
+
+                        trackState.currentFrameByType[opType] = -1;
+                        break;
                     }
-                    
-                    x += totalTranslate.x;
-                    y += totalTranslate.y;
-                    
-                    tp.point.x = x;
-                    tp.point.y = y;
-                });
-                
-                // Handle visibility
-                let visible = true;
-                for (const track of tracks) {
-                    const visKeyframes = track.keyframes.filter(kf => kf.action === 'visibility' && kf.time <= time);
-                    if (visKeyframes.length > 0) {
-                        visible = visKeyframes[visKeyframes.length - 1].params.visible;
-                    }
+                } else {
+
+                    applyTransformationStep(
+                        track, opType, nextKf, remaining, stepTime, false,
+                        trackState, animationModels, track.modelIndex, groupIndices
+                    );
+                    stepTime += remaining;
+                    remaining = 0;
                 }
-                model.visible = visible;
             }
+        }
+    
+    
+    }
+    
+    animationFrameState.lastTime = targetTime;
+    animationFrameState.frameSum += dt;
+    
+    draw();
+}
+
+
+
+function applyTransformationStep(track, opType, kf, dt, currentTime, lastIteration, trackState, models, modelIndex, groupIndices) {
+    const model = models[modelIndex];
+    if (!model) return;
+    
+    let delta = 0;
+    if (kf.deltaToNext && kf.deltaToNext > 0) {
+        delta = dt / kf.deltaToNext;
+    } else {
+        delta = 1.0;
+    }
+    delta = Math.min(1, Math.max(0, delta));
+    
+    switch (opType) {
+        case 'translate': {
+            const px = delta * (kf.params.x || 0);
+            const py = delta * (kf.params.y || 0);
             
-            // Process group tracks (same pattern)
-            const groupTracksByTarget = new Map();
-            anim.tracks.forEach(track => {
-                if (track.type === 'group') {
-                    const key = `${track.modelIndex}_${track.groupIndex}`;
-                    if (!groupTracksByTarget.has(key)) {
-                        groupTracksByTarget.set(key, []);
-                    }
-                    groupTracksByTarget.get(key).push(track);
+            if (track.type === 'model') {
+                for (let tri of model.triangles) {
+                    tri.v1.x += px;
+                    tri.v1.y += py;
+                    tri.v2.x += px;
+                    tri.v2.y += py;
+                    tri.v3.x += px;
+                    tri.v3.y += py;
                 }
-            });
-            
-            for (const [key, tracks] of groupTracksByTarget) {
-                const [modelIndex, groupIndex] = key.split('_').map(Number);
-                const model = animationModels[modelIndex];
-                if (!model) continue;
-                
-                const group = models[modelIndex].pointGroups?.[groupIndex];
-                if (!group) continue;
-                const groupIndices = new Set(group.pointIndices);
-                
-                let targetPoints = [];
-                let globalIdx = 0;
-                for (let i = 0; i < model.triangles.length; i++) {
-                    const tri = model.triangles[i];
+            } else if (track.type === 'group' && groupIndices) {
+                let pointIdx = 0;
+                for (let tri of model.triangles) {
                     for (let v = 0; v < 3; v++) {
-                        const point = v === 0 ? tri.v1 : (v === 1 ? tri.v2 : tri.v3);
-                        if (groupIndices.has(globalIdx)) {
-                            targetPoints.push({ point, originalPoint: { x: point.x, y: point.y } });
+                        if (groupIndices.has(pointIdx)) {
+                            const point = v === 0 ? tri.v1 : (v === 1 ? tri.v2 : tri.v3);
+                            point.x += px;
+                            point.y += py;
                         }
-                        globalIdx++;
+                        pointIdx++;
                     }
                 }
-                
-                if (targetPoints.length === 0) continue;
-                
-                let totalTranslate = { x: 0, y: 0 };
-                let totalRotate = { angle: 0, useModelCenter: false, centerX: 32, centerY: 16 };
-                let totalScale = { scaleX: 1, scaleY: 1, useModelCenter: false, centerX: 32, centerY: 16 };
-                
-                for (const track of tracks) {
-                    const translateVal = getValueWithReset(track.keyframes, time, 'translate', true);
-                    const rotateVal = getValueWithReset(track.keyframes, time, 'rotate', true);
-                    const scaleVal = getValueWithReset(track.keyframes, time, 'scale', true);
-                    
-                    if (translateVal) {
-                        totalTranslate.x += translateVal.x;
-                        totalTranslate.y += translateVal.y;
-                    }
-                    if (rotateVal) {
-                        totalRotate.angle += rotateVal.angle;
-                        if (rotateVal.useModelCenter) totalRotate.useModelCenter = true;
-                        if (rotateVal.centerX !== undefined) totalRotate.centerX = rotateVal.centerX;
-                        if (rotateVal.centerY !== undefined) totalRotate.centerY = rotateVal.centerY;
-                    }
-                    if (scaleVal) {
-                        totalScale.scaleX *= scaleVal.scaleX;
-                        totalScale.scaleY *= scaleVal.scaleY;
-                        if (scaleVal.useModelCenter) totalScale.useModelCenter = true;
-                        if (scaleVal.centerX !== undefined) totalScale.centerX = scaleVal.centerX;
-                        if (scaleVal.centerY !== undefined) totalScale.centerY = scaleVal.centerY;
-                    }
-                }
-                
-                let currentCenter = { x: 32, y: 16 };
-                const useDynamicCenter = totalRotate.useModelCenter || totalScale.useModelCenter;
-                
-                if (useDynamicCenter) {
-                    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-                    targetPoints.forEach(tp => {
-                        minX = Math.min(minX, tp.originalPoint.x);
-                        maxX = Math.max(maxX, tp.originalPoint.x);
-                        minY = Math.min(minY, tp.originalPoint.y);
-                        maxY = Math.max(maxY, tp.originalPoint.y);
-                    });
-                    currentCenter = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
-                }
-                
-                targetPoints.forEach(tp => {
-                    let x = tp.originalPoint.x;
-                    let y = tp.originalPoint.y;
-                    
-                    if (totalScale.scaleX !== 1 || totalScale.scaleY !== 1) {
-                        let centerToUse;
-                        if (totalScale.useModelCenter && useDynamicCenter) {
-                            centerToUse = currentCenter;
-                        } else if (totalScale.centerX !== undefined && totalScale.centerY !== undefined) {
-                            centerToUse = { x: totalScale.centerX, y: totalScale.centerY };
-                        } else {
-                            centerToUse = fixedCenter;
-                        }
-                        x = centerToUse.x + (x - centerToUse.x) * totalScale.scaleX;
-                        y = centerToUse.y + (y - centerToUse.y) * totalScale.scaleY;
-                    }
-                    
-                    if (totalRotate.angle !== 0) {
-                        const rad = totalRotate.angle * Math.PI / 180;
-                        let centerToUse;
-                        if (totalRotate.useModelCenter && useDynamicCenter) {
-                            centerToUse = currentCenter;
-                        } else if (totalRotate.centerX !== undefined && totalRotate.centerY !== undefined) {
-                            centerToUse = { x: totalRotate.centerX, y: totalRotate.centerY };
-                        } else {
-                            centerToUse = fixedCenter;
-                        }
-                        const dx = x - centerToUse.x;
-                        const dy = y - centerToUse.y;
-                        x = centerToUse.x + dx * Math.cos(rad) - dy * Math.sin(rad);
-                        y = centerToUse.y + dx * Math.sin(rad) + dy * Math.cos(rad);
-                    }
-                    
-                    x += totalTranslate.x;
-                    y += totalTranslate.y;
-                    
-                    tp.point.x = x;
-                    tp.point.y = y;
-                });
             }
-            
-            draw();
+            break;
         }
         
+        case 'rotate': {
+            const angle = delta * (kf.params.angle || 0);
+            if (angle === 0) break;
+            
+            const rad = angle * Math.PI / 180;
+            
+            let center = { x: kf.params.centerX || 32, y: kf.params.centerY || 16 };
+            if (kf.params.useModelCenter) {
+                if (track.type === 'model') {
+                    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                    for (let tri of model.triangles) {
+                        minX = Math.min(minX, tri.v1.x, tri.v2.x, tri.v3.x);
+                        maxX = Math.max(maxX, tri.v1.x, tri.v2.x, tri.v3.x);
+                        minY = Math.min(minY, tri.v1.y, tri.v2.y, tri.v3.y);
+                        maxY = Math.max(maxY, tri.v1.y, tri.v2.y, tri.v3.y);
+                    }
+                    if (minX !== Infinity) {
+                        center = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
+                    }
+                } else if (track.type === 'group' && groupIndices) {
+                    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                    let pointIdx = 0;
+                    for (let tri of model.triangles) {
+                        for (let v = 0; v < 3; v++) {
+                            if (groupIndices.has(pointIdx)) {
+                                const point = v === 0 ? tri.v1 : (v === 1 ? tri.v2 : tri.v3);
+                                minX = Math.min(minX, point.x);
+                                maxX = Math.max(maxX, point.x);
+                                minY = Math.min(minY, point.y);
+                                maxY = Math.max(maxY, point.y);
+                            }
+                            pointIdx++;
+                        }
+                    }
+                    if (minX !== Infinity) {
+                        center = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
+                    }
+                }
+            }
+            
+            const cos = Math.cos(rad);
+            const sin = Math.sin(rad);
+            
+            if (track.type === 'model') {
+                for (let tri of model.triangles) {
+                    const points = [tri.v1, tri.v2, tri.v3];
+                    for (let p of points) {
+                        const dx = p.x - center.x;
+                        const dy = p.y - center.y;
+                        p.x = center.x + dx * cos - dy * sin;
+                        p.y = center.y + dx * sin + dy * cos;
+                    }
+                }
+            } else if (track.type === 'group' && groupIndices) {
+                let pointIdx = 0;
+                for (let tri of model.triangles) {
+                    for (let v = 0; v < 3; v++) {
+                        if (groupIndices.has(pointIdx)) {
+                            const point = v === 0 ? tri.v1 : (v === 1 ? tri.v2 : tri.v3);
+                            const dx = point.x - center.x;
+                            const dy = point.y - center.y;
+                            point.x = center.x + dx * cos - dy * sin;
+                            point.y = center.y + dx * sin + dy * cos;
+                        }
+                        pointIdx++;
+                    }
+                }
+            }
+            break;
+        }
+        
+        case 'scale': {
+            const scaleX = 1 + ((kf.params.scaleX || 1) - 1) * delta;
+            const scaleY = 1 + ((kf.params.scaleY || 1) - 1) * delta;
+            
+            if (scaleX === 1 && scaleY === 1) break;
+            
+            let center = { x: kf.params.centerX || 32, y: kf.params.centerY || 16 };
+            if (kf.params.useModelCenter) {
+                if (track.type === 'model') {
+                    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                    for (let tri of model.triangles) {
+                        minX = Math.min(minX, tri.v1.x, tri.v2.x, tri.v3.x);
+                        maxX = Math.max(maxX, tri.v1.x, tri.v2.x, tri.v3.x);
+                        minY = Math.min(minY, tri.v1.y, tri.v2.y, tri.v3.y);
+                        maxY = Math.max(maxY, tri.v1.y, tri.v2.y, tri.v3.y);
+                    }
+                    if (minX !== Infinity) {
+                        center = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
+                    }
+                } else if (track.type === 'group' && groupIndices) {
+                    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                    let pointIdx = 0;
+                    for (let tri of model.triangles) {
+                        for (let v = 0; v < 3; v++) {
+                            if (groupIndices.has(pointIdx)) {
+                                const point = v === 0 ? tri.v1 : (v === 1 ? tri.v2 : tri.v3);
+                                minX = Math.min(minX, point.x);
+                                maxX = Math.max(maxX, point.x);
+                                minY = Math.min(minY, point.y);
+                                maxY = Math.max(maxY, point.y);
+                            }
+                            pointIdx++;
+                        }
+                    }
+                    if (minX !== Infinity) {
+                        center = { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
+                    }
+                }
+            }
+            
+            if (track.type === 'model') {
+                for (let tri of model.triangles) {
+                    const points = [tri.v1, tri.v2, tri.v3];
+                    for (let p of points) {
+                        p.x = center.x + (p.x - center.x) * scaleX;
+                        p.y = center.y + (p.y - center.y) * scaleY;
+                    }
+                }
+            } else if (track.type === 'group' && groupIndices) {
+                let pointIdx = 0;
+                for (let tri of model.triangles) {
+                    for (let v = 0; v < 3; v++) {
+                        if (groupIndices.has(pointIdx)) {
+                            const point = v === 0 ? tri.v1 : (v === 1 ? tri.v2 : tri.v3);
+                            point.x = center.x + (point.x - center.x) * scaleX;
+                            point.y = center.y + (point.y - center.y) * scaleY;
+                        }
+                        pointIdx++;
+                    }
+                }
+            }
+            break;
+        }
+        
+        case 'color': {
+            const targetColor = kf.params.color || "#ffffff";
+            
+            if (lastIteration) {
+                // At exact keyframe time, set color directly
+                if (track.type === 'model') {
+                    for (let tri of model.triangles) {
+                        tri.color = targetColor;
+                    }
+                } else if (track.type === 'group' && groupIndices) {
+                    let pointIdx = 0;
+                    for (let tri of model.triangles) {
+                        for (let v = 0; v < 3; v++) {
+                            if (groupIndices.has(pointIdx)) {
+                                tri.color = targetColor;
+                                break;
+                            }
+                            pointIdx++;
+                        }
+                    }
+                }
+                trackState.colorInterpolationStarted = false;
+                trackState.startColor = null;
+                break;
+            }
+            
+            // Get current color for interpolation start
+            let currentColor = "#ffffff";
+            if (track.type === 'model') {
+                currentColor = model.triangles[0]?.color || "#ffffff";
+            } else if (track.type === 'group' && groupIndices) {
+                let pointIdx = 0;
+                for (let tri of model.triangles) {
+                    for (let v = 0; v < 3; v++) {
+                        if (groupIndices.has(pointIdx)) {
+                            currentColor = tri.color;
+                            break;
+                        }
+                        pointIdx++;
+                    }
+                }
+            }
+            
+            // Start interpolation if not started
+            if (!trackState.colorInterpolationStarted) {
+                trackState.startColor = currentColor;
+                trackState.colorInterpolationStarted = true;
+            }
+            
+            // Calculate interpolation progress
+            let colorDelta = 0;
+            if (kf.deltaToNext && kf.deltaToNext > 0) {
+                const elapsed = currentTime - (kf.interpolationStartedAt || kf.time);
+                colorDelta = elapsed / kf.deltaToNext;
+            } else {
+                colorDelta = 1.0;
+            }
+            colorDelta = Math.min(1, Math.max(0, colorDelta));
+            
+            const startColor = trackState.startColor;
+            
+            const r1 = parseInt(startColor.slice(1,3), 16);
+            const g1 = parseInt(startColor.slice(3,5), 16);
+            const b1 = parseInt(startColor.slice(5,7), 16);
+            const r2 = parseInt(targetColor.slice(1,3), 16);
+            const g2 = parseInt(targetColor.slice(3,5), 16);
+            const b2 = parseInt(targetColor.slice(5,7), 16);
+            
+            const r = Math.round(r1 + (r2 - r1) * colorDelta);
+            const g = Math.round(g1 + (g2 - g1) * colorDelta);
+            const b = Math.round(b1 + (b2 - b1) * colorDelta);
+            
+            const interpolatedColor = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            
+            if (track.type === 'model') {
+                for (let tri of model.triangles) {
+                    tri.color = interpolatedColor;
+                }
+            } else if (track.type === 'group' && groupIndices) {
+                let pointIdx = 0;
+                for (let tri of model.triangles) {
+                    for (let v = 0; v < 3; v++) {
+                        if (groupIndices.has(pointIdx)) {
+                            tri.color = interpolatedColor;
+                            break;
+                        }
+                        pointIdx++;
+                    }
+                }
+            }
+            break;
+        }
+        
+        case 'visibility': {
+            if (lastIteration) {
+                model.visible = kf.params.visible !== false;
+            }
+            break;
+        }
+        
+        case 'reset': {
+            if (lastIteration) {
+                // Get the ORIGINAL pristine model (never modified)
+                const originalModel = pristineOriginalModels[track.modelIndex];
+                if (originalModel) {
+
+                    // Completely reset the current model to original pristine state
+                    model.triangles = JSON.parse(JSON.stringify(originalModel.triangles));
+                    model.visible = originalModel.visible;
+
+                }
+            }
+            break;
+        }    
+    }
+}
+
+// Helper function to update keyframe deltas - call this whenever keyframes change
+function updateKeyframeDeltas(track) {
+    const keyframes = track.keyframes.sort((a, b) => a.time - b.time);
+    for (let i = 0; i < keyframes.length; i++) {
+        const current = keyframes[i];
+        const next = keyframes[i + 1];
+        if (next) {
+            current.deltaToNext = next.time - current.time;
+        } else {
+            current.deltaToNext = 0;
+        }
+        current.interpolationStartedAt = current.time;
+    }
+}
+
+// Call this whenever keyframes are added, removed, or modified
+function updateKeyframeDeltasForTrack(track) {
+    const keyframesByType = {
+        translate: [],
+        rotate: [],
+        scale: [],
+        color: [],
+        visibility: [],
+        reset: []
+    };
+    
+    const sortedKeyframes = [...track.keyframes].sort((a, b) => a.time - b.time);
+    
+    for (const kf of sortedKeyframes) {
+        const type = kf.action;
+        if (keyframesByType[type]) {
+            keyframesByType[type].push(kf);
+        }
+    }
+    
+    for (const type of Object.keys(keyframesByType)) {
+        const kfList = keyframesByType[type].sort((a, b) => a.time - b.time);
+        let lastTime = 0;
+        
+        for (let i = 0; i < kfList.length; i++) {
+            const current = kfList[i];
+            current.interpolationStartedAt = lastTime;
+            
+            // RESET keyframes should have deltaToNext = 0 (instant, no interpolation)
+            if (type === 'reset') {
+                current.deltaToNext = 0;
+            } else {
+                current.deltaToNext = current.time - lastTime;
+            }
+            
+            lastTime = current.time;
+        }
+    }
+}
+
+// Reset animation state when changing animations or seeking
+function resetAnimationState() {
+    
+    animationFrameState.lastTime = 0;
+    animationFrameState.frameSum = 0;
+    animationFrameState.trackStates.clear();
+}
+
+
         // ===========================================
         // PLAYBACK CONTROLS
         // ===========================================
@@ -5190,6 +5279,8 @@
         function stopAnimationPlayback() {
             pauseAnimationPlayback();
             currentAnimationTime = 0;
+
+            resetAnimationState();
             
             // Clear accumulated base when stopping
             accumulatedBaseModels = null;
@@ -5694,9 +5785,13 @@
             // Override renderTimelines to use our system
             window.renderTimelines = renderTimelineForAnimation;
             
-            document.getElementById('addAnimationBtn').addEventListener('click', function() {
-                showCreateAnimationDialog(false);
-            });
+            // Check if elements exist before adding event listeners
+            const addAnimationBtn = document.getElementById('addAnimationBtn');
+            if (addAnimationBtn) {
+                addAnimationBtn.addEventListener('click', function() {
+                    showCreateAnimationDialog(false);
+                });
+            }
             
             // Add track button (the inline one in the header)
             const addTrackBtnInline = document.getElementById('addTimelineBtnInline');
@@ -5731,7 +5826,7 @@
             if (stopBtn) stopBtn.onclick = stopAnimationPlayback;
             if (durationInput) durationInput.onchange = updateAnimationDuration;
             
-            // Modal close handlers
+            // Modal close handlers - check if elements exist
             const closeModalBtn = document.getElementById('closeTimelineModal');
             const cancelBtn = document.getElementById('cancelTimelineBtn');
             const confirmBtn = document.getElementById('confirmCreateTimelineBtn');
@@ -5746,7 +5841,12 @@
             animations = [];
             selectedAnimationId = null;
             currentAnimationTime = 0;
-
+            
+            // Get timeline element and add editor-mode class if not in animation mode
+            const timeline = document.getElementById('timelineContainer');
+            if (timeline && !isAnimationMode) {
+                timeline.classList.add('editor-mode');
+            }
             
             // Update UI to show empty state
             renderAnimationList();
@@ -5781,7 +5881,6 @@
             const repeatBehavior = document.getElementById('repeatBehavior');
 
             if (repeatToggle) {
-
                 repeatToggle.addEventListener('change', function() {
                     const anim = getSelectedAnimation();
                     if (anim) {
@@ -5790,11 +5889,8 @@
                         anim.repeatEnabled = this.checked;
                         updateRepeatControls();
                     }
-                    this.blur(); //yep i need this shit here
+                    this.blur();
                 });
- 
-
-
             }
 
             if (repeatBehavior) {
@@ -5803,17 +5899,12 @@
                     if (anim) {
                         saveUndoState();
                         initRepeatProperties(anim);
-                        const oldBehavior = anim.repeatBehavior;
                         anim.repeatBehavior = this.value;
                         updateRepeatControls();
                     }
                 });
             }
-
-
         }
-
-
         setTimeout(initAnimationSystem, 100);
         
 
@@ -5886,7 +5977,6 @@
             });
             
             renderModelList();
-            updateCodeDisplay();
             
             // Refresh animation if in animation mode
             if (isAnimationMode) {
@@ -5930,7 +6020,6 @@
             });
             
             renderModelList();
-            updateCodeDisplay();
             
             // Refresh animation if in animation mode
             if (isAnimationMode) {
@@ -6020,7 +6109,7 @@
                 const removedTracks = anim.tracks.filter(track => track.modelIndex === index);
                 if (removedTracks.length > 0) {
                     tracksRemoved = true;
-                    console.log(`Removed ${removedTracks.length} track(s) from animation "${anim.name}" due to model deletion`);
+                    
                 }
                 anim.tracks = anim.tracks.filter(track => track.modelIndex !== index);
                 
@@ -6079,8 +6168,8 @@
             // Update all UI while in animation mode
             renderModelList();
             renderAnimationList();
+            storePristineModels()
             renderTimelineForAnimation(); // This will now show the updated tracks
-            updateCodeDisplay();
             
             if (selectedAnimationId) {
                 applyAnimationAtTime(currentAnimationTime);
@@ -6092,7 +6181,6 @@
                 toggleMode(); // Switch back to model mode
                 // Refresh model mode UI
                 renderModelList();
-                updateCodeDisplay();
                 draw();
             }
         }        
@@ -6114,7 +6202,7 @@
             selectedVertices = [];
             selectionFromSelectTool = false;
             renderModelList();
-            updateCodeDisplay();
+            storePristineModels();
             draw();
         }
 
@@ -6146,7 +6234,6 @@
             selectionFromSelectTool = false;
 
             renderModelList();
-            updateCodeDisplay();
             draw();
         }
 
@@ -6158,7 +6245,6 @@
                     selectedGroupIndex = -1;
                 }
                 renderModelList();
-                updateCodeDisplay();
                 draw();
             }
         }
@@ -6980,63 +7066,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
             document.getElementById('totalTriangles').textContent = total;
         }
 
-        function updateCodeDisplay() {
-            var displayDiv = document.getElementById("codeDisplay");
-            if (models.length === 0) {
-                displayDiv.textContent = "// no models";
-                return;
-            }
-            
-            var lines = [];
-            
-            models.forEach(function(model, idx) {
-                var tris = model.triangles;
-                
-                if (tris.length === 0) {
-                    lines.push(`// Model ${idx}: "${model.name}" has no triangles`);
-                    lines.push(`mem = new Model();`);
-                    lines.push(`sc.addModel(mem);`);
-                    lines.push(``);
-                    return;
-                }
-                
-                lines.push(`    // Model ${idx}: "${model.name}"`);
-                lines.push(`    mem = new Model();`);
-                lines.push(`    numTriangles = ${tris.length};`);
-                lines.push(`    mem->Begin(numTriangles);`);
-                
-                for (var i = 0; i < tris.length; i++) {
-                    var tri = tris[i];
-                    var v1 = tri.v1, v2 = tri.v2, v3 = tri.v3;
-                    var colorHex = tri.color.slice(1);
-                    var r = parseInt(colorHex.slice(0, 2), 16);
-                    var g = parseInt(colorHex.slice(2, 4), 16);
-                    var b = parseInt(colorHex.slice(4, 6), 16);
-                    lines.push(`    mem->SetTriangle(${i}, Vec2f(${v1.x.toFixed(1)}f,${v1.y.toFixed(1)}f), Vec2f(${v2.x.toFixed(1)}f,${v2.y.toFixed(1)}f), Vec2f(${v3.x.toFixed(1)}f,${v3.y.toFixed(1)}f), Devices::Display->color565(${r},${g},${b}));`);
-                }
-                
-                if (model.pointGroups && model.pointGroups.length > 0) {
-                    lines.push(``);
-                    for (var j = 0; j < model.pointGroups.length; j++) {
-                        var group = model.pointGroups[j];
-                        if (group.pointIndices && group.pointIndices.length > 0) {
-                            var indicesStr = group.pointIndices.join(', ');
-                            lines.push(`    mem->AddPointGroup(std::vector<int>({${indicesStr}}));`);
-                        }
-                    }
-                }
-                
-                lines.push(`    mem->Reset();`);
-                lines.push(`    mem->Recalculate();`);
-                lines.push(`    mem->SetBatchOperations(true);`);
-                lines.push(`    mem->SetAccumulativeOperations(true);`);
-                lines.push(`    sc.addModel(mem);`);
-                lines.push(``);
-            });
-            
-            displayDiv.textContent = lines.join('\n');
-        }
-
         function renderModelList() {
             var listDiv = document.getElementById("modelList");
             var placeholder = document.getElementById("emptyModelPlaceholder");
@@ -7281,7 +7310,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                                         
                                         group.pointIndices = group.pointIndices.filter(idx => !pointsToRemove.includes(idx));
                                         renderModelList();
-                                        updateCodeDisplay();
                                         draw();
                                     }
                                 });
@@ -7413,7 +7441,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                     selectedVertices = [];
                     selectionFromSelectTool = false;
                     renderModelList();
-                    updateCodeDisplay();
                     draw();
                 });
                 
@@ -7605,7 +7632,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                     group.pointIndices.sort((a,b)=>a-b);
                     saveUndoState();
                     renderModelList();
-                    updateCodeDisplay();
                 }
             }
         }
@@ -7622,7 +7648,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
             selectedVertices = [];
             selectionFromSelectTool = false;
             selectedGroupIndex = -1;
-            updateCodeDisplay();
             renderModelList();
             draw();
         }
@@ -8128,6 +8153,16 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                                                     keyframe.params = {
                                                         visible: kf.v !== undefined ? kf.v : true
                                                     };
+                                                } else if (kf.t === 'color') {
+                                                    // Convert RGB565 to hex color
+                                                    const rgb565 = kf.c;
+                                                    const r = (rgb565 >> 11) & 0x1F;
+                                                    const g = (rgb565 >> 5) & 0x3F;
+                                                    const b = rgb565 & 0x1F;
+                                                    const r8 = (r << 3) | (r >> 2);
+                                                    const g8 = (g << 2) | (g >> 4);
+                                                    const b8 = (b << 3) | (b >> 2);
+                                                    keyframe.params.color = '#' + ((1 << 24) + (r8 << 16) + (g8 << 8) + b8).toString(16).slice(1);
                                                 }
                                                 
                                                 if (kf.i) keyframe.instant = true;
@@ -8139,14 +8174,19 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                                             trackKeyframes.sort((a, b) => a.time - b.time);
                                             
                                             // Generate a unique ID for the track
-                                            tracks.push({
+                                            const newTrack = {
                                                 id: Date.now() + '_' + Math.random().toString(36).substr(2, 6) + '_' + trackIdx,
                                                 name: trackName,
                                                 type: trackType,
                                                 modelIndex: targetModelIndex,
                                                 groupIndex: targetGroupIndex,
                                                 keyframes: trackKeyframes
-                                            });
+                                            };
+                                            
+                                            // Update deltaToNext for this track
+                                            updateKeyframeDeltasForTrack(newTrack);
+                                            
+                                            tracks.push(newTrack);
                                         });
                                     }
                                     
@@ -8164,7 +8204,7 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                                     }
                                 });
                             }
-                            
+                            storePristineModels();
                             // Update animations
                             if (newAnimations.length > 0) {
                                 animations = newAnimations;
@@ -8184,7 +8224,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                             renderModelList();
                             renderAnimationList();
                             renderTimelineForAnimation();
-                            updateCodeDisplay();
                             updateTotalTriangles();
 
                             // Force timeline refresh to fix collapsed tracks
@@ -8224,6 +8263,7 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
             input.click();
         });
 
+
         document.getElementById('addModelBtn').addEventListener('click', function() {
             if (!isAnimationMode) {
                 showNameDialog();
@@ -8259,7 +8299,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                 if (newName !== "") {
                     models[settingsModelIndex].name = newName;
                     renderModelList();
-                    updateCodeDisplay();
                     draw();
                 }
             }
@@ -8475,22 +8514,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
             draw();
         });
 
-        document.getElementById('copyCodeBtn').addEventListener('click', function() {
-            if (isAnimationMode) return;
-            var codeDisplay = document.getElementById('codeDisplay');
-            var codeText = codeDisplay.textContent;
-            navigator.clipboard.writeText(codeText).then(function() {
-                var btn = document.getElementById('copyCodeBtn');
-                var originalText = btn.textContent;
-                btn.textContent = 'done';
-                btn.style.background = '#4CAF50';
-                setTimeout(function() {
-                    btn.textContent = originalText;
-                    btn.style.background = '#ff9900';
-                }, 1500);
-            });
-        });
-
         document.getElementById('confirmYes').addEventListener('click', function() {
             if (pendingGroupDelete && !isAnimationMode) {
                 deletePointGroup(pendingGroupDelete.modelIndex, pendingGroupDelete.groupIndex);
@@ -8587,7 +8610,7 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                 // Check if the click target is the canvas or a canvas-related element
                 const isCanvas = e.target === c || e.target.closest('#meuCanvas');
                 const isPickButton = e.target.closest('#pickTranslateBtn') || e.target.closest('#pickCenterBtn');
-                console.log("oh shish: "+isCanvas+"  "+isPickButton)
+                
                 // Don't cancel if clicking on the pick button or canvas
                 if (!isCanvas && !isPickButton) {
                     // Clicked outside canvas - cancel pick mode
@@ -8786,7 +8809,7 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                 // Copy the currently selected keyframe (if editor is open)
                 if (currentEditingKeyframe) {
                     copiedKeyframe = JSON.parse(JSON.stringify(currentEditingKeyframe.kf));
-                    console.log("Keyframe copied:", copiedKeyframe);
+                
                     // Show temporary feedback
                     const editorEl = document.getElementById('keyframeEditor');
                     const originalBorder = editorEl.style.border;
@@ -8851,7 +8874,7 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                         sel.vx = v.x;
                         sel.vy = v.y;
                     }
-                    updateCodeDisplay();
+         
                     draw();
                 }
             }
@@ -8991,7 +9014,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                 if (isAnimationMode) {
                     highlightModelUnderMouse();
                 }
-                updateCodeDisplay();
                 draw();
             }
             
@@ -9041,8 +9063,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                     v.x = toFloat32(Math.min(63, Math.max(0, newX)));
                     v.y = toFloat32(Math.min(31, Math.max(0, newY)));
                 });
-                
-                updateCodeDisplay();
                 draw();
             }
 
@@ -9108,7 +9128,7 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                     isDragging = false;
                     document.removeEventListener('mousemove', onMouseMove);
                     document.removeEventListener('mouseup', onMouseUp);
-                    console.log("Mouse up, pick mode still active");
+              
                 };
                 
                 document.addEventListener('mousemove', onMouseMove);
@@ -9143,7 +9163,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                             createLine(shapeStartPos.x, shapeStartPos.y, mouseX, mouseY);
                         }
                         shapeStartPos = null;
-                        updateCodeDisplay();
                         renderModelList();
                         draw();
                     }
@@ -9245,7 +9264,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                             selectedVertices = [];
                             selectionFromSelectTool = false;
                             renderModelList();
-                            updateCodeDisplay();
                             draw();
                             return;
                         }
@@ -9400,14 +9418,11 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                 if (draggingVertex) {
                     draggingVertex = null;
                     multiDragStart = null;
-                    updateCodeDisplay();
-
                     draw();
                 }
                 if (multiDragging) {
                     multiDragging = false;
                     multiDragStart = null;
-                    updateCodeDisplay();
                     draw();
                 }
                 overlayControls.dragging = false;
@@ -9457,7 +9472,7 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                     models[selectedModelIndex].triangles.push(tri);
                     points = [];
                     state = 0;
-                    updateCodeDisplay();
+
                     renderModelList();
                     draw();
 
@@ -9468,7 +9483,7 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                     if (models[selectedModelIndex].triangles[hit.triIndex].color.toLowerCase() !== currentColor.toLowerCase()) {
                         saveUndoState();
                         models[selectedModelIndex].triangles[hit.triIndex].color = currentColor;
-                        updateCodeDisplay();
+
                     }
                     hoverTriangleIndex = -1;
                     if (oscillationTimer) {
@@ -9482,7 +9497,7 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
                 if (hit) {
                     saveUndoState();
                     models[selectedModelIndex].triangles.splice(hit.triIndex, 1);
-                    updateCodeDisplay();
+
                     renderModelList();
 
                     hoverTriangleIndex = -1;
@@ -9499,77 +9514,6 @@ function fillTriangleScanline(p1, p2, p3, fillStyle) {
 
 
 
-// ===========================================
-// ANIMATION ACTION TYPES CONFIGURATION
-// ===========================================
-
-const animationActionTypes = {
-    "reset": {
-        name: "Reset",
-        description: "Reset target to original position and orientation",
-        icon: "↺",
-        color: "#9E9E9E",
-        fields: [],
-        useModelCenter: false,
-        isInstant: true
-    },
-    "translate": {
-        name: "Translate",
-        description: "Move target by offset",
-        icon: "✏️",
-        color: "#4CAF50",
-        fields: [
-            { name: "x", label: "X Offset", default: 0, type: "number", min: -100, max: 100, step: 1, unit: "px" },
-            { name: "y", label: "Y Offset", default: 0, type: "number", min: -100, max: 100, step: 1, unit: "px" }
-        ],
-        useModelCenter: false
-    },
-    "rotate": {
-        name: "Rotate",
-        description: "Rotate target around center",
-        icon: "🔄",
-        color: "#2196F3",
-        fields: [
-            { name: "angle", label: "Angle", default: 0, type: "number", min: -360, max: 360, step: 15, unit: "°" },
-            { name: "centerX", label: "Center X", default: 32, type: "number", min: -100, max: 164, step: 1, unit: "px", optional: true },
-            { name: "centerY", label: "Center Y", default: 16, type: "number", min: -100, max: 132, step: 1, unit: "px", optional: true },
-            { name: "useModelCenter", label: "Model center", default: false, type: "checkbox" }
-        ],
-        useModelCenter: true
-    },
-    "scale": {
-        name: "Scale",
-        description: "Scale target relative to center",
-        icon: "🔍",
-        color: "#FF9800",
-        fields: [
-            { name: "scaleX", label: "Scale X", default: 1.0, type: "number", min: 0.01, max: 100, step: 0.1 },
-            { name: "scaleY", label: "Scale Y", default: 1.0, type: "number", min: 0.01, max: 100, step: 0.1 },
-            { name: "centerX", label: "Center X", default: 32, type: "number", min: -100, max: 164, step: 1, unit: "px", optional: true },
-            { name: "centerY", label: "Center Y", default: 16, type: "number", min: -100, max: 132, step: 1, unit: "px", optional: true },
-            { name: "useModelCenter", label: "Model center", default: false, type: "checkbox" }
-        ],
-        useModelCenter: true
-    },
-    "visibility": {
-        name: "Visibility",
-        description: "Show or hide the target",
-        icon: "👁️",
-        color: "#9C27B0",
-        fields: [
-            { name: "visible", label: "Visible", default: true, type: "checkbox" }
-        ],
-        useModelCenter: false,
-        isInstant: findTriangleUnderMouse
-    }
-};
-
-
-const ACTION_TYPES = Object.keys(animationActionTypes);
-
-
-
-   
 
         // ===========================================
         // RENDER ANIMATION LIST - Fix for undefined error
@@ -9785,6 +9729,7 @@ const ACTION_TYPES = Object.keys(animationActionTypes);
             currentEditingKeyframe = { animation, track, keyframeIndex, kf };
             currentEditingTrack = track;
             currentEditingAnimation = animation;
+            updateKeyframeDeltas(track);
             
             let html = `
                 <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
@@ -9881,6 +9826,17 @@ const ACTION_TYPES = Object.keys(animationActionTypes);
                     <div class="instant-checkbox">
                         <input type="checkbox" id="editUseModelCenter" ${kf.params.useModelCenter ? 'checked' : ''}>
                         <label for="editUseModelCenter">Always use model center</label>
+                    </div>
+                `;
+            } else if (kf.action === 'color') {
+                html += `
+                    <div class="param-row">
+                        <div class="param-label">TIME (ms)</div>
+                        <input type="number" id="editKeyframeTime" value="${Math.round(kf.time)}" min="0" max="${animation.duration}" step="${snapInterval}">
+                    </div>
+                    <div class="param-row">
+                        <div class="param-label">COLOR</div>
+                        <input type="color" id="editParamColor" value="${kf.params.color || '#ffffff'}">
                     </div>
                 `;
             } else if (kf.action === 'visibility') {
@@ -9981,6 +9937,9 @@ const ACTION_TYPES = Object.keys(animationActionTypes);
                     if (centerY !== undefined && centerY !== '') newKf.params.centerY = parseFloat(centerY);
                     else delete newKf.params.centerY;
                     newKf.params.useModelCenter = useModelCenter || false;
+                } else if (newKf.action === 'color') {
+                    const color = document.getElementById('editParamColor')?.value;
+                    if (color) newKf.params.color = color;
                 } else if (newKf.action === 'visibility') {
                     const radioSelected = document.querySelector('input[name="visibilityState"]:checked');
                     if (radioSelected) {
@@ -10000,6 +9959,8 @@ const ACTION_TYPES = Object.keys(animationActionTypes);
                 
                 // Re-sort keyframes
                 track.keyframes.sort((a, b) => a.time - b.time);
+
+                updateKeyframeDeltasForTrack(track);
                 
                 // Update UI without closing editor
                 renderTimelineForAnimation();
@@ -10043,6 +10004,26 @@ const ACTION_TYPES = Object.keys(animationActionTypes);
             document.getElementById('editParamCenterX')?.addEventListener('input', autoSave);
             document.getElementById('editParamCenterY')?.addEventListener('input', autoSave);
             document.getElementById('editUseModelCenter')?.addEventListener('change', autoSave);
+            
+            // Add immediate color change listener for color picker
+            const colorInput = document.getElementById('editParamColor');
+            if (colorInput) {
+                colorInput.addEventListener('input', () => {
+                    autoSave();
+                    // Also apply the color immediately to preview on canvas
+                    if (currentEditingKeyframe) {
+                        const { track, keyframeIndex } = currentEditingKeyframe;
+                        const newColor = colorInput.value;
+                        if (track.keyframes[keyframeIndex]) {
+                            track.keyframes[keyframeIndex].params.color = newColor;
+                            renderTimelineForAnimation();
+                            applyAnimationAtTime(currentAnimationTime);
+                            draw();
+                            highlightKeyframe(track.id, keyframeIndex);
+                        }
+                    }
+                });
+            }
             
             const pickTranslateBtn = document.getElementById('pickTranslateBtn');
             if (pickTranslateBtn) {
@@ -10152,11 +10133,13 @@ const ACTION_TYPES = Object.keys(animationActionTypes);
             
             highlightKeyframe(track.id, keyframeIndex);
             
+            // In the delete keyframe button handler in showKeyframeEditor
             document.getElementById('deleteKeyframeBtn').onclick = () => {
                 if (currentEditingKeyframe) {
                     saveUndoState();
                     const { track, keyframeIndex } = currentEditingKeyframe;
                     track.keyframes.splice(keyframeIndex, 1);
+                    updateKeyframeDeltasForTrack(track);  // Add this line
                     renderTimelineForAnimation();
                     applyAnimationAtTime(currentAnimationTime);
                     draw();
@@ -10172,7 +10155,6 @@ const ACTION_TYPES = Object.keys(animationActionTypes);
                 clearKeyframeHighlight();
             };
         }
-
         function updateModelVisibilityForAnimation() {
             if (!isAnimationMode) return;
             
@@ -10256,9 +10238,8 @@ const ACTION_TYPES = Object.keys(animationActionTypes);
             if (!track) return;
 
             saveUndoState();
-    
+
             let time = currentAnimationTime;
-         
             
             // Check if a keyframe with same action already exists at this time
             const existing = track.keyframes.find(kf => 
@@ -10294,6 +10275,9 @@ const ACTION_TYPES = Object.keys(animationActionTypes);
             track.keyframes.push(keyframeData);
             track.keyframes.sort((a, b) => a.time - b.time);
             
+            // Update deltaToNext for this track
+            updateKeyframeDeltasForTrack(track);
+            
             // Store current time before render
             const savedTime = currentAnimationTime;
             
@@ -10315,7 +10299,6 @@ const ACTION_TYPES = Object.keys(animationActionTypes);
                 }
             }, 50);
         }
-
         // ===========================================
         // REPEAT/LOOP FUNCTIONALITY
         // ===========================================
@@ -10441,7 +10424,7 @@ const ACTION_TYPES = Object.keys(animationActionTypes);
         setTimeout(makeCanvasResizable, 100);
 
         renderModelList();
-        updateCodeDisplay();
+
         updateTotalTriangles();
   
         draw();
