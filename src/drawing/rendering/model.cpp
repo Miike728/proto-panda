@@ -250,7 +250,6 @@ void Model::Rotate(Vec2f center, float angle){
     }
 };
 
-
 void Model::Reset() {
     const int vecSize = triangleCount * 3;
     dsps_addc_f32(this->originalPoints.x, this->points.x, vecSize, 0, 1, 1);
@@ -280,11 +279,10 @@ void Model::SetColor(uint16_t col) {
     if (triangleCount == 0) {
         return;
     }
+    //Memset cant be used here. Cuz it fucks up with
     for (int i=0;i<triangleCount;i++){
         color[i] = col;
-    }
-    //memset(this->color, col, sizeof(uint16_t) * triangleCount);
-    
+    }    
 }
 
 void Model::Scale(Vec2f center, Vec2f scaleFactors) {
