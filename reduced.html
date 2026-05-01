@@ -1736,7 +1736,13 @@
             overflow-y: visible;
             background: #2d2d2d;
             position: relative;
+             direction: rtl;
         }
+
+        .ruler-track-container canvas {
+            direction: ltr; 
+        }
+
 
         .timeline-ruler {
             background: #2d2d2d;
@@ -1767,6 +1773,7 @@
             min-height: 32px;
             width: max-content;
             min-width: 100%;
+            direction: ltr;
         }
 
         .timeline-label {
@@ -1899,6 +1906,7 @@
             background: #1a1a1a;
             min-height: 0;
             width: 100%;
+            direction: rtl;
         }
 
         /* Custom scrollbar */
