@@ -258,6 +258,9 @@ void Model::Reset() {
     if (!batchOperations){
         Recalculate();
     }
+    m_shader = SHADER_NONE;
+    shaderStrenght = 1.0f;
+    visible = true;
 }
 
 void Model::Store() {
@@ -483,8 +486,10 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
                 break;
             }
             if (!scene->MarkPixel(a, y0)) {
-                Devices::Display->updateMatrixDMABuffer_2(a, y0, r, g, bl);
-                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - a, y0, r, g, bl);
+                uint8_t rr=r, gg=g, bbl=bl;
+                ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
+                Devices::Display->updateMatrixDMABuffer_2(a, y0, rr, gg, bbl);
+                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - a, y0, rr, gg, bbl);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
                         int byteIdOled = a + y0*PANEL_WIDTH;
@@ -532,16 +537,18 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
         if (y < 0 || y >= PANEL_HEIGHT){
             continue;
         }
-        for (int xx = a; xx <= b; xx++) {
+        for (int16_t xx = a; xx <= b; xx++) {
             if (xx >= PANEL_WIDTH){
                 break;
             }
             if (!scene->MarkPixel(xx, y)) {
-                Devices::Display->updateMatrixDMABuffer_2(xx, y, r, g, bl);
-                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - xx, y, r, g, bl);
+                uint8_t rr=r, gg=g, bbl=bl;
+                ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
+                Devices::Display->updateMatrixDMABuffer_2(xx, y, rr, gg, bbl);
+                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - xx, y, rr, gg, bbl);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
-                        int byteIdOled = xx + y*PANEL_WIDTH;
+                        int16_t byteIdOled = xx + y*PANEL_WIDTH;
                         targetBitmap[byteIdOled] = 1;
                     }
                 }
@@ -570,16 +577,18 @@ void Model::RasterTriangleWithBitmap(ModelHandler *scene, int i, uint8_t *target
         if (y < 0 || y >= PANEL_HEIGHT){
             continue;
         }
-        for (int xx = a; xx <= b; xx++) {
+        for (int16_t xx = a; xx <= b; xx++) {
             if (xx >= PANEL_WIDTH){
                 break;
             }
             if (!scene->MarkPixel(xx, y)) {
-                Devices::Display->updateMatrixDMABuffer_2(xx, y, r, g, bl);
-                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - xx, y, r, g, bl);
+                uint8_t rr=r, gg=g, bbl=bl;
+                ShaderProcessor::UpdateColorByShader(a, y0, rr, gg, bbl, m_shader, shaderStrenght);
+                Devices::Display->updateMatrixDMABuffer_2(xx, y, rr, gg, bbl);
+                Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1) - xx, y, rr, gg, bbl);
                 if (targetBitmap != nullptr){
                     if ((color & 0x8610) != 0) { 
-                        int byteIdOled = xx + y*PANEL_WIDTH;
+                        int16_t byteIdOled = xx + y*PANEL_WIDTH;
                         targetBitmap[byteIdOled] = 1;
                     }
                 }
@@ -610,6 +619,11 @@ Vec2f Model::GetPointGroupCenter(uint32_t pointId){
     return bones.GetCenter(pointId);
 }
 
+void Model::SetShaderWithStrenght(ShaderType t, float strenght){
+    m_shader = t;
+    shaderStrenght = strenght;
+
+}
 
 void Model::TranslatePoint(uint32_t pointid, Vec2f pos){
     points.x[pointid] += pos.x;

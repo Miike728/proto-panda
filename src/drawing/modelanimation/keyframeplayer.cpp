@@ -199,12 +199,11 @@ void KeyframePlayer::runModelAnim(uint32_t dt){
         return;
     }
 
-   
+
     for (auto &mod : obj->m_models){
         mod->Recalculate();
         mod->CopyToRaster();
-    }    
-    
+    }        
     g_modelHandler.RenderScene(obj->m_models);    
 }
 
@@ -237,7 +236,13 @@ void KeyframeTrack::UpdateTrack(uint32_t dt, uint32_t prevDt){
                         remaining = nextKf.deltaToNext;
                         currentStepDt += diff;
                     }
-                    applyTransformations(currentStepDt, sumLocal, nextKf, true);
+                    if (nextKf.ignoreInterpolation){
+                        applyTransformations(currentStepDt + remaining, sumLocal, nextKf, true);
+                        sumLocal += currentStepDt + remaining;
+                    } else {
+                        applyTransformations(currentStepDt, sumLocal, nextKf, true);
+                        sumLocal += currentStepDt;
+                    }
                     //interpolations[operationName](track.r, currentStepDt, nextKf, true)
                     sumLocal += currentStepDt;
                     bool found = false;
@@ -257,7 +262,9 @@ void KeyframeTrack::UpdateTrack(uint32_t dt, uint32_t prevDt){
                 }else{
                     //Logger::Info("[%d / %d] MINI STEP %d with step %d   AT %d  (sum %d)", maxIter, dt, frameId, remaining, nextKf.playAt, sumLocal);
                     uint32_t currentStepDt = nextKf.playAt-sumLocal;
-                    applyTransformations(remaining, sumLocal, nextKf, false);
+                    if (!nextKf.ignoreInterpolation){
+                        applyTransformations(remaining, sumLocal, nextKf, false);
+                    }
                     //interpolations[operationName](track.r, remaining, nextKf, false)
                     sumLocal += remaining;
                     remaining = 0;
@@ -385,6 +392,26 @@ void KeyframeTrack::applyTransformations(uint32_t dt, uint32_t frameSum, Keyfram
             obj->SetColor(interpolatedColor);
 
             break;
+        }
+        case KEYFRAME_VISIBILITY:{
+            if (lastIteration){
+                obj->visible = nextKf.dynamicCenter;
+            }
+            break;
+        }
+        case KEYFRAME_RAINBOW:{
+            if (lastIteration){
+                obj->SetShaderWithStrenght(SHADER_RAINBOW, 1.0f);
+                break;
+            }
+
+            float delta = 0;
+            if (nextKf.deltaToNext != 0){
+                delta = ((float)(frameSum-nextKf.interpolationStartedAt))/(float)nextKf.deltaToNext;
+            }else{
+                delta = 1.0f;
+            }
+            obj->SetShaderWithStrenght(SHADER_RAINBOW, delta);
         }
     
     default:

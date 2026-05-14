@@ -12,7 +12,8 @@ enum KeyframeType{
     KEYFRAME_SCALE,
     KEYFRAME_RESET,
     KEYFRAME_COLOR,
-
+    KEYFRAME_VISIBILITY,
+    KEYFRAME_RAINBOW,
     KEYFRAME_TYPE_LAST,
 };
 
@@ -22,6 +23,8 @@ const std::map<std::string, KeyframeType> KeyframeTypeMap = {
     {"scale", KEYFRAME_SCALE},
     {"reset", KEYFRAME_RESET},
     {"color", KEYFRAME_COLOR},
+    {"visibility", KEYFRAME_VISIBILITY},
+    {"rainbow", KEYFRAME_RAINBOW},
 };
 
 class Keyframe{

@@ -281,6 +281,11 @@
               "y": -3
             },
             {
+              "t": "rainbow",
+              "at": 1000,
+              "enable": true
+            },
+            {
               "t": "translate",
               "at": 1200,
               "x": 0,
@@ -322,11 +327,6 @@
               "y": -3
             },
             {
-              "t": "color",
-              "at": 2900,
-              "color": 0
-            },
-            {
               "t": "translate",
               "at": 3000,
               "x": 0,
@@ -344,6 +344,11 @@
               "cx": 32,
               "cy": 16,
               "umc": true
+            },
+            {
+              "t": "rainbow",
+              "at": 500,
+              "enable": true
             },
             {
               "t": "rotate",
@@ -473,6 +478,12 @@
               "cx": 32,
               "cy": 16,
               "umc": true
+            },
+            {
+              "t": "rainbow",
+              "at": 2000,
+              "i": true,
+              "enable": true
             },
             {
               "t": "scale",

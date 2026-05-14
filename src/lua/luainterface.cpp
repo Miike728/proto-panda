@@ -843,11 +843,13 @@ void LuaInterface::RegisterConstants()
 
 
 
-  m_lua->setConstant("KEYFRAME_TRANSLATE",  (int)KEYFRAME_TRANSLATE);
-  m_lua->setConstant("KEYFRAME_ROTATE",     (int)KEYFRAME_ROTATE);
-  m_lua->setConstant("KEYFRAME_SCALE",      (int)KEYFRAME_SCALE);
-  m_lua->setConstant("KEYFRAME_RESET",      (int)KEYFRAME_RESET);
-  m_lua->setConstant("KEYFRAME_COLOR",      (int)KEYFRAME_COLOR);
+  m_lua->setConstant("KEYFRAME_TRANSLATE",       (int)KEYFRAME_TRANSLATE);
+  m_lua->setConstant("KEYFRAME_ROTATE",          (int)KEYFRAME_ROTATE);
+  m_lua->setConstant("KEYFRAME_SCALE",           (int)KEYFRAME_SCALE);
+  m_lua->setConstant("KEYFRAME_RESET",           (int)KEYFRAME_RESET);
+  m_lua->setConstant("KEYFRAME_COLOR",           (int)KEYFRAME_COLOR);
+  m_lua->setConstant("KEYFRAME_VISIBILITY",      (int)KEYFRAME_VISIBILITY);
+  m_lua->setConstant("KEYFRAME_RAINBOW",         (int)KEYFRAME_RAINBOW);
 
 
   m_lua->setConstant("MODEL_FRAME_ID_OFFSET",      (int)MODEL_FRAME_ID_OFFSET);

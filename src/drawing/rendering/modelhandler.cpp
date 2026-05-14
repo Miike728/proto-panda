@@ -3,8 +3,9 @@
 #include "tools/oledscreen.hpp"
 
 void ModelHandler::RenderModels(std::vector<Model*> mdls, uint8_t *bitmap){
+    ShaderProcessor::IncrFrame();
     for (auto& model : mdls) {
-        if (model->triangleCount == 0) continue;
+        if (model->triangleCount == 0 || model->visible == false) continue;
         
         for (int i = model->triangleCount - 1; i >= 0; i--) {
             model->RasterTriangleWithBitmap(this, i, bitmap);

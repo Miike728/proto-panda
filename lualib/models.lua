@@ -18,7 +18,7 @@ local keyframeTypeMap = {
     	if type(obj.y) ~= 'number' then 
     		return nil, "x is not a number"
     	end
-    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_TRANSLATE, obj.at, {x=obj.x, y=obj.y})) 
+    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_TRANSLATE, obj.at, {x=obj.x, y=obj.y}, {x=obj.cx or 0,y=obj.cy or 0}, 0, obj.i == true)) 
     end,
 
 
@@ -35,7 +35,7 @@ local keyframeTypeMap = {
     	if type(obj.cy) ~= 'number' then 
     		return nil, "cy is not a number"
     	end
-    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_ROTATE, obj.at, {x=obj.a, y=0}, {x=obj.cx,y=obj.cy}, 0, false, obj.umc == true)) 
+    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_ROTATE, obj.at, {x=obj.a, y=0}, {x=obj.cx,y=obj.cy}, 0, obj.i == true, obj.umc == true)) 
     end,
 
     ["scale"] = function(tr, obj) 
@@ -55,7 +55,7 @@ local keyframeTypeMap = {
     	if type(obj.cy) ~= 'number' then 
     		return nil, "cy is not a number"
     	end
-    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_SCALE, obj.at, {x=obj.sx, y=obj.sy}, {x=obj.cx,y=obj.cy}, 0, false, obj.umc == true)) 
+    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_SCALE, obj.at, {x=obj.sx, y=obj.sy}, {x=obj.cx,y=obj.cy}, 0, obj.i == true, obj.umc == true)) 
     end,
     ["reset"] = function(tr, obj) 
     	return tr:AddKeyFrame(KeyFrame(KEYFRAME_RESET, obj.at, {x=0, y=0})) 
@@ -64,7 +64,19 @@ local keyframeTypeMap = {
 		if type(obj.color) ~= 'number' then  
 			return nil, 'color is not a number'
 		end	
-    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_COLOR, obj.at, {x=0, y=0}, {x=0,y=0}, obj.color)) 
+    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_COLOR, obj.at, {x=0, y=0}, {x=0,y=0}, obj.color, obj.i == true, false)) 
+	end,
+	["visibility"] = function(tr, obj) 
+		if type(obj.v) ~= 'boolean' then  
+			return nil, 'v is not a boolean ('..type(obj.v)..')'
+		end	
+    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_VISIBILITY, obj.at, {x=0, y=0}, {x=0,y=0}, 0, true, obj.v)) 
+	end,
+	["rainbow"] = function(tr, obj) 
+		if type(obj.enable) ~= 'boolean' then  
+			return nil, 'enable is not a boolean ('..type(obj.enable)..')'
+		end	
+    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_RAINBOW, obj.at, {x=0, y=0}, {x=0,y=0}, 0, obj.i == true, obj.enable)) 
 	end
 }
 
