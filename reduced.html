@@ -3573,221 +3573,219 @@
             drawRuler(canvas, duration);
         }
 
-// Find the renderTimelineForAnimation function and modify the keyframe marker creation section
-
-function renderTimelineForAnimation() {
-    const container = document.getElementById('timelinesContainer');
-    if (!container) return;
-    
-    const anim = getSelectedAnimation();
-    if (!anim || anim.tracks.length === 0) {
-        container.innerHTML = '<div class="empty-timelines-message">✨ No animation selected or no tracks. Click + to add a track, then drag tools to add keyframes.</div>';
-        updateTimelineStats();
-        if (anim) updateRuler(anim.duration);
-        return;
-    }
-    
-    // Get the current visible width
-    const rulerContainer = document.querySelector('.ruler-track-container');
-    const visibleWidth = rulerContainer ? rulerContainer.clientWidth : 800;
-    const totalWidth = visibleWidth;
-    
-    // Update ruler to match (if width changed)
-    const rulerCanvas = document.getElementById('timelineRulerCanvas');
-    if (rulerCanvas && rulerCanvas.width !== totalWidth) {
-        rulerCanvas.width = totalWidth;
-        rulerCanvas.height = 28;
-        drawRuler(rulerCanvas, anim.duration);
-    }
-    
-    container.innerHTML = '';
-    
-    // Helper function to update hover time display
-    function updateHoverTimeFromMouseEvent(e, canvasElement) {
-        const rect = canvasElement.getBoundingClientRect();
-        const scrollContainer = document.querySelector('.ruler-track-container');
-        const scrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
-        const mouseX = e.clientX - rect.left + scrollLeft;
-        const percent = Math.min(1, Math.max(0, mouseX / totalWidth));
-        const time = percent * anim.duration;
-        
-        const timeDisplaySpan = document.getElementById('timelineHoverTime');
-        if (timeDisplaySpan) {
-            if (time >= 1000) {
-                timeDisplaySpan.textContent = (time / 1000).toFixed(1) + 's';
-            } else {
-                timeDisplaySpan.textContent = Math.round(time) + 'ms';
+        function renderTimelineForAnimation() {
+            const container = document.getElementById('timelinesContainer');
+            if (!container) return;
+            
+            const anim = getSelectedAnimation();
+            if (!anim || anim.tracks.length === 0) {
+                container.innerHTML = '<div class="empty-timelines-message">✨ No animation selected or no tracks. Click + to add a track, then drag tools to add keyframes.</div>';
+                updateTimelineStats();
+                if (anim) updateRuler(anim.duration);
+                return;
             }
-        }
-    }
-    
-    // Define vertical offsets for different action types (in pixels)
-    const actionVerticalOffsets = {
-        'translate': 0,
-        'rotate': -4,
-        'scale': 8,
-        'color': -8,
-        'visibility': -12,
-        'shader': 4,
-        'reset': 12
-    };
-    
-    anim.tracks.forEach((track) => {
-        const row = document.createElement('div');
-        row.className = 'timeline-row';
-        row.style.display = 'flex';
-        row.style.alignItems = 'stretch';
-        row.style.borderBottom = '1px solid #2a2a2a';
-        row.style.minHeight = '32px';
-        row.style.width = '100%';
-        row.style.minWidth = '100%';
-        row.setAttribute('data-track-id', track.id);
-        
-        if (selectedTimelineId === track.id) {
-            row.style.background = '#2a5a5a';
-        }
-        
-        const label = document.createElement('div');
-        label.className = 'timeline-label';
-        label.style.width = '160px';
-        label.style.flexShrink = '0';
-        label.style.padding = '4px 8px';
-        label.style.fontSize = '10px';
-        label.style.fontWeight = 'bold';
-        label.style.color = '#ffaa66';
-        label.style.background = selectedTimelineId === track.id ? '#3a6a6a' : '#1e1e1e';
-        label.style.borderRight = '1px solid #2a2a2a';
-        label.style.display = 'flex';
-        label.style.alignItems = 'center';
-        label.style.gap = '4px';
-        label.style.whiteSpace = 'nowrap';
-        label.style.overflow = 'hidden';
-        
-        const icon = track.type === 'model' ? '📁' : '👥';
-        label.innerHTML = `
-            <span style="flex-shrink: 0;">${icon}</span>
-            <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(track.name)}</span>
-            <button class="timeline-delete-btn" data-track-id="${track.id}" style="background:none; border:none; color:#666; cursor:pointer; font-size:10px; opacity:0.7; flex-shrink:0;">✕</button>
-        `;
-        
-        const canvas = document.createElement('div');
-        canvas.className = 'timeline-canvas';
-        canvas.style.flex = '1';
-        canvas.style.position = 'relative';
-        canvas.style.height = '32px';
-        canvas.style.background = selectedTimelineId === track.id ? '#2a4a4a' : '#1a1a1a';
-        canvas.style.cursor = 'crosshair';
-        canvas.style.width = '100%';
-        canvas.setAttribute('data-track-id', track.id);
-        
-        // Add mouse move handler for this track canvas
-        canvas.onmousemove = function(e) {
-            updateHoverTimeFromMouseEvent(e, canvas);
-        };
-        
-        canvas.onmouseleave = function() {
-            const timeDisplaySpan = document.getElementById('timelineHoverTime');
-            if (timeDisplaySpan) {
-                timeDisplaySpan.textContent = '--';
+            
+            // Get the current visible width
+            const rulerContainer = document.querySelector('.ruler-track-container');
+            const visibleWidth = rulerContainer ? rulerContainer.clientWidth : 800;
+            const totalWidth = visibleWidth;
+            
+            // Update ruler to match (if width changed)
+            const rulerCanvas = document.getElementById('timelineRulerCanvas');
+            if (rulerCanvas && rulerCanvas.width !== totalWidth) {
+                rulerCanvas.width = totalWidth;
+                rulerCanvas.height = 28;
+                drawRuler(rulerCanvas, anim.duration);
             }
-        };
-        
-        // Add keyframe markers - position using percentage with vertical offset by type
-        (track.keyframes || []).forEach((kf, kfIdx) => {
-            const percent = kf.time / anim.duration;
-            const pixelX = percent * totalWidth;
-            const config = animationActionTypes[kf.action];
-            const markerColor = config ? config.color : '#ff9900';
             
-            // Get vertical offset for this action type (default 0)
-            const yOffset = actionVerticalOffsets[kf.action] || 0;
+            container.innerHTML = '';
             
-            const marker = document.createElement('div');
-            marker.className = 'keyframe-marker';
-            marker.setAttribute('data-action', kf.action);
-            marker.setAttribute('data-track-id', track.id);
-            marker.setAttribute('data-kf-idx', kfIdx);
-            marker.style.position = 'absolute';
-            marker.style.width = '10px';
-            marker.style.height = '10px';
-            marker.style.background = markerColor;
-            marker.style.border = `1px solid ${markerColor}80`;
-            marker.style.boxShadow = `0 0 4px ${markerColor}`;
-            marker.style.borderRadius = '50%';
-            marker.style.transform = 'translate(-50%, -50%)';
-            marker.style.top = `calc(50% + ${yOffset}px)`;
-            marker.style.left = `${pixelX}px`;
-            marker.style.cursor = 'grab';
-            marker.style.zIndex = '10';
-            
-            let info = `${kf.action.toUpperCase()} @ ${Math.round(kf.time)}ms`;
-            if (kf.action === 'translate') info += ` (${kf.params.x},${kf.params.y})`;
-            if (kf.action === 'rotate') info += ` (${kf.params.angle}°)`;
-            if (kf.action === 'scale') info += ` (${kf.params.scaleX},${kf.params.scaleY})`;
-            if (kf.action === 'visibility') info += kf.params.visible ? ' (SHOW)' : ' (HIDE)';
-            if (kf.instant) info += ` ⚡ INSTANT`;
-            marker.title = info;
-            
-            canvas.appendChild(marker);
-        });
-        
-        const playhead = document.createElement('div');
-        playhead.className = 'playhead';
-        playhead.style.position = 'absolute';
-        playhead.style.top = '0';
-        playhead.style.width = '2px';
-        playhead.style.height = '100%';
-        playhead.style.background = '#ff9900';
-        playhead.style.pointerEvents = 'none';
-        playhead.style.zIndex = '20';
-        playhead.style.boxShadow = '0 0 3px #ff9900';
-        const percent = currentAnimationTime / anim.duration;
-        const pixelX = percent * totalWidth;
-        playhead.style.left = `${pixelX}px`;
-        canvas.appendChild(playhead);
-        
-        row.appendChild(label);
-        row.appendChild(canvas);
-        container.appendChild(row);
-    });
-    
-    // Add mouse move handler for the ruler as well
-    const timelineRulerCanvas = document.getElementById('timelineRulerCanvas');
-    if (timelineRulerCanvas) {
-        // Store the totalWidth in a closure for the ruler handler
-        const rulerTotalWidth = totalWidth;
-        
-        timelineRulerCanvas.onmousemove = function(e) {
-            const rect = timelineRulerCanvas.getBoundingClientRect();
-            const scrollContainer = document.querySelector('.ruler-track-container');
-            const scrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
-            const mouseX = e.clientX - rect.left + scrollLeft;
-            const percent = Math.min(1, Math.max(0, mouseX / rulerTotalWidth));
-            const time = percent * anim.duration;
-            
-            const timeDisplaySpan = document.getElementById('timelineHoverTime');
-            if (timeDisplaySpan) {
-                if (time >= 1000) {
-                    timeDisplaySpan.textContent = (time / 1000).toFixed(1) + 's';
-                } else {
-                    timeDisplaySpan.textContent = Math.round(time) + 'ms';
+            // Helper function to update hover time display
+            function updateHoverTimeFromMouseEvent(e, canvasElement) {
+                const rect = canvasElement.getBoundingClientRect();
+                const scrollContainer = document.querySelector('.ruler-track-container');
+                const scrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
+                const mouseX = e.clientX - rect.left + scrollLeft;
+                const percent = Math.min(1, Math.max(0, mouseX / totalWidth));
+                const time = percent * anim.duration;
+                
+                const timeDisplaySpan = document.getElementById('timelineHoverTime');
+                if (timeDisplaySpan) {
+                    if (time >= 1000) {
+                        timeDisplaySpan.textContent = (time / 1000).toFixed(1) + 's';
+                    } else {
+                        timeDisplaySpan.textContent = Math.round(time) + 'ms';
+                    }
                 }
             }
-        };
-        
-        timelineRulerCanvas.onmouseleave = function() {
-            const timeDisplaySpan = document.getElementById('timelineHoverTime');
-            if (timeDisplaySpan) {
-                timeDisplaySpan.textContent = '--';
+            
+            // Define vertical offsets for different action types (in pixels)
+            const actionVerticalOffsets = {
+                'translate': 0,
+                'rotate': -4,
+                'scale': 8,
+                'color': -8,
+                'visibility': -12,
+                'shader': 4,
+                'reset': 12
+            };
+            
+            anim.tracks.forEach((track) => {
+                const row = document.createElement('div');
+                row.className = 'timeline-row';
+                row.style.display = 'flex';
+                row.style.alignItems = 'stretch';
+                row.style.borderBottom = '1px solid #2a2a2a';
+                row.style.minHeight = '32px';
+                row.style.width = '100%';
+                row.style.minWidth = '100%';
+                row.setAttribute('data-track-id', track.id);
+                
+                if (selectedTimelineId === track.id) {
+                    row.style.background = '#2a5a5a';
+                }
+                
+                const label = document.createElement('div');
+                label.className = 'timeline-label';
+                label.style.width = '160px';
+                label.style.flexShrink = '0';
+                label.style.padding = '4px 8px';
+                label.style.fontSize = '10px';
+                label.style.fontWeight = 'bold';
+                label.style.color = '#ffaa66';
+                label.style.background = selectedTimelineId === track.id ? '#3a6a6a' : '#1e1e1e';
+                label.style.borderRight = '1px solid #2a2a2a';
+                label.style.display = 'flex';
+                label.style.alignItems = 'center';
+                label.style.gap = '4px';
+                label.style.whiteSpace = 'nowrap';
+                label.style.overflow = 'hidden';
+                
+                const icon = track.type === 'model' ? '📁' : '👥';
+                label.innerHTML = `
+                    <span style="flex-shrink: 0;">${icon}</span>
+                    <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(track.name)}</span>
+                    <button class="timeline-delete-btn" data-track-id="${track.id}" style="background:none; border:none; color:#666; cursor:pointer; font-size:10px; opacity:0.7; flex-shrink:0;">✕</button>
+                `;
+                
+                const canvas = document.createElement('div');
+                canvas.className = 'timeline-canvas';
+                canvas.style.flex = '1';
+                canvas.style.position = 'relative';
+                canvas.style.height = '32px';
+                canvas.style.background = selectedTimelineId === track.id ? '#2a4a4a' : '#1a1a1a';
+                canvas.style.cursor = 'crosshair';
+                canvas.style.width = '100%';
+                canvas.setAttribute('data-track-id', track.id);
+                
+                // Add mouse move handler for this track canvas
+                canvas.onmousemove = function(e) {
+                    updateHoverTimeFromMouseEvent(e, canvas);
+                };
+                
+                canvas.onmouseleave = function() {
+                    const timeDisplaySpan = document.getElementById('timelineHoverTime');
+                    if (timeDisplaySpan) {
+                        timeDisplaySpan.textContent = '--';
+                    }
+                };
+                
+                // Add keyframe markers - position using percentage with vertical offset by type
+                (track.keyframes || []).forEach((kf, kfIdx) => {
+                    const percent = kf.time / anim.duration;
+                    const pixelX = percent * totalWidth;
+                    const config = animationActionTypes[kf.action];
+                    const markerColor = config ? config.color : '#ff9900';
+                    
+                    // Get vertical offset for this action type (default 0)
+                    const yOffset = actionVerticalOffsets[kf.action] || 0;
+                    
+                    const marker = document.createElement('div');
+                    marker.className = 'keyframe-marker';
+                    marker.setAttribute('data-action', kf.action);
+                    marker.setAttribute('data-track-id', track.id);
+                    marker.setAttribute('data-kf-idx', kfIdx);
+                    marker.style.position = 'absolute';
+                    marker.style.width = '10px';
+                    marker.style.height = '10px';
+                    marker.style.background = markerColor;
+                    marker.style.border = `1px solid ${markerColor}80`;
+                    marker.style.boxShadow = `0 0 4px ${markerColor}`;
+                    marker.style.borderRadius = '50%';
+                    marker.style.transform = 'translate(-50%, -50%)';
+                    marker.style.top = `calc(50% + ${yOffset}px)`;
+                    marker.style.left = `${pixelX}px`;
+                    marker.style.cursor = 'grab';
+                    marker.style.zIndex = '10';
+                    
+                    let info = `${kf.action.toUpperCase()} @ ${Math.round(kf.time)}ms`;
+                    if (kf.action === 'translate') info += ` (${kf.params.x},${kf.params.y})`;
+                    if (kf.action === 'rotate') info += ` (${kf.params.angle}°)`;
+                    if (kf.action === 'scale') info += ` (${kf.params.scaleX},${kf.params.scaleY})`;
+                    if (kf.action === 'visibility') info += kf.params.visible ? ' (SHOW)' : ' (HIDE)';
+                    if (kf.instant) info += ` ⚡ INSTANT`;
+                    marker.title = info;
+                    
+                    canvas.appendChild(marker);
+                });
+                
+                const playhead = document.createElement('div');
+                playhead.className = 'playhead';
+                playhead.style.position = 'absolute';
+                playhead.style.top = '0';
+                playhead.style.width = '2px';
+                playhead.style.height = '100%';
+                playhead.style.background = '#ff9900';
+                playhead.style.pointerEvents = 'none';
+                playhead.style.zIndex = '20';
+                playhead.style.boxShadow = '0 0 3px #ff9900';
+                const percent = currentAnimationTime / anim.duration;
+                const pixelX = percent * totalWidth;
+                playhead.style.left = `${pixelX}px`;
+                canvas.appendChild(playhead);
+                
+                row.appendChild(label);
+                row.appendChild(canvas);
+                container.appendChild(row);
+            });
+            
+            // Add mouse move handler for the ruler as well
+            const timelineRulerCanvas = document.getElementById('timelineRulerCanvas');
+            if (timelineRulerCanvas) {
+                // Store the totalWidth in a closure for the ruler handler
+                const rulerTotalWidth = totalWidth;
+                
+                timelineRulerCanvas.onmousemove = function(e) {
+                    const rect = timelineRulerCanvas.getBoundingClientRect();
+                    const scrollContainer = document.querySelector('.ruler-track-container');
+                    const scrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
+                    const mouseX = e.clientX - rect.left + scrollLeft;
+                    const percent = Math.min(1, Math.max(0, mouseX / rulerTotalWidth));
+                    const time = percent * anim.duration;
+                    
+                    const timeDisplaySpan = document.getElementById('timelineHoverTime');
+                    if (timeDisplaySpan) {
+                        if (time >= 1000) {
+                            timeDisplaySpan.textContent = (time / 1000).toFixed(1) + 's';
+                        } else {
+                            timeDisplaySpan.textContent = Math.round(time) + 'ms';
+                        }
+                    }
+                };
+                
+                timelineRulerCanvas.onmouseleave = function() {
+                    const timeDisplaySpan = document.getElementById('timelineHoverTime');
+                    if (timeDisplaySpan) {
+                        timeDisplaySpan.textContent = '--';
+                    }
+                };
             }
-        };
-    }
-    
-    syncRulerScroll();
-    attachTimelineEventsForAnimation();
-    updateTimelineStats();
-    updateModelVisibilityForAnimation();
-}
+            
+            syncRulerScroll();
+            attachTimelineEventsForAnimation();
+            updateTimelineStats();
+            updateModelVisibilityForAnimation();
+        }
 
         function setupDragAndDrop() {
             document.querySelectorAll('.compact-tool').forEach(tool => {
@@ -3869,6 +3867,7 @@ function renderTimelineForAnimation() {
                 
                 tool.onmouseup = (e) => {
                     // Only add keyframe if we're NOT dragging and mouse didn't move
+                    console.log("aaa: "+selectedTimelineId)
                     if (!isDragging && !hasMoved && selectedTimelineId && isAnimationMode) {
                         const action = tool.getAttribute('data-action');
                         const config = animationActionTypes[action];
@@ -4586,8 +4585,7 @@ function renderTimelineForAnimation() {
                 trackType = 'group';
             }
             
-            // NO LONGER prevent duplicate tracks - allow multiple per target
-            // Remove the duplicate check
+            
             
             const track = {
                 id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
@@ -4597,6 +4595,9 @@ function renderTimelineForAnimation() {
                 groupIndex: groupIndex,
                 keyframes: []
             };
+
+            selectedTimelineId = track.id;
+
             anim.tracks.push(track);
             renderTimelineForAnimation();
             updateModelVisibilityForAnimation();
@@ -5919,7 +5920,10 @@ function renderTimelineForAnimation() {
             const type = parts[0];
             const modelIdx = parseInt(parts[1]);
             const groupIdx = parts[2] ? parseInt(parts[2]) : -1;
-            createTrackFromTarget(type, modelIdx, groupIdx);
+            const newTrack = createTrackFromTarget(type, modelIdx, groupIdx);
+            if (newTrack) {
+                selectedTimelineId = newTrack.id;
+            }
             closeTrackModal();
             renderTimelineForAnimation();
         }
@@ -8994,15 +8998,71 @@ function renderTimelineForAnimation() {
         });
 
         document.addEventListener('keydown', function(e) {
-            
+            // Special handling for Escape - always process it even when input is focused
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                
+                const editor = document.getElementById('keyframeEditor');
+                const isEditorOpen = editor && editor.style.display === 'block';
+                
+                // Handle keyframe editor
+                if (isEditorOpen) {
+                    editor.style.display = 'none';
+                    currentEditingKeyframe = null;
+                    clearKeyframeHighlight();
+                    return;
+                }
+                
+                // Handle other UI elements
+                if (document.getElementById('overlayPanel').classList.contains('active')) {
+                    document.getElementById('overlayPanel').classList.remove('active');
+                    if (overlayActive) overlayActive = false;
+                    if (!isAnimationMode) setTool('toolMovePoints');
+                } else if (overlayActive) {
+                    overlayActive = false;
+                    draw();
+                } else if (shapesWindowActive) {
+                    document.getElementById('shapesWindow').classList.remove('active');
+                    shapesWindowActive = false;
+                    if (!isAnimationMode) setTool('toolMovePoints');
+                } else if (!isAnimationMode && shapePlacementMode) {
+                    shapePlacementMode = false;
+                    currentShape = null;
+                    shapeStartPos = null;
+                    draw();
+                } else if (!isAnimationMode && currentTool === 'add' && (state === 1 || state === 2)) {
+                    points = [];
+                    state = 0;
+                    draw();
+                } else {
+                    selectedGroupIndex = -1;
+                    selectedVertices = [];
+                    selectionFromSelectTool = false;
+                    renderModelList();
+                    draw();
+                }
 
+                if (copyModeActive) {
+                    copyModeActive = false;
+                    document.body.style.cursor = '';
+                    const instruction = document.getElementById('pasteInstruction');
+                    if (instruction) instruction.remove();
+                }
+                
+                document.getElementById('nameDialog').classList.remove('active');
+                document.getElementById('modelSettingsDialog').classList.remove('active');
+                document.getElementById('logoModal').classList.remove('active');
+                document.getElementById('keyframeDialog').classList.remove('active');
+                return;
+            }
+            
+            // For all other keys, return early if input is focused
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
                 if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
                     return;
                 }
                 return;
             }
-
 
             // Check if keyframe editor is open
             const editor = document.getElementById('keyframeEditor');
@@ -9030,15 +9090,6 @@ function renderTimelineForAnimation() {
                     currentEditingKeyframe = null;
                     clearKeyframeHighlight();
                 }
-                return;
-            }
-
-            // Handle Escape for keyframe editor
-            if ((e.key === 'Escape' || e.key === 'Enter' || e.key === 'Escape') && isEditorOpen) {
-                e.preventDefault();
-                editor.style.display = 'none';
-                currentEditingKeyframe = null;
-                clearKeyframeHighlight();
                 return;
             }
 
@@ -9090,7 +9141,7 @@ function renderTimelineForAnimation() {
                                 applyAnimationAtTime(0);
                                 draw();
                             }
-                            playAnimationPlayback()
+                            playAnimationPlayback();
                         }
                     } else {
                         alert('Create an animation and add tracks first!');
@@ -9098,7 +9149,6 @@ function renderTimelineForAnimation() {
                 } else {
                     setTool('toolPaintPoints');
                 }
-
             } else if (e.key === 'd' || e.key === 'D') {
                 e.preventDefault();
                 if (!isAnimationMode) setTool('toolDeleteTriangle');
@@ -9108,48 +9158,6 @@ function renderTimelineForAnimation() {
             } else if (e.key === 'o' || e.key === 'O') {
                 e.preventDefault();
                 if (!isAnimationMode) setTool('toolOverlay');
-            } else if (e.key === 'Escape') {
-                e.preventDefault();
-                if (document.getElementById('overlayPanel').classList.contains('active')) {
-                    document.getElementById('overlayPanel').classList.remove('active');
-                    if (overlayActive) overlayActive = false;
-                    if (!isAnimationMode) setTool('toolMovePoints');
-                } else if (overlayActive) {
-                    overlayActive = false;
-                    draw();
-                } else if (shapesWindowActive) {
-                    document.getElementById('shapesWindow').classList.remove('active');
-                    shapesWindowActive = false;
-                    if (!isAnimationMode) setTool('toolMovePoints');
-                } else if (!isAnimationMode && shapePlacementMode) {
-                    shapePlacementMode = false;
-                    currentShape = null;
-                    shapeStartPos = null;
-                    draw();
-                } else if (!isAnimationMode && currentTool === 'add' && (state === 1 || state === 2)) {
-                    points = [];
-                    state = 0;
-                    draw();
-                } else {
-                    selectedGroupIndex = -1;
-                    selectedVertices = [];
-                    selectionFromSelectTool = false;
-                    renderModelList();
-                    draw();
-                }
-
-                if (copyModeActive) {
-                    copyModeActive = false;
-                    document.body.style.cursor = '';
-                    const instruction = document.getElementById('pasteInstruction');
-                    if (instruction) instruction.remove();
-                    return;
-                }
-                
-                document.getElementById('nameDialog').classList.remove('active');
-                document.getElementById('modelSettingsDialog').classList.remove('active');
-                document.getElementById('logoModal').classList.remove('active');
-                document.getElementById('keyframeDialog').classList.remove('active');
             } else if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
                 undo();
@@ -9233,11 +9241,12 @@ function renderTimelineForAnimation() {
                         sel.vx = v.x;
                         sel.vy = v.y;
                     }
-         
+            
                     draw();
                 }
             }
         });
+
         c.addEventListener('mousemove', function(e) {
             var rect = c.getBoundingClientRect();
             var scaleX = c.width / rect.width;
