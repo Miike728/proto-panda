@@ -399,9 +399,10 @@ void KeyframeTrack::applyTransformations(uint32_t dt, uint32_t frameSum, Keyfram
             }
             break;
         }
-        case KEYFRAME_RAINBOW:{
+        case KEYFRAME_SHADER:{
+            ShaderType shdr = (ShaderType)nextKf.color;
             if (lastIteration){
-                obj->SetShaderWithStrenght(SHADER_RAINBOW, 1.0f);
+                obj->SetShaderWithStrenght(shdr, 1.0f);
                 break;
             }
 
@@ -411,7 +412,11 @@ void KeyframeTrack::applyTransformations(uint32_t dt, uint32_t frameSum, Keyfram
             }else{
                 delta = 1.0f;
             }
-            obj->SetShaderWithStrenght(SHADER_RAINBOW, delta);
+            if (shdr == SHADER_NONE){
+                shdr = obj->GetShader();
+                delta = 1.0f - delta;
+            }
+            obj->SetShaderWithStrenght(shdr, delta);
         }
     
     default:

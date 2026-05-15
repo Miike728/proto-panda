@@ -1,10 +1,12 @@
 #include "drawing/rendering/shader.hpp"
+#include "tools/devices.hpp"
 #include <math.h>
 #include <algorithm>
 #include <Arduino.h>
 
 uint32_t ShaderProcessor::FrameId = 0;
 uint32_t ShaderProcessor::Time = 0;
+uint16_t* ShaderProcessor::Texture = nullptr;
 
 void ShaderProcessor::Hsv2Rgb(uint8_t h, uint8_t s, uint8_t v, uint8_t& r, uint8_t& g, uint8_t& b) {
   // Convert hue to degrees
@@ -155,11 +157,26 @@ void ShaderProcessor::ShaderFire(int16_t &x, int16_t &y, uint8_t &r, uint8_t &g,
     b = (uint8_t)(b * (1.0f - strength) + fireB * strength);
 }
 
+void ShaderProcessor::ShaderTexture(int16_t &x, int16_t &y, uint8_t &r, uint8_t &g, uint8_t &b, ShaderType &shdr, float &shaderStrength){
+    
+    // Simple UV mapping - map screen coordinates directly to texture
+    if (ShaderProcessor::Texture != nullptr) {
+        uint16_t textureColor = ShaderProcessor::Texture[y * PANEL_WIDTH + x];
+        uint8_t textureR, textureG, textureB;
+        Devices::Display->color565to888(textureColor, textureR, textureG, textureB);
+        
+        // Blend with original color based on shaderStrength
+        float strength = std::clamp(shaderStrength, 0.0f, 1.0f);
+        r = (uint8_t)(r * (1.0f - strength) + textureR * strength);
+        g = (uint8_t)(g * (1.0f - strength) + textureG * strength);
+        b = (uint8_t)(b * (1.0f - strength) + textureB * strength);
+    }
+}
+
 void ShaderProcessor::UpdateColorByShader(int16_t &x, int16_t &y, uint8_t &r, uint8_t &g, uint8_t &b, ShaderType &shdr, float &shaderStrength){
     switch (shdr)
     {
     case SHADER_NONE:
-        //  
         ShaderNone(x, y, r, g, b, shdr, shaderStrength);
         break;
     
@@ -169,6 +186,10 @@ void ShaderProcessor::UpdateColorByShader(int16_t &x, int16_t &y, uint8_t &r, ui
 
     case SHADER_FIRE:
         ShaderFire(x, y, r, g, b, shdr, shaderStrength);  
+        break;
+    
+    case SHADER_TEXTURE:
+        ShaderTexture(x, y, r, g, b, shdr, shaderStrength);  
         break;
     
     default:

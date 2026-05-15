@@ -591,7 +591,9 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("getInternalButtonStatus", getInternalButtonStatus); 
   //Panels
   #ifdef ENABLE_HUB75_PANEL
+  //LoadFrameAsTexture(int i)
   m_lua->FuncRegisterFromObjectOpt("flipPanelBuffer", &g_animation, &Animation::MakeFlip);
+  m_lua->FuncRegisterFromObjectOpt("loadFrameAsTexture", &g_animation, &Animation::LoadFrameAsTexture);
   m_lua->FuncRegister("drawPanelRect", DrawRect);
   m_lua->FuncRegister("drawPanelFillRect", DrawFillRect);
   m_lua->FuncRegister("drawPanelPixel", DrawPixel);
@@ -849,7 +851,15 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("KEYFRAME_RESET",           (int)KEYFRAME_RESET);
   m_lua->setConstant("KEYFRAME_COLOR",           (int)KEYFRAME_COLOR);
   m_lua->setConstant("KEYFRAME_VISIBILITY",      (int)KEYFRAME_VISIBILITY);
-  m_lua->setConstant("KEYFRAME_RAINBOW",         (int)KEYFRAME_RAINBOW);
+  m_lua->setConstant("KEYFRAME_SHADER",          (int)KEYFRAME_SHADER);
+
+
+
+
+  m_lua->setConstant("SHADER_NONE",         (int)SHADER_NONE);
+  m_lua->setConstant("SHADER_RAINBOW",      (int)SHADER_RAINBOW);
+  m_lua->setConstant("SHADER_FIRE",         (int)SHADER_FIRE);
+  m_lua->setConstant("SHADER_TEXTURE",      (int)SHADER_TEXTURE);
 
 
   m_lua->setConstant("MODEL_FRAME_ID_OFFSET",      (int)MODEL_FRAME_ID_OFFSET);

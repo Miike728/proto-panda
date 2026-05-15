@@ -234,6 +234,125 @@ void Animation::adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r,
     reorder_rgb(currentMode, &r, &g, &b);
 }
 
+void Animation::LoadFrameAsTexture(int i){
+    if (i == 0){
+        return;
+    }
+
+    uint32_t startPosition;
+    uint32_t flashFileLenght;
+    
+    g_frameRepo.getBulkOffsetByFrameId(i, startPosition, flashFileLenght);
+    if (startPosition < 0){
+        Serial.printf("Failed to find frame id %d, returned position %ld\n", i, startPosition);
+        return;
+    }
+
+    File *file = g_frameRepo.takeFile();
+    if (file == nullptr){
+        return;
+    }
+
+    file->seek(startPosition);
+    size_t rd = file->readBytes((char*)buffer, flashFileLenght);
+    g_frameRepo.freeFile();
+
+    if (rd != flashFileLenght){
+        Serial.printf("Failed to read %d at pos %ld on file with size %ld. Read just %d bytes\n", i , startPosition, flashFileLenght, rd);
+        g_frameRepo.freeFile();
+        return;
+    }
+
+    uint8_t r, g, b;
+    uint8_t version = buffer[0];
+    if (version != PANDA_CACHE_VERSION){
+        Serial.printf("Mismatched cached frame version. Current version is %d but in cache got %d. Clear the cache or rebuild bulk: %d", PANDA_CACHE_VERSION, version, buffer[1]);
+        g_frameRepo.freeFile();
+        return;
+    }
+
+    uint8_t flip_left = buffer[1];
+    uint8_t flip_right = buffer[2];
+    if (m_colorMode == 0){
+        m_colorMode = (ColorMode)buffer[3];
+    }
+
+    if (m_texture == nullptr){
+        m_texture = (uint16_t*)ps_malloc(sizeof(uint16_t) * PANEL_WIDTH * PANEL_HEIGHT);
+        ShaderProcessor::SetTextureAddr(m_texture);
+    }
+
+
+    int byteIdOled = 0;
+    int compressionMode = buffer[5];
+    uint16_t fileLenght = *((uint16_t*)(&buffer[6])); 
+    int16_t x=0;
+    int16_t y=0;
+
+    if (compressionMode == 1){
+        int compressionReadPos = 0;
+        uint8_t *readBuffer = (buffer+FILE_HEADER_BYTES);
+
+        do{
+            int lenght = readBuffer[compressionReadPos++];
+            int iter = 1;
+            
+            if (lenght == 253){
+                iter = readBuffer[compressionReadPos++];
+                lenght = 1;
+            }
+
+            while(iter > 0){
+                uint16_t color = readBuffer[compressionReadPos++]; 
+                iter--;
+                color |= (readBuffer[compressionReadPos++] << 8); 
+
+                
+                
+                for (int iddx=0;iddx<lenght;iddx++){
+                    //drawPixelAt(x, y, color, r, g, b, flip_left, flip_right, byteIdOled);
+                    m_texture[y * PANEL_WIDTH + x] = color;
+                    x++;
+                    if (x >= PANEL_WIDTH){
+                        x = 0;
+                        y++;
+                        
+                        if (y >= PANEL_HEIGHT){
+                            g_frameRepo.freeFile();
+                            return;
+                        }
+                    }
+                }
+                if (compressionReadPos >= fileLenght){
+                    g_frameRepo.freeFile();
+                    return;
+                }
+                
+            }
+        } while(compressionReadPos <= fileLenght);
+       
+    }else{
+        //Need to divide by 2 (size of uint16_t) because the buffer is converted to a uin16_t pixels.
+        //And the header must be a multiple of 2 to avoid byte skipping
+        uint16_t *readBuffer = (uint16_t *)(buffer);
+        const int begin = FILE_HEADER_BYTES / sizeof(uint16_t);
+        const int finish = begin+FILE_PIXEL_COUNT;
+
+        for (int16_t idx=begin;idx<finish;idx++){
+            uint16_t color = readBuffer[idx];
+            
+            m_texture[y * PANEL_WIDTH + x] = color;
+            x++;
+            if (x >= PANEL_WIDTH){
+                x = 0;
+                y++;
+            }
+        }
+    }
+    g_frameRepo.freeFile();
+    return;
+}
+
 void Animation::DrawFrame(int i){
     if (i == 0){
         return;

@@ -57,7 +57,7 @@ class AnimationSequence{
 
 class Animation{
     public:
-        Animation():m_animations(),m_shader(0),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_onBlankScreen(false),m_frameDrawDuration(0),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
+        Animation():m_animations(),m_shader(0),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_onBlankScreen(false),m_frameDrawDuration(0),m_texture(nullptr),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
 
         void Update(uint32_t dt);
 
@@ -73,6 +73,7 @@ class Animation{
         }
 
         void DrawFrame(int i);
+        void LoadFrameAsTexture(int i);
         void DrawCurrentFrame(){
             DrawFrame(m_lastFace);
         }
@@ -82,6 +83,10 @@ class Animation{
         void MakeFlip();
         void SetShader(int id);
 
+        uint16_t* GetTexture(){
+            return m_texture;
+        }
+        
         void setColorMode(ColorMode mode){
             m_colorMode = mode;
             m_needRedraw = true;
@@ -133,6 +138,8 @@ class Animation{
         bool m_isManaged;
         bool m_needRedraw;
         bool m_onBlankScreen;
+
+        uint16_t *m_texture;
         
         uint64_t m_frameDrawDuration;
         uint64_t m_frameLoadDuration;

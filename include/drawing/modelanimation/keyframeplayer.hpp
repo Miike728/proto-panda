@@ -7,13 +7,13 @@
 
 enum KeyframeType{
     KEYFRAME_NONE=0,
+    KEYFRAME_RESET,
     KEYFRAME_TRANSLATE,
     KEYFRAME_ROTATE,
     KEYFRAME_SCALE,
-    KEYFRAME_RESET,
     KEYFRAME_COLOR,
     KEYFRAME_VISIBILITY,
-    KEYFRAME_RAINBOW,
+    KEYFRAME_SHADER,
     KEYFRAME_TYPE_LAST,
 };
 
@@ -24,7 +24,7 @@ const std::map<std::string, KeyframeType> KeyframeTypeMap = {
     {"reset", KEYFRAME_RESET},
     {"color", KEYFRAME_COLOR},
     {"visibility", KEYFRAME_VISIBILITY},
-    {"rainbow", KEYFRAME_RAINBOW},
+    {"shader", KEYFRAME_SHADER},
 };
 
 class Keyframe{

@@ -72,11 +72,20 @@ local keyframeTypeMap = {
 		end	
     	return tr:AddKeyFrame(KeyFrame(KEYFRAME_VISIBILITY, obj.at, {x=0, y=0}, {x=0,y=0}, 0, true, obj.v)) 
 	end,
-	["rainbow"] = function(tr, obj) 
-		if type(obj.enable) ~= 'boolean' then  
-			return nil, 'enable is not a boolean ('..type(obj.enable)..')'
+	["shader"] = function(tr, obj) 
+		if type(obj.shader) ~= 'string' then  
+			return nil, 'shader is not a string ('..type(obj.string)..')'
 		end	
-    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_RAINBOW, obj.at, {x=0, y=0}, {x=0,y=0}, 0, obj.i == true, obj.enable)) 
+		if not obj.shader:match("SHADER_") then  
+			return nil, "Invalid shader"
+		end
+
+		local shdr = _G[obj.shader]
+		if type(shdr) ~= 'number' then  
+			return nil, "Invalid shader"
+		end
+
+    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_SHADER, obj.at, {x=0, y=0}, {x=0,y=0}, shdr, obj.i == true, false)) 
 	end
 }
 

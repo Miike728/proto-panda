@@ -263,6 +263,11 @@
           "modelname": "mouth",
           "keyframes": [
             {
+              "t": "shader",
+              "at": 0,
+              "shader": "SHADER_RAINBOW"
+            },
+            {
               "t": "translate",
               "at": 300,
               "x": 0,
@@ -279,11 +284,6 @@
               "at": 900,
               "x": 0,
               "y": -3
-            },
-            {
-              "t": "rainbow",
-              "at": 1000,
-              "enable": true
             },
             {
               "t": "translate",
@@ -346,9 +346,9 @@
               "umc": true
             },
             {
-              "t": "rainbow",
-              "at": 500,
-              "enable": true
+              "t": "shader",
+              "at": 800,
+              "shader": "SHADER_RAINBOW"
             },
             {
               "t": "rotate",
@@ -373,6 +373,11 @@
               "cx": 32,
               "cy": 16,
               "umc": true
+            },
+            {
+              "t": "shader",
+              "at": 3000,
+              "shader": "SHADER_NONE"
             }
           ]
         },
@@ -462,6 +467,11 @@
           "modelname": "nose",
           "keyframes": [
             {
+              "t": "shader",
+              "at": 0,
+              "shader": "SHADER_RAINBOW"
+            },
+            {
               "t": "scale",
               "at": 600,
               "sx": 1,
@@ -480,12 +490,6 @@
               "umc": true
             },
             {
-              "t": "rainbow",
-              "at": 2000,
-              "i": true,
-              "enable": true
-            },
-            {
               "t": "scale",
               "at": 1898,
               "sx": 1.5,
@@ -497,6 +501,11 @@
             {
               "t": "reset",
               "at": 1950
+            },
+            {
+              "t": "shader",
+              "at": 1950,
+              "shader": "SHADER_RAINBOW"
             }
           ]
         }

@@ -70,6 +70,9 @@ class Model {
         void TranslatePoint(uint32_t pointid, Vec2f pos);
 
         void SetShaderWithStrenght(ShaderType t, float strenght=1.0f);
+        ShaderType GetShader(){
+            return m_shader;
+        };
 
         int GetSize(){ return triangleCount;};
         int GetId(){ return id;};
