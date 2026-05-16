@@ -45,7 +45,7 @@ void PointGroups::Rotate(uint32_t group, Vec2f center, float angle){
     float x,y;
     for (auto &pointid : it){
         x = xPoints[pointid] - center.x;
-        y = xPoints[pointid] - center.y;
+        y = yPoints[pointid] - center.y;
         xPoints[pointid] = (x * commonCos - y * commonSin) + center.x;
         yPoints[pointid] = (x * commonSin + y * commonCos) + center.y;        
     }
