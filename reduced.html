@@ -592,6 +592,14 @@
             cursor: not-allowed;
         }
 
+        .group-select-cursor {
+            cursor: crosshair !important;
+        }
+
+        .group-select-cursor canvas {
+            cursor: crosshair !important;
+        }
+
         .model-gear-btn {
             background: #3c3c3c;
             border: 1px solid #555;
@@ -2564,6 +2572,7 @@
                             <option value="accumulate">Accumulate</option>
                         </select>
                     </div>
+                    <input type="text" id="animationNameInput" value="Animation 1" style="background:#3c3c3c; border:1px solid #555; color:#fff; border-radius:3px; padding:3px 6px; font-size:11px; width:120px; font-family:monospace;">
                 </div>
                 
                 <div class="timeline-tools-compact">
@@ -2937,6 +2946,11 @@
         var isAnimPlaying = false;
         var animFrameId = null;
 
+        var fineMouseX = -1;
+        var fineMouseY = -1;
+        var ctrlKeyPressed = false;
+        
+
         // Undo/Redo 
         var undoStack = [];
         var redoStack = [];
@@ -3262,6 +3276,8 @@
                 if (timeline) {
                     timeline.classList.remove('editor-mode');
                 }
+
+                collapseAllPointGroups();
                 
                 // COPY models to animationModels
                 
@@ -3398,24 +3414,47 @@
             rightPanel.appendChild(collapseBtn);
         }
 
-        
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        function showFeedback(message, duration = 2000) {
+            // Remove any existing feedback
+            const existingFeedback = document.getElementById('globalFeedback');
+            if (existingFeedback) existingFeedback.remove();
+            
+            // Get the canvas position
+            const canvas = document.getElementById('meuCanvas');
+            const canvasRect = canvas.getBoundingClientRect();
+            
+            const feedback = document.createElement('div');
+            feedback.id = 'globalFeedback';
+            feedback.style.cssText = `
+                position: fixed;
+                top: ${canvasRect.bottom + 5}px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #ff9900;
+                color: #111;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-family: monospace;
+                font-size: 11px;
+                font-weight: bold;
+                z-index: 100000;
+                pointer-events: auto;
+                white-space: nowrap;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+                border: 1px solid #ffaa33;
+            `;
+            feedback.textContent = message;
+            document.body.appendChild(feedback);
+            
+            // Auto-remove after duration
+            const timeoutId = setTimeout(() => {
+                if (feedback.parentNode) feedback.remove();
+            }, duration);
+            
+            // Store timeout ID on the element so we can clear it on Escape
+            feedback._timeoutId = timeoutId;
+        }
 
         // ===========================================
         // ANIMATION FUNCTIONS
@@ -3424,11 +3463,16 @@
         function createNewAnimation(name) {
             saveUndoState();
             
-            // Don't modify original models here - they should stay as is
+            // Generate unique name
+            let baseName = name || "Animation " + (animations.length + 1);
+            let finalName = baseName;
+            if (!isAnimationNameUnique(finalName)) {
+                finalName = getUniqueAnimationName(baseName);
+            }
             
             const newAnim = {
                 id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                name: name || "Animation " + (animations.length + 1),
+                name: finalName,
                 duration: 3000,
                 tracks: [],
                 repeatEnabled: false,
@@ -3444,9 +3488,16 @@
             const durationInput = document.getElementById('timelineDuration');
             if (durationInput) durationInput.value = 3000;
             
+            // Update name input field
+            const nameInput = document.getElementById('animationNameInput');
+            if (nameInput) nameInput.value = finalName;
+            
             // Reset models to original and apply animation at time 0
             applyAnimationAtTime(0);
             draw();
+            
+            // Show feedback
+            showFeedback(`Created animation: "${finalName}"`, 1500);
             
             return newAnim;
         }
@@ -3495,6 +3546,22 @@
                 }
                 draw();
             }
+        }
+
+        function isAnimationNameUnique(name, excludeAnimId = null) {
+            if (!name || name.trim() === '') return false;
+            const trimmedName = name.trim();
+            return !animations.some(anim => anim.id !== excludeAnimId && anim.name === trimmedName);
+        }
+
+        function getUniqueAnimationName(baseName) {
+            let name = baseName;
+            let counter = 1;
+            while (!isAnimationNameUnique(name)) {
+                counter++;
+                name = `${baseName} ${counter}`;
+            }
+            return name;
         }
 
         function getSelectedAnimation() {
@@ -3577,7 +3644,14 @@
             const container = document.getElementById('timelinesContainer');
             if (!container) return;
             
+
             const anim = getSelectedAnimation();
+
+            const nameInput = document.getElementById('animationNameInput');
+            if (nameInput && anim) {
+                nameInput.value = anim.name;
+            }
+
             if (!anim || anim.tracks.length === 0) {
                 container.innerHTML = '<div class="empty-timelines-message">✨ No animation selected or no tracks. Click + to add a track, then drag tools to add keyframes.</div>';
                 updateTimelineStats();
@@ -4560,6 +4634,59 @@
             // Apply animation preview while dragging
             applyAnimationAtTime(newTime);
             draw();
+        }
+
+        function sanitizePointGroups() {
+            if (isAnimationMode) return;
+            
+            let changed = false;
+            
+            models.forEach((model, modelIdx) => {
+                if (!model.pointGroups || model.pointGroups.length === 0) return;
+                
+                // Get all valid point indices from current triangles
+                let totalPoints = 0;
+                for (let i = 0; i < model.triangles.length; i++) {
+                    totalPoints += 3; // 3 vertices per triangle
+                }
+                
+                const validIndices = new Set();
+                let globalIdx = 0;
+                for (let i = 0; i < model.triangles.length; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        validIndices.add(globalIdx);
+                        globalIdx++;
+                    }
+                }
+                
+                // Check each group and remove invalid indices
+                model.pointGroups.forEach((group, groupIdx) => {
+                    const originalLength = group.pointIndices.length;
+                    group.pointIndices = group.pointIndices.filter(idx => validIndices.has(idx));
+                    if (group.pointIndices.length !== originalLength) {
+                        changed = true;
+                        console.log(`Sanitized group "${group.name}": removed ${originalLength - group.pointIndices.length} invalid points`);
+                    }
+                });
+                
+                // Remove empty groups
+                const beforeCount = model.pointGroups.length;
+                model.pointGroups = model.pointGroups.filter(group => group.pointIndices.length > 0);
+                if (model.pointGroups.length !== beforeCount) {
+                    changed = true;
+                    console.log(`Removed ${beforeCount - model.pointGroups.length} empty groups`);
+                }
+            });
+            
+            if (changed) {
+                // If selected group was removed, deselect it
+                if (selectedGroupIndex !== -1 && models[selectedModelIndex] && 
+                    selectedGroupIndex >= models[selectedModelIndex].pointGroups.length) {
+                    selectedGroupIndex = -1;
+                }
+                renderModelList();
+                draw();
+            }
         }
       
         function createTrackFromTarget(type, modelIndex, groupIndex = -1) {
@@ -5761,130 +5888,17 @@
         }
 
         // ===========================================
-        // ADD ANIMATION BUTTON
-        // ===========================================
-
-        function showCreateAnimationDialog(openTrackModalAfter = false) {
-            // Create a modal dialog with name, loop, and duration
-            const dialog = document.createElement('div');
-            dialog.className = 'name-dialog';
-            dialog.style.display = 'block';
-            dialog.style.zIndex = '20000';
-            dialog.innerHTML = `
-                <h3>Create New Animation</h3>
-                <div class="settings-row">
-                    <label>Animation Name:</label>
-                    <input type="text" id="newAnimName" placeholder="Animation name" value="Animation ${animations.length + 1}">
-                </div>
-                <div class="settings-row">
-                    <label>Duration (ms):</label>
-                    <input type="number" id="newAnimDuration" value="3000" min="500" max="30000" step="100">
-                </div>
-                <div class="settings-row">
-                    <label style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" id="newAnimLoop"> Enable Loop
-                    </label>
-                </div>
-                <div class="settings-row" id="loopBehaviorRow" style="display: none;">
-                    <label>Loop Behavior:</label>
-                    <select id="newAnimLoopBehavior">
-                        <option value="reset">Reset</option>
-                        <option value="accumulate">Accumulate</option>
-                    </select>
-                </div>
-                <div class="name-dialog-buttons">
-                    <button class="name-dialog-btn cancel" id="newAnimCancel">CANCEL</button>
-                    <button class="name-dialog-btn create" id="newAnimCreate">CREATE</button>
-                </div>
-            `;
-            
-            document.body.appendChild(dialog);
-            
-            const loopCheckbox = dialog.querySelector('#newAnimLoop');
-            const loopBehaviorRow = dialog.querySelector('#loopBehaviorRow');
-            
-            loopCheckbox.addEventListener('change', () => {
-                loopBehaviorRow.style.display = loopCheckbox.checked ? 'block' : 'none';
-            });
-            
-            const createBtn = dialog.querySelector('#newAnimCreate');
-            const cancelBtn = dialog.querySelector('#newAnimCancel');
-            const nameInput = dialog.querySelector('#newAnimName');
-            const durationInput = dialog.querySelector('#newAnimDuration');
-            const loopBehaviorSelect = dialog.querySelector('#newAnimLoopBehavior');
-            
-            createBtn.onclick = () => {
-                const name = nameInput.value.trim();
-                if (!name) {
-                    alert('Please enter a name');
-                    return;
-                }
-                
-                const duration = parseInt(durationInput.value);
-                const loopEnabled = loopCheckbox.checked;
-                const loopBehavior = loopBehaviorSelect.value;
-                
-                const newAnim = {
-                    id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                    name: name,
-                    duration: duration,
-                    tracks: [],
-                    repeatEnabled: loopEnabled,
-                    repeatBehavior: loopBehavior,
-                };
-                
-                animations.push(newAnim);
-                selectedAnimationId = newAnim.id;
-                currentAnimationTime = 0;
-                
-                renderAnimationList();
-                renderTimelineForAnimation();
-                updateRuler(duration);
-                
-                const durationInputElem = document.getElementById('timelineDuration');
-                if (durationInputElem) durationInputElem.value = duration;
-                
-                // Update repeat controls
-                const repeatToggle = document.getElementById('repeatToggle');
-                const repeatBehavior = document.getElementById('repeatBehavior');
-                if (repeatToggle) repeatToggle.checked = loopEnabled;
-                if (repeatBehavior) {
-                    repeatBehavior.value = loopBehavior;
-                    repeatBehavior.disabled = !loopEnabled;
-                }
-                
-                applyAnimationAtTime(0);
-                draw();
-                
-                dialog.remove();
-                
-                // If we need to open track modal after creating animation
-                if (openTrackModalAfter) {
-                    setTimeout(() => showAddTrackModal(), 100);
-                }
-            };
-            
-            cancelBtn.onclick = () => {
-                dialog.remove();
-            };
-            
-            nameInput.focus();
-            nameInput.select();
-        }
-        // ===========================================
         // MODAL FOR CREATING TRACK FROM MODEL/GROUP
         // ===========================================
 
         function showAddTrackModal() {
-            // If no animations exist, create one first
+            // If no animations exist, create one instantly
             if (animations.length === 0) {
-                showCreateAnimationDialog(true); // true = then show track modal after
-                return;
+                createNewAnimation();
             }
             
             const anim = getSelectedAnimation();
-            if (!anim) {
-                // If no animation selected but animations exist, select the first one
+            if (!anim && animations.length > 0) {
                 selectedAnimationId = animations[0].id;
                 renderAnimationList();
             }
@@ -5982,12 +5996,81 @@
             
             setupDragAndDrop();
         }
+
+        function setupAnimationNameInput() {
+            const nameInput = document.getElementById('animationNameInput');
+            if (!nameInput) return;
+            
+            // Update the input value when animation changes
+            function updateAnimationNameInput() {
+                const anim = getSelectedAnimation();
+                if (anim) {
+                    nameInput.value = anim.name;
+                } else {
+                    nameInput.value = '';
+                }
+            }
+            
+            // Handle blur (when user deselects the field)
+            nameInput.addEventListener('blur', function(e) {
+                const anim = getSelectedAnimation();
+                if (!anim) return;
+                
+                let newName = e.target.value.trim();
+                
+                // If blank, auto-fill with current name or default
+                if (newName === '') {
+                    newName = anim.name;
+                    nameInput.value = newName;
+                    return;
+                }
+                
+                // Check if name is unique
+                if (!isAnimationNameUnique(newName, anim.id)) {
+                    // Name exists, append a number
+                    let counter = 2;
+                    let suggestedName = `${newName} ${counter}`;
+                    while (!isAnimationNameUnique(suggestedName, anim.id)) {
+                        counter++;
+                        suggestedName = `${newName} ${counter}`;
+                    }
+                    newName = suggestedName;
+                    nameInput.value = newName;
+                    showFeedback(`Name changed to "${newName}"`, 1500);
+                }
+                
+                // Apply the name
+                if (newName !== anim.name) {
+                    anim.name = newName;
+                    renderAnimationList();
+                    renderTimelineForAnimation();
+                }
+            });
+            
+            // Also handle Enter key to blur
+            nameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    nameInput.blur();
+                }
+            });
+            
+            // Update when animation selection changes
+            const originalSelectAnimation = selectAnimation;
+            window.selectAnimation = function(animId) {
+                originalSelectAnimation(animId);
+                updateAnimationNameInput();
+            };
+            
+            // Initial update
+            updateAnimationNameInput();
+        }
             
    
         function initAnimationSystem() {
             // Generate compact tools from config
             generateCompactTools();
-
+            setupAnimationNameInput();
             setupDragAndDrop();
             // Override toggleMode to reset animation state
             const originalToggle = toggleMode;
@@ -6009,7 +6092,7 @@
             const addAnimationBtn = document.getElementById('addAnimationBtn');
             if (addAnimationBtn) {
                 addAnimationBtn.addEventListener('click', function() {
-                    showCreateAnimationDialog(false);
+                    createNewAnimation()
                 });
             }
             
@@ -6386,6 +6469,7 @@
             }
             
             // Update all UI while in animation mode
+            sanitizePointGroups();
             renderModelList();
             renderAnimationList();
             storePristineModels()
@@ -6459,6 +6543,17 @@
 
         function deletePointGroup(modelIndex, groupIndex) {
             if (isAnimationMode) return;
+
+            const usage = isPointGroupUsed(modelIndex, groupIndex);
+            if (usage.length > 0) {
+                let usageMessage = `Cannot delete group because it's used in:\n\n`;
+                usage.forEach(use => {
+                    usageMessage += `• Animation "${use.animationName}" → Track "${use.trackName}"\n`;
+                });
+                showWarningDialog(usageMessage);
+                return;
+            }
+
             if (models[modelIndex] && models[modelIndex].pointGroups) {
                 models[modelIndex].pointGroups.splice(groupIndex, 1);
                 if (selectedModelIndex === modelIndex && selectedGroupIndex === groupIndex) {
@@ -7028,18 +7123,40 @@
                 });
                 
                 if (!isAnimationMode && currentTool === 'add') {
+                    // Get the current mouse position
+                    let currentMousePosX = mouseX;
+                    let currentMousePosY = mouseY;
+                    
+                    // For preview, show the fine position when Ctrl is held
+                    if (ctrlKeyPressed && fineMouseX >= 0 && fineMouseY >= 0) {
+                        let rect = c.getBoundingClientRect();
+                        let scaleX = c.width / rect.width;
+                        let scaleY = c.height / rect.height;
+                        let physX = (fineMouseX);
+                        let physY = (fineMouseY);
+                        currentMousePosX = Math.min(63, Math.max(0, physX / SCALE));
+                        currentMousePosY = Math.min(31, Math.max(0, physY / SCALE));
+                    } else {
+                        // Snap to nearby points for preview
+                        let nearestPoint = findNearestPoint(currentMousePosX, currentMousePosY, 0.5);
+                        if (nearestPoint) {
+                            currentMousePosX = nearestPoint.x;
+                            currentMousePosY = nearestPoint.y;
+                        }
+                    }
+                    
                     if (state === 1 && points.length === 1 && mouseX >= 0 && mouseX < 64 && mouseY >= 0 && mouseY < 32) {
-                        drawLine(points[0], Vec2f(mouseX, mouseY), "#888");
+                        drawLine(points[0], Vec2f(currentMousePosX, currentMousePosY), "#888");
                     } else if (state === 2 && points.length === 2 && mouseX >= 0 && mouseX < 64 && mouseY >= 0 && mouseY < 32) {
                         if (showPixelated) {
-                            fillTriangleScanline(points[0], points[1], Vec2f(mouseX, mouseY), "#404040");
+                            fillTriangleScanline(points[0], points[1], Vec2f(currentMousePosX, currentMousePosY), "#404040");
                         } else {
-                            fillTriangleSmooth(points[0], points[1], Vec2f(mouseX, mouseY), "#404040");
+                            fillTriangleSmooth(points[0], points[1], Vec2f(currentMousePosX, currentMousePosY), "#404040");
                         }
                         if (showLines) {
                             drawLine(points[0], points[1], "#888");
-                            drawLine(points[1], Vec2f(mouseX, mouseY), "#888");
-                            drawLine(Vec2f(mouseX, mouseY), points[0], "#888");
+                            drawLine(points[1], Vec2f(currentMousePosX, currentMousePosY), "#888");
+                            drawLine(Vec2f(currentMousePosX, currentMousePosY), points[0], "#888");
                         }
                     }
                 }
@@ -7203,9 +7320,18 @@
             }
             
             if (showPixelated && mouseX >= 0 && mouseX < 64 && mouseY >= 0 && mouseY < 32) {
-                let physX = mouseX * SCALE + SCALE/2;
-                let physY = mouseY * SCALE + SCALE/2;
-                let invColor = getInverseColor(mouseX, mouseY);
+                let physX, physY;
+                
+                if (ctrlKeyPressed && fineMouseX >= 0 && fineMouseY >= 0) {
+                    // When Ctrl is held, show the actual fine position
+                    physX = fineMouseX;
+                    physY = fineMouseY;
+                } else {
+                    physX = mouseX * SCALE + SCALE/2;
+                    physY = mouseY * SCALE + SCALE/2;
+                }
+                
+                let invColor = getInverseColor(Math.floor(physX / SCALE), Math.floor(physY / SCALE));
                 ctx.fillStyle = invColor;
                 ctx.fillRect(physX - 2, physY - 2, 4, 4);
             }
@@ -7320,6 +7446,16 @@
                 c.style.cursor = 'default';
                 return;
             }
+            
+            // Check if a point group is selected
+            const hasSelectedGroup = (selectedGroupIndex !== -1 && models[selectedModelIndex]?.pointGroups?.[selectedGroupIndex]);
+            
+            if (hasSelectedGroup) {
+                // Show special cursor for group selection mode
+                c.style.cursor = 'copy';
+                return;
+            }
+            
             if (shapePlacementMode) {
                 c.style.cursor = 'crosshair';
                 return;
@@ -7383,7 +7519,6 @@
             const cursorUrl = cursorCanvas.toDataURL('image/png');
             c.style.cursor = `url(${cursorUrl}) 0 0, auto`;
         }
-
         function updateOverlayPanel() {
             const hasImage = overlayImage !== null;
             document.getElementById('overlayClearBtn').disabled = !hasImage || isAnimationMode;
@@ -7407,6 +7542,62 @@
                 total += model.triangles.length;
             }
             document.getElementById('totalTriangles').textContent = total;
+        }
+
+        function showWarningDialog(message) {
+            // Remove any existing warning dialog
+            const existingWarning = document.getElementById('warningDialog');
+            if (existingWarning) existingWarning.remove();
+            
+            // Create new warning dialog
+            const warningDialog = document.createElement('div');
+            warningDialog.id = 'warningDialog';
+            warningDialog.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #ff4444;
+                border: 2px solid #ff0000;
+                border-radius: 6px;
+                padding: 12px 20px;
+                color: #fff;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
+                font-weight: bold;
+                z-index: 10001;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+                text-align: center;
+                min-width: 250px;
+                max-width: 400px;
+                white-space: pre-line;
+                animation: fadeOut 3s forwards;
+                pointer-events: none;
+            `;
+            warningDialog.textContent = message;
+            document.body.appendChild(warningDialog);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (warningDialog.parentNode) warningDialog.remove();
+            }, 3000);
+        }
+            
+   
+        function isPointGroupUsed(modelIndex, groupIndex) {
+            const usage = [];
+            animations.forEach(anim => {
+                anim.tracks.forEach(track => {
+                    if (track.type === 'group' && track.modelIndex === modelIndex && track.groupIndex === groupIndex) {
+                        usage.push({
+                            animationName: anim.name,
+                            animationId: anim.id,
+                            trackName: track.name
+                        });
+                    }
+                });
+            });
+            return usage;
         }
 
         function renderModelList() {
@@ -7524,6 +7715,24 @@
                         deleteBtn.disabled = isAnimationMode;
                         deleteBtn.addEventListener("click", function(e) {
                             e.stopPropagation();
+                            
+                            // Check if the point group is used in any animation
+                            const usage = isPointGroupUsed(index, gIdx);
+                            
+                            if (usage.length > 0) {
+                                // Build usage message
+                                let usageMessage = `Cannot delete group "${group.name}" it's used in:\n\n`;
+                                usage.forEach(use => {
+                                    usageMessage += `• Animation "${use.animationName}" → Track "${use.trackName}"\n`;
+                                });
+                                usageMessage += `\nRemove the tracks using this group first.`;
+                                
+                                // Show warning dialog
+                                showWarningDialog(usageMessage);
+                                return;
+                            }
+                            
+                            // If not used, show confirmation dialog
                             pendingGroupDelete = { modelIndex: index, groupIndex: gIdx };
                             document.getElementById('confirmMessage').textContent = `Delete "${group.name}"?`;
                             document.getElementById('confirmDialog').classList.add('active');
@@ -7536,6 +7745,8 @@
                         pointsList.className = "group-points-list";
                         
                         let active = models[selectedModelIndex];
+                        
+                        // Group indices by their position for display, but store actual indices
                         let positionMap = new Map(); 
                         
                         let globalIdx = 0;
@@ -7543,8 +7754,8 @@
                             let tri = active.triangles[i];
                             let vertices = [tri.v1, tri.v2, tri.v3];
                             for (let j = 0; j < 3; j++) {
-                                let v = vertices[j];
                                 if (group.pointIndices.includes(globalIdx)) {
+                                    let v = vertices[j];
                                     let posKey = Math.floor(v.x) + "," + Math.floor(v.y);
                                     if (!positionMap.has(posKey)) {
                                         positionMap.set(posKey, {
@@ -7558,48 +7769,44 @@
                                 globalIdx++;
                             }
                         }
-              
+                    
                         positionMap.forEach((posData, posKey) => {
                             var badge = document.createElement("span");
                             badge.className = "group-point-badge";
                             
                             posData.indices.sort((a,b)=>a-b);
                             
+                            // Store the actual indices as a data attribute
+                            badge.setAttribute('data-indices', posData.indices.join(','));
                             badge.setAttribute('data-pos', posKey);
-
+                            
+                            // Display the indices
                             if (posData.indices.length === 1) {
                                 badge.textContent = `#${posData.indices[0]}`;
                             } else {
                                 badge.textContent = `#[${posData.indices.join(',')}]`;
                             }
                             
-                            badge.title = `Position (${posData.x}, ${posData.y}) - Click to remove all points at this position`;
+                            badge.title = `Indices: ${posData.indices.join(', ')} - Click to remove all these points from group`;
                             badge.style.cursor = isAnimationMode ? "default" : "pointer";
-                            badge.setAttribute('data-positions', posKey);
-                            badge.setAttribute('data-indices', posData.indices.join(','));
                             
                             badge.addEventListener("mouseenter", function(e) {
                                 e.stopPropagation();
                                 
-                                // Get the positions from the badge
-                                const positions = posKey.split(',').map(Number);
-                                const targetX = positions[0];
-                                const targetY = positions[1];
+                                // Get the actual indices from the badge
+                                const indices = posData.indices;
                                 
-                                // Find all points at this position in the active model
-                                let pointsAtPosition = [];
+                                // Find all points with these indices
+                                let pointsAtIndices = [];
                                 let globalIdx = 0;
                                 for (let i = 0; i < active.triangles.length; i++) {
                                     let tri = active.triangles[i];
                                     let vertices = [tri.v1, tri.v2, tri.v3];
                                     for (let j = 0; j < 3; j++) {
-                                        let v = vertices[j];
-                                        let dx = Math.abs(v.x - targetX);
-                                        let dy = Math.abs(v.y - targetY);
-                                        if (dx < 0.5 && dy < 0.5) {
-                                            pointsAtPosition.push({
-                                                x: v.x,
-                                                y: v.y,
+                                        if (indices.includes(globalIdx)) {
+                                            pointsAtIndices.push({
+                                                x: vertices[j].x,
+                                                y: vertices[j].y,
                                                 globalIdx: globalIdx,
                                                 triIndex: i,
                                                 vertexIndex: j
@@ -7610,9 +7817,9 @@
                                 }
                                 
                                 hoveredGroupBadge = {
-                                    x: targetX,
-                                    y: targetY,
-                                    points: pointsAtPosition,
+                                    x: posData.x,
+                                    y: posData.y,
+                                    points: pointsAtIndices,
                                     badgeRect: e.target.getBoundingClientRect()
                                 };
                                 
@@ -7631,27 +7838,12 @@
                                     if (selectedModelIndex === index) {
                                         saveUndoState();
                                         
-                                        let positions = posKey.split(',').map(Number);
-                                        let targetX = positions[0];
-                                        let targetY = positions[1];
+                                        // Get the indices from the badge
+                                        const indicesToRemove = posData.indices;
                                         
-                                        let pointsToRemove = [];
-                                        let globalIdx = 0;
-                                        for (let i = 0; i < active.triangles.length; i++) {
-                                            let tri = active.triangles[i];
-                                            let vertices = [tri.v1, tri.v2, tri.v3];
-                                            for (let j = 0; j < 3; j++) {
-                                                let v = vertices[j];
-                                                let dx = Math.abs(v.x - targetX);
-                                                let dy = Math.abs(v.y - targetY);
-                                                if (dx < 0.5 && dy < 0.5) {
-                                                    pointsToRemove.push(globalIdx);
-                                                }
-                                                globalIdx++;
-                                            }
-                                        }
-                                        
-                                        group.pointIndices = group.pointIndices.filter(idx => !pointsToRemove.includes(idx));
+                                        // Remove these indices from the group
+                                        group.pointIndices = group.pointIndices.filter(idx => !indicesToRemove.includes(idx));
+                                               
                                         renderModelList();
                                         draw();
                                     }
@@ -7664,7 +7856,6 @@
                         groupDiv.appendChild(groupHeader);
                         groupDiv.appendChild(pointsList);
                         
-
                         groupDiv.addEventListener('click', (e) => {
                             e.stopPropagation();
                             e.preventDefault();
@@ -7675,12 +7866,10 @@
                                     const existingTrack = anim.tracks.find(track => track.type === 'group' && track.modelIndex === index && track.groupIndex === gIdx);
                                     
                                     if (existingTrack) {
-                                        // Timeline exists - select it
                                         selectedTimelineId = existingTrack.id;
                                         renderTimelineForAnimation();
                                         draw();
                                     } else {
-                                        // No timeline exists - ask to create one
                                         const groupName = models[index].pointGroups[gIdx].name;
                                         if (confirm(`Point group "${groupName}" doesn't have an animation track. Create one?`)) {
                                             const newTrack = createTrackFromTarget('group', index, gIdx);
@@ -7695,30 +7884,48 @@
                                 return;
                             }
                             
-                            // Normal model mode behavior
-                            // Only switch to select tool if not already on a tool that needs selection
                             if (currentTool !== 'select' && currentTool !== 'move') {
                                 setTool('toolSelectPoints');
                             }
                             
-                            // First, select the model if not already selected
                             if (selectedModelIndex !== index) {
                                 selectedModelIndex = index;
                                 selectedGroupIndex = -1;
                                 renderModelList();
                             }
                             
-                            // Handle point group selection
                             if (selectedGroupIndex === gIdx) {
-                                // Already selected - deselect it
                                 selectedGroupIndex = -1;
                                 selectedVertices = [];
                                 selectionFromSelectTool = false;
+                                showFeedback(`Exited group "${group.name}" selection mode`, 1000);
                             } else {
-                                // Select this group
                                 selectedGroupIndex = gIdx;
+                                // Select all points in the group by their indices
                                 selectedVertices = [];
+                                let globalIdx = 0;
+                                for (let i = 0; i < active.triangles.length; i++) {
+                                    let tri = active.triangles[i];
+                                    let vertices = [tri.v1, tri.v2, tri.v3];
+                                    for (let j = 0; j < 3; j++) {
+                                        if (group.pointIndices.includes(globalIdx)) {
+                                            selectedVertices.push({
+                                                triIndex: i,
+                                                vertexIndex: j,
+                                                globalPointIndex: globalIdx,
+                                                vx: vertices[j].x,
+                                                vy: vertices[j].y
+                                            });
+                                        }
+                                        globalIdx++;
+                                    }
+                                }
                                 selectionFromSelectTool = false;
+                                if (group.pointIndices.length === 0) {
+                                    showFeedback(`Group "${group.name}" selected (empty). Click on points to add them to this group.`, 3000);
+                                } else {
+                                    showFeedback(`Group "${group.name}" selected with ${group.pointIndices.length} points. Click on points to add/remove them.<b>Drag a single selected point to move the whole group.`, 3000);
+                                }
                             }
                             
                             renderModelList();
@@ -7749,20 +7956,16 @@
                 item.addEventListener("click", function(e) {
                     if (e.target === visCheck || e.target.closest('.model-order-btn') || e.target.closest('.model-gear-btn') || e.target.closest('.model-collapse-header') || e.target.closest('.group-item')) return;
                     
-
                     if (isAnimationMode) {
-                        // Check if this model already has a timeline track
                         const anim = getSelectedAnimation();
                         if (anim) {
                             const existingTrack = anim.tracks.find(track => track.type === 'model' && track.modelIndex === index);
                             
                             if (existingTrack) {
-                                // Timeline exists - select it
                                 selectedTimelineId = existingTrack.id;
                                 renderTimelineForAnimation();
                                 draw();
                             } else {
-                                // No timeline exists - ask to create one
                                 if (confirm(`Model "${models[index].name}" doesn't have an animation track. Create one?`)) {
                                     const newTrack = createTrackFromTarget('model', index, -1);
                                     if (newTrack) {
@@ -7776,7 +7979,6 @@
                         return;
                     }
                     
-                    // Normal model mode behavior
                     selectedModelIndex = index;
                     selectedGroupIndex = -1;
                     points = [];
@@ -7791,6 +7993,12 @@
             });
         }
 
+        function collapseAllPointGroups() {
+            for (let i = 0; i < models.length; i++) {
+                expandedGroups[i] = false;
+            }
+            renderModelList();
+        }
 
         function drawConnectionLine() {
             if (!hoveredGroupBadge) return;
@@ -7976,8 +8184,12 @@
                 if (added) {
                     group.pointIndices.sort((a,b)=>a-b);
                     saveUndoState();
+                    showFeedback(`Added ${newIndices.length} point(s) to "${group.name}"`, 1500);
                     renderModelList();
                 }
+                // Clear selected vertices after adding
+                selectedVertices = [];
+                selectionFromSelectTool = false;
             }
         }
 
@@ -7993,6 +8205,7 @@
             selectedVertices = [];
             selectionFromSelectTool = false;
             selectedGroupIndex = -1;
+            sanitizePointGroups();
             renderModelList();
             draw();
         }
@@ -8214,7 +8427,8 @@
                 modelsToSave = models;
             } else {
                 modelsToSave = models;
-            }
+            }  
+            sanitizePointGroups();
             
             // Build animations in new format - WITHOUT resources array
             const animationsData = [];
@@ -8585,6 +8799,7 @@
                             }
                             
                             // Update UI
+                            sanitizePointGroups();
                             renderModelList();
                             renderAnimationList();
                             renderTimelineForAnimation();
@@ -9001,6 +9216,12 @@
             // Special handling for Escape - always process it even when input is focused
             if (e.key === 'Escape') {
                 e.preventDefault();
+
+                const feedback = document.getElementById('globalFeedback');
+                if (feedback) {
+                    if (feedback._timeoutId) clearTimeout(feedback._timeoutId);
+                    feedback.remove();
+                }
                 
                 const editor = document.getElementById('keyframeEditor');
                 const isEditorOpen = editor && editor.style.display === 'block';
@@ -9247,6 +9468,32 @@
             }
         });
 
+        function findNearestPoint(x, y, maxDistance = 0.5) {
+            if (models.length === 0 || selectedModelIndex < 0) return null;
+            
+            let active = models[selectedModelIndex];
+            let closestDist = maxDistance;
+            let closestPoint = null;
+            
+            for (let i = 0; i < active.triangles.length; i++) {
+                let tri = active.triangles[i];
+                let vertices = [tri.v1, tri.v2, tri.v3];
+                for (let j = 0; j < 3; j++) {
+                    let v = vertices[j];
+                    let dx = Math.abs(v.x - x);
+                    let dy = Math.abs(v.y - y);
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestPoint = { x: v.x, y: v.y, dist: dist };
+                    }
+                }
+            }
+            
+            return closestPoint;
+        }
+
         c.addEventListener('mousemove', function(e) {
             var rect = c.getBoundingClientRect();
             var scaleX = c.width / rect.width;
@@ -9254,6 +9501,10 @@
             
             var physX = (e.clientX - rect.left) * scaleX;
             var physY = (e.clientY - rect.top) * scaleY;
+
+            fineMouseX = physX;
+            fineMouseY = physY;
+            ctrlKeyPressed = e.ctrlKey;
             
             mouseX = Math.min(63, Math.max(0, Math.floor(physX / SCALE)));
             mouseY = Math.min(31, Math.max(0, Math.floor(physY / SCALE)));
@@ -9357,6 +9608,13 @@
                 } else {
                     currentMouseX = mouseX;
                     currentMouseY = mouseY;
+                    
+                    // Snap to nearby points
+                    let nearestPoint = findNearestPoint(currentMouseX, currentMouseY, 0.5);
+                    if (nearestPoint) {
+                        currentMouseX = nearestPoint.x;
+                        currentMouseY = nearestPoint.y;
+                    }
                 }
                 
                 dx = currentMouseX - multiDragStart.x;
@@ -9367,26 +9625,21 @@
                     let tri = active.triangles[sel.triIndex];
                     let v = [tri.v1, tri.v2, tri.v3][sel.vertexIndex];
                     
+                    let newX = sel.vx + dx;
+                    let newY = sel.vy + dy;
+                    
                     if (e.ctrlKey) {
-                        let newX = Math.max(0, Math.min(64, sel.vx + dx));
-                        let newY = Math.max(0, Math.min(32, sel.vy + dy));
-                        v.x = toFloat32(newX);
-                        v.y = toFloat32(newY);
+                        v.x = toFloat32(Math.min(63, Math.max(0, newX)));
+                        v.y = toFloat32(Math.min(31, Math.max(0, newY)));
                     } else {
-                        let newX = Math.min(63, Math.max(0, Math.round(sel.vx + dx)));
-                        let newY = Math.min(31, Math.max(0, Math.round(sel.vy + dy)));
-                        v.x = toFloat32(newX);
-                        v.y = toFloat32(newY);
+                        v.x = toFloat32(Math.min(63, Math.max(0, Math.round(newX))));
+                        v.y = toFloat32(Math.min(31, Math.max(0, Math.round(newY))));
                     }
-                }
-                if (isAnimationMode) {
-                    highlightModelUnderMouse();
                 }
                 draw();
             }
             
             if (!isAnimationMode && currentTool === 'move' && mouseDown && draggingVertex && models.length > 0) {
-
                 if (!multiDragStart) {
                     multiDragStart = { x: mouseX, y: mouseY };
                     for (let point of draggingVertex) {
@@ -9395,16 +9648,11 @@
                     }
                 }
                 
-                let firstVertex = draggingVertex[0];
-                let firstTri = models[selectedModelIndex].triangles[firstVertex.triIndex];
-                let firstV = [firstTri.v1, firstTri.v2, firstTri.v3][firstVertex.vertexIndex];
-                
-                // Get current mouse position in grid coordinates
-                let currentMouseX = mouseX;
-                let currentMouseY = mouseY;
+                // Get current mouse position
+                let currentMouseX, currentMouseY;
                 
                 if (e.ctrlKey) {
-                    // Fine movement with Ctrl
+                    // Fine movement with Ctrl - use the fine mouse position
                     let rect = c.getBoundingClientRect();
                     let scaleX = c.width / rect.width;
                     let scaleY = c.height / rect.height;
@@ -9412,6 +9660,19 @@
                     let physY = (e.clientY - rect.top) * scaleY;
                     currentMouseX = Math.max(0, Math.min(64, physX / SCALE));
                     currentMouseY = Math.max(0, Math.min(32, physY / SCALE));
+                    
+                    // Don't snap, use exact position
+                } else {
+                    // Normal movement with grid snapping
+                    currentMouseX = mouseX;
+                    currentMouseY = mouseY;
+                    
+                    // Snap to nearby points
+                    let nearestPoint = findNearestPoint(currentMouseX, currentMouseY, 0.5);
+                    if (nearestPoint) {
+                        currentMouseX = nearestPoint.x;
+                        currentMouseY = nearestPoint.y;
+                    }
                 }
                 
                 // Calculate delta from the starting position
@@ -9427,9 +9688,14 @@
                     let newX = vertexInfo.vx + dx;
                     let newY = vertexInfo.vy + dy;
                     
-                    // Clamp to grid bounds
-                    v.x = toFloat32(Math.min(63, Math.max(0, newX)));
-                    v.y = toFloat32(Math.min(31, Math.max(0, newY)));
+                    // Clamp to grid bounds (allow fractional when Ctrl is held)
+                    if (e.ctrlKey) {
+                        v.x = toFloat32(Math.min(63, Math.max(0, newX)));
+                        v.y = toFloat32(Math.min(31, Math.max(0, newY)));
+                    } else {
+                        v.x = toFloat32(Math.min(63, Math.max(0, Math.round(newX))));
+                        v.y = toFloat32(Math.min(31, Math.max(0, Math.round(newY))));
+                    }
                 });
                 draw();
             }
@@ -9804,48 +10070,113 @@
             
             if (overlayActive) return;
             
-            if (!isAnimationMode && currentTool === 'add') {
-                if (state === 0) {
-                    points = [Vec2f(mouseX, mouseY)];
-                    state = 1;
-                } else if (state === 1) {
-                    points.push(Vec2f(mouseX, mouseY));
-                    state = 2;
-                } else if (state === 2) {
+            // Handle adding points to selected group on click
+            if (!isAnimationMode && selectedGroupIndex !== -1 && models[selectedModelIndex]?.pointGroups?.[selectedGroupIndex]) {
+                let group = models[selectedModelIndex].pointGroups[selectedGroupIndex];
+                let active = models[selectedModelIndex];
+                
+                // Find all vertices at the clicked position
+                let verticesAtPos = findVerticesAtPosition(mouseX, mouseY);
+                
+                if (verticesAtPos.length > 0) {
                     saveUndoState();
                     
-                    let v0 = Vec2f(points[0].x, points[0].y);
-                    let v1 = Vec2f(points[1].x, points[1].y);
-                    let v2 = Vec2f(mouseX, mouseY);
+                    let anyInGroup = verticesAtPos.some(v => group.pointIndices.includes(v.globalPointIndex));
                     
-                    function swap(a, b) {
-                        let tempX = a.x;
-                        let tempY = a.y;
-                        a.x = b.x;
-                        a.y = b.y;
-                        b.x = tempX;
-                        b.y = tempY;
+                    if (anyInGroup) {
+                        // Remove points from group
+                        verticesAtPos.forEach(v => {
+                            group.pointIndices = group.pointIndices.filter(idx => idx !== v.globalPointIndex);
+                        });
+                        showFeedback(`Removed point(s) from "${group.name}"`, 1000);
+                        
+                        // Clear selected vertices since they are no longer in the group
+                        selectedVertices = [];
+                        selectionFromSelectTool = false;
+                    } else {
+                        // Add points to group
+                        verticesAtPos.forEach(v => {
+                            if (!group.pointIndices.includes(v.globalPointIndex)) {
+                                group.pointIndices.push(v.globalPointIndex);
+                            }
+                        });
+                        group.pointIndices.sort((a,b)=>a-b);
+                        showFeedback(`Added point(s) to "${group.name}"`, 1000);
                     }
                     
-                    if (v0.y > v1.y) swap(v0, v1);
-                    if (v0.y > v2.y) swap(v0, v2);
-                    if (v1.y > v2.y) swap(v1, v2);
-                    
-                    var tri = {
-                        v1: v0,
-                        v2: v1,
-                        v3: v2,
-                        color: currentColor
-                    };
-                    models[selectedModelIndex].triangles.push(tri);
-                    points = [];
-                    state = 0;
-
                     renderModelList();
                     draw();
-
+                    return;
                 }
-            } else if (!isAnimationMode && currentTool === 'paint') {
+            }
+            
+                if (!isAnimationMode && currentTool === 'add') {
+                    // Get the actual position (with fine control if Ctrl is held)
+                    let posX, posY;
+                    
+                    if (e.ctrlKey) {
+                        // Fine placement - use the exact mouse position
+                        let rect = c.getBoundingClientRect();
+                        let scaleX = c.width / rect.width;
+                        let scaleY = c.height / rect.height;
+                        let physX = (e.clientX - rect.left) * scaleX;
+                        let physY = (e.clientY - rect.top) * scaleY;
+                        posX = Math.min(63, Math.max(0, physX / SCALE));
+                        posY = Math.min(31, Math.max(0, physY / SCALE));
+                    } else {
+                        // Grid placement
+                        posX = mouseX;
+                        posY = mouseY;
+                        
+                        // Snap to nearby points (within 0.5 grid units)
+                        let nearestPoint = findNearestPoint(posX, posY, 0.5);
+                        if (nearestPoint) {
+                            posX = nearestPoint.x;
+                            posY = nearestPoint.y;
+                        }
+                    }
+                    
+                    if (state === 0) {
+                        points = [Vec2f(posX, posY)];
+                        state = 1;
+                    } else if (state === 1) {
+                        points.push(Vec2f(posX, posY));
+                        state = 2;
+                    } else if (state === 2) {
+                        saveUndoState();
+                        
+                        let v0 = Vec2f(points[0].x, points[0].y);
+                        let v1 = Vec2f(points[1].x, points[1].y);
+                        let v2 = Vec2f(posX, posY);
+                        
+                        function swap(a, b) {
+                            let tempX = a.x;
+                            let tempY = a.y;
+                            a.x = b.x;
+                            a.y = b.y;
+                            b.x = tempX;
+                            b.y = tempY;
+                        }
+                        
+                        if (v0.y > v1.y) swap(v0, v1);
+                        if (v0.y > v2.y) swap(v0, v2);
+                        if (v1.y > v2.y) swap(v1, v2);
+                        
+                        var tri = {
+                            v1: v0,
+                            v2: v1,
+                            v3: v2,
+                            color: currentColor
+                        };
+                        models[selectedModelIndex].triangles.push(tri);
+                        points = [];
+                        state = 0;
+
+                        renderModelList();
+                        draw();
+                    }
+                    return;
+                } else if (!isAnimationMode && currentTool === 'paint') {
                 let hit = findTriangleUnderMouse(mouseX, mouseY);
                 if (hit) {
                     if (models[selectedModelIndex].triangles[hit.triIndex].color.toLowerCase() !== currentColor.toLowerCase()) {
@@ -9865,7 +10196,7 @@
                 if (hit) {
                     saveUndoState();
                     models[selectedModelIndex].triangles.splice(hit.triIndex, 1);
-
+                    sanitizePointGroups();
                     renderModelList();
 
                     hoverTriangleIndex = -1;

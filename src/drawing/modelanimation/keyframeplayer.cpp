@@ -88,7 +88,7 @@ void KeyframeTrack::Reserve(){
 
 KeyframeAnimation* KeyframePlayer::NewKeyframeAnimation(uint32_t duration){
     KeyframeAnimation* kf = new KeyframeAnimation();
-    kf->duration = 3000;
+    kf->duration = duration;
 
     int idx = AddKeyframeAnimation(kf);
     kf->SetId(idx);
