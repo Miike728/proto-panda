@@ -615,7 +615,7 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegisterFromObjectOpt("setInterruptAnimationPin", &g_animation, &Animation::SetInterruptPin);
 
     
-  m_lua->FuncRegisterFromObjectOpt("setRainbowShader", &g_animation, &Animation::setRainbowShader, true); 
+  m_lua->FuncRegisterFromObjectOpt("setAnimationShader", &g_animation, &Animation::SetShader, 1.0f); 
   m_lua->FuncRegisterFromObjectOpt("getAnimationStackSize", &g_animation, &Animation::getAnimationStackSize);   
   m_lua->FuncRegisterFromObjectOpt("setPanelColorMode", &g_animation, &Animation::setColorMode);   
 
@@ -631,7 +631,6 @@ void LuaInterface::RegisterMethods()
   m_lua->FuncRegister("setPanelBrightness", setPanelBrightness);
   m_lua->FuncRegister("getPanelBrightness", getPanelBrightness);
 
-  m_lua->FuncRegisterFromObjectOpt("setRainbowShader", &g_animation, &Animation::setRainbowShader, true); 
   m_lua->FuncRegisterFromObjectOpt("getAnimationStackSize", &g_animation, &Animation::getAnimationStackSize); 
 
   m_lua->FuncRegister("color565", color565);
@@ -860,6 +859,8 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("SHADER_RAINBOW",      (int)SHADER_RAINBOW);
   m_lua->setConstant("SHADER_FIRE",         (int)SHADER_FIRE);
   m_lua->setConstant("SHADER_TEXTURE",      (int)SHADER_TEXTURE);
+  
+  m_lua->setConstant("SHADER_LAST",         (int)SHADER_TEXTURE);
 
 
   m_lua->setConstant("MODEL_FRAME_ID_OFFSET",      (int)MODEL_FRAME_ID_OFFSET);

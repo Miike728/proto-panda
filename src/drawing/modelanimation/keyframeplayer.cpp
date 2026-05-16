@@ -140,7 +140,11 @@ void KeyframePlayer::ResetSpecificAnimation(int id){
     obj->Reset();
 }
 
-void KeyframePlayer::PlayAnimationId(int32_t id, bool restartAnimation){
+void KeyframePlayer::PlayAnimationId(int32_t id, bool restartAnimation, ShaderType &shdr, float &strenght){
+
+    m_defaultShader = shdr;
+    m_defaultShaderStrenght = strenght;
+    
     if (id == m_currentlyPlaying){
         //If we're already playing it, there is no point in restarting it.
         return;
@@ -199,8 +203,10 @@ void KeyframePlayer::runModelAnim(uint32_t dt){
         return;
     }
 
-
     for (auto &mod : obj->m_models){
+        if (m_defaultShader != SHADER_NONE && mod->GetShader() == SHADER_NONE){
+            mod->SetShaderWithStrenght(m_defaultShader, m_defaultShaderStrenght);
+        }
         mod->Recalculate();
         mod->CopyToRaster();
     }        

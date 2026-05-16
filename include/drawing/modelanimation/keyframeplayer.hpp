@@ -103,9 +103,9 @@ class KeyframeAnimation{
 
 class KeyframePlayer{
     public:
-        KeyframePlayer():m_currentlyPlaying(-1),m_extraDtForNextFrame(0),m_finishedAnimationInThisFrame(false){};
+        KeyframePlayer():m_defaultShader(SHADER_NONE),m_defaultShaderStrenght(1.0f),m_currentlyPlaying(-1),m_extraDtForNextFrame(0),m_finishedAnimationInThisFrame(false){};
         bool Update(uint32_t dt);
-        void PlayAnimationId(int32_t id, bool restartAnimation=true);
+        void PlayAnimationId(int32_t id, bool restartAnimation, ShaderType &shdr, float &strenght);
         void ResetCurrentAnimation();
         void ResetSpecificAnimation(int id);
         int32_t GetCurrentPlaying(){
@@ -120,6 +120,10 @@ class KeyframePlayer{
         KeyframeAnimation* NewKeyframeAnimation(uint32_t duration);
 
     private:
+    
+        ShaderType m_defaultShader;
+        float m_defaultShaderStrenght;
+        
         void runModelAnim(uint32_t dt);
         int32_t m_currentlyPlaying;
         uint32_t m_extraDtForNextFrame;

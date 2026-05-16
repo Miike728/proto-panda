@@ -55,11 +55,11 @@ void AnimationSequence::ResetIfNeeded(){
     }
 }
 
-AnimationFrameAction AnimationSequence::Update(uint32_t dt, int m_interruptPin, bool isManaged){
+AnimationFrameAction AnimationSequence::Update(uint32_t dt, int m_interruptPin, bool isManaged, ShaderType &shdr, float &strenght){
 
     if (m_isModel){
         //Timing is handled here.
-        g_kf.PlayAnimationId(m_frame, true);
+        g_kf.PlayAnimationId(m_frame, true, shdr, strenght);
 
         bool finishedAnimation = false;
         if (isManaged){
@@ -103,66 +103,6 @@ int AnimationSequence::GetFrameId(){
         return MODEL_FRAME_ID_OFFSET + m_frame;
     }
     return m_frames[m_frame];
-}
-
-void hsv_to_rgb(uint8_t h, uint8_t s, uint8_t v, uint8_t& r, uint8_t& g, uint8_t& b) {
-  // Convert hue to degrees
-  float hue = h / 255.0f * 360.0f;
-
-  // Convert saturation and value to percentages
-  float saturation = s / 255.0f;
-  float value = v / 255.0f;
-
-  // Calculate chroma
-  float chroma = value * saturation;
-
-  // Find the hue sector
-  float hue_sector = hue / 60.0f;
-  int hue_sector_int = (int)hue_sector;
-
-  // Calculate the intermediate value x
-  float x = chroma * (1.0f - fabs(fmod(hue_sector, 2.0f) - 1.0f));
-
-  // Calculate the values of r, g, and b
-  float r_temp = 0.0f, g_temp = 0.0f, b_temp = 0.0f;
-  switch(hue_sector_int) {
-    case 0:
-      r_temp = chroma;
-      g_temp = x;
-      b_temp = 0;
-      break;
-    case 1:
-      r_temp = x;
-      g_temp = chroma;
-      b_temp = 0;
-      break;
-    case 2:
-      r_temp = 0;
-      g_temp = chroma;
-      b_temp = x;
-      break;
-    case 3:
-      r_temp = 0;
-      g_temp = x;
-      b_temp = chroma;
-      break;
-    case 4:
-      r_temp = x;
-      g_temp = 0;
-      b_temp = chroma;
-      break;
-    case 5:
-      r_temp = chroma;
-      g_temp = 0;
-      b_temp = x;
-      break;
-  }
-
-  // Calculate the final values of r, g, and b
-  float m = value - chroma;
-  r = (uint8_t)((r_temp + m) * 255);
-  g = (uint8_t)((g_temp + m) * 255);
-  b = (uint8_t)((b_temp + m) * 255);
 }
 
 void reorder_rgb(ColorMode mode, uint8_t *r, uint8_t *g, uint8_t *b){
@@ -227,11 +167,11 @@ void Animation::adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r,
     //We know each color has 5 6 and 5 bits. So to check if the color is strong enough, we're using this mask that discards
     //each of 3 initial bits of each color
     //If any of the remaining bits are 1, the whole condition will give != 0 and therefore color!
-    if (m_shader == 1 || (r == 57 && g == 121 && b == 181)){
-        float gray = (r+g+b)/3.0f;
-        hsv_to_rgb(  (((frameId+x)%64) / 64.0f) * 255, 255, gray, r, g, b);
-    }
+    /*if (m_shader == 1 || (r == 57 && g == 121 && b == 181)){
+
+    }*/
     reorder_rgb(currentMode, &r, &g, &b);
+    ShaderProcessor::UpdateColorByShader(x, y, r, g, b, m_shader, m_shaderStrenght);
 }
 
 void Animation::LoadFrameAsTexture(int i){
@@ -500,8 +440,9 @@ void Animation::MakeFlip(){
     m_needFlip = false;
 }
 
-void Animation::SetShader(int id){
-    m_shader = id;
+void Animation::SetShader(int id, float strenght){
+    m_shader = (ShaderType)id;
+    m_shaderStrenght = strenght;
 }
 
 void Animation::Update(uint32_t dt){
@@ -539,7 +480,7 @@ void Animation::setManaged(bool v){
 
 bool Animation::internalUpdate(uint32_t dt, AnimationSequence &running){
     bool managed = isManaged();
-    switch (running.Update(dt, m_interruptPin, managed)){
+    switch (running.Update(dt, m_interruptPin, managed, m_shader, m_shaderStrenght)){
     case ANIMATION_FINISHED:
         return 1;
         break;
@@ -556,7 +497,7 @@ bool Animation::internalUpdate(uint32_t dt, AnimationSequence &running){
         }
         break;
     case ANIMATION_NO_CHANGE:
-        if (m_shader == 1){
+        if (m_shader != SHADER_NONE){
             m_lastFace = running.GetFrameId();
             if (managed){
                 DrawFrame(m_lastFace);

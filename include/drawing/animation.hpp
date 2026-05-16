@@ -7,6 +7,7 @@
 #include "config.hpp"
 #include "tools/psrammap.hpp"
 #include "drawing/rendering/modelhandler.hpp"
+#include "drawing/rendering/shader.hpp"
 
 enum ColorMode{
     COLOR_MODE_RGB,
@@ -36,7 +37,7 @@ class AnimationSequence{
     public:
         AnimationSequence():m_duration(2500),m_frame(0),m_counter(0),m_repeat(-1),m_updateMode(0),m_storageId(-1),m_isNew(true),m_isModel(false){}
         PSRAMVector<int> m_frames;
-        AnimationFrameAction Update(uint32_t dt, int m_interruptPin, bool isManaged);
+        AnimationFrameAction Update(uint32_t dt, int m_interruptPin, bool isManaged, ShaderType &shdr, float &strenghy);
         inline int GetFrameId();
         void ResetIfNeeded();
         int m_duration;
@@ -57,7 +58,7 @@ class AnimationSequence{
 
 class Animation{
     public:
-        Animation():m_animations(),m_shader(0),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_onBlankScreen(false),m_frameDrawDuration(0),m_texture(nullptr),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
+        Animation():m_animations(),m_shader(SHADER_NONE),m_shaderStrenght(1.0f),m_lastFace(0),m_interruptPin(-1),m_colorMode(COLOR_MODE_RGB),m_needFlip(false),m_isManaged(true),m_needRedraw(false),m_onBlankScreen(false),m_frameDrawDuration(0),m_texture(nullptr),m_frameLoadDuration(0),m_cycleDuration(0),m_mutex(xSemaphoreCreateMutex()){};
 
         void Update(uint32_t dt);
 
@@ -81,7 +82,7 @@ class Animation{
 
         bool PopAnimation();
         void MakeFlip();
-        void SetShader(int id);
+        void SetShader(int id, float strenght=1.0f);
 
         uint16_t* GetTexture(){
             return m_texture;
@@ -113,14 +114,6 @@ class Animation{
             return m_animations.size();
         }
 
-        void setRainbowShader(bool enabled){
-            if (enabled){
-                m_shader = true;
-            }else{
-                m_shader = false;
-            }
-        }
-
         static unsigned char buffer[FILE_SIZE];
 
         uint32_t getDrawDuration() { return m_frameDrawDuration;};
@@ -130,7 +123,8 @@ class Animation{
         inline void adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, ColorMode &colorMode, int16_t &frameId);
         std::stack<AnimationSequence> m_animations;
         bool internalUpdate(uint32_t dt, AnimationSequence &seq);
-        int m_shader;
+        ShaderType m_shader;
+        float m_shaderStrenght;
         int m_lastFace;
         int m_interruptPin;
         ColorMode m_colorMode;
