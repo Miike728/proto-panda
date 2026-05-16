@@ -6609,7 +6609,7 @@
                         let b = parseInt(fillStyle.slice(5,7), 16);
                         
                         // Apply shader
-                        const shaded = applyShader(shaderInfo.shaderType, x, y, r, g, b, shaderInfo.strength);
+                        const shaded = applyShader(shaderInfo.shaderType, x, y0, r, g, b, shaderInfo.strength);
                         // Convert back to hex format
                         const hexColor = '#' + ((1 << 24) + (shaded.r << 16) + (shaded.g << 8) + shaded.b).toString(16).slice(1);   
                         finalColor = hexColor;                     
