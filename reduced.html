@@ -106,6 +106,14 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.8);
         }
 
+        body.paste-mode {
+            cursor: copy !important;
+        }
+
+        body.paste-mode canvas {
+            cursor: copy !important;
+        }
+
         .tools-section {
             width: 100%;
             display: flex;
@@ -2473,6 +2481,52 @@
             color: #111;
         }
 
+        /* Keyframe Tooltip */
+        .keyframe-tooltip {
+            position: fixed;
+            background: #1e1e1e;
+            border: 1px solid #ff9900;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #ccc;
+            z-index: 10001;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+        }
+
+        .keyframe-tooltip .title {
+            color: #ff9900;
+            font-weight: bold;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 2px;
+        }
+
+        .keyframe-tooltip .row {
+            display: flex;
+            gap: 8px;
+            margin-top: 3px;
+        }
+
+        .keyframe-tooltip .label {
+            color: #888;
+        }
+
+        .keyframe-tooltip .value {
+            color: #9cdcfe;
+            font-weight: bold;
+        }
+
+        .keyframe-tooltip .instant {
+            color: #ff6666;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
 
        
 
@@ -2613,32 +2667,42 @@
          
                 <!-- Top bar with transport controls and tools -->
                 <div class="timeline-header">
-                <div class="timeline-controls">
-                    <button class="timeline-btn" id="timelinePlayBtn">▶</button>
-                    <button class="timeline-btn" id="timelinePauseBtn">⏸</button>
-                    <button class="timeline-btn" id="timelineStopBtn">⏹</button>
-                    <label style="color:#aaa; font-size: 11px;">Duration:</label>
-                    <input type="number" id="timelineDuration" value="3000" min="500" max="30000" step="100" style="width:65px; background:#3c3c3c; border:1px solid #555; color:#fff; border-radius:3px; padding:3px; font-size:11px;">
-                    <span style="color:#aaa; font-size: 11px;">ms</span>
-                    <div class="repeat-controls">
-                        <label class="repeat-checkbox">
-                            <input type="checkbox" id="repeatToggle"> 🔁 LOOP
-                        </label>
-                        <select id="repeatBehavior" class="repeat-select" disabled>
-                            <option value="reset">Reset</option>
-                            <option value="accumulate">Accumulate</option>
-                        </select>
+                    <div class="timeline-controls">
+                        <button class="timeline-btn" id="timelinePlayBtn">▶</button>
+                        <button class="timeline-btn" id="timelinePauseBtn">⏸</button>
+                        <button class="timeline-btn" id="timelineStopBtn">⏹</button>
+                        
+                        <span style="color:#444; margin: 0 4px;">|</span>
+                        
+                        <label style="color:#ff9900; font-size: 11px; font-weight: bold;">Duration:</label>
+                        <input type="number" id="timelineDuration" value="3000" min="500" max="30000" step="100" style="width:65px; background:#3c3c3c; border:1px solid #555; color:#fff; border-radius:3px; padding:3px; font-size:11px;">
+                        <span style="color:#ff9900; font-size: 11px; font-weight: bold;">ms</span>
+                        
+                        <span style="color:#444; margin: 0 4px;">|</span>
+                        
+                        <div class="repeat-controls">
+                            <label class="repeat-checkbox">
+                                <input type="checkbox" id="repeatToggle"><span style="color:#ff9900; font-size: 11px; font-weight: bold; margin-left: 4px;">LOOP</span>
+                            </label>
+                            <select id="repeatBehavior" class="repeat-select" disabled>
+                                <option value="reset">Reset</option>
+                                <option value="accumulate">Accumulate</option>
+                            </select>
+                        </div>
+                        
+                        <span style="color:#444; margin: 0 4px;">|</span>
+                        
+                        <span style="color:#ff9900; font-size: 11px; font-weight: bold;">Name:</span>
+                        <input type="text" id="animationNameInput" value="Animation 1" style="background:#3c3c3c; border:1px solid #555; color:#fff; border-radius:3px; padding:3px 6px; font-size:11px; width:120px; font-family:monospace;">
                     </div>
-                    <input type="text" id="animationNameInput" value="Animation 1" style="background:#3c3c3c; border:1px solid #555; color:#fff; border-radius:3px; padding:3px 6px; font-size:11px; width:120px; font-family:monospace;">
-                </div>
-                
-                <div class="timeline-tools-compact">
-                    
-                </div>
 
-                <div id="timelineOverlay" class="timeline-overlay" style="display: none;">
-                    <button id="switchToAnimModeBtn" class="switch-mode-btn">SWITCH TO ANIMATION MODE</button>
-                </div>
+                    <div class="timeline-tools-compact">
+                    
+                    </div>
+
+                    <div id="timelineOverlay" class="timeline-overlay" style="display: none;">
+                        <button id="switchToAnimModeBtn" class="switch-mode-btn">SWITCH TO ANIMATION MODE</button>
+                    </div>
             </div>
                 
                 <!-- Ruler with spacer for model names -->
@@ -3117,6 +3181,9 @@
         var copyModeActive = false;
 
         var snapInterval = 50;
+
+        let keyframeTooltip = null;
+        let tooltipTimeout = null;
 
         
         // Pick mode state
@@ -3902,7 +3969,7 @@
                 
                 const icon = track.type === 'model' ? '📁' : '👥';
                 
-                // Create menu button instead of delete button
+                // Create menu button
                 const menuBtn = document.createElement('button');
                 menuBtn.className = 'track-menu-btn';
                 menuBtn.innerHTML = '☰';
@@ -3960,12 +4027,34 @@
                     marker.style.cursor = 'grab';
                     marker.style.zIndex = '10';
                     
+                    // Add tooltip on hover
+                    marker.addEventListener('mouseenter', (e) => {
+                        if (window.keyframeTooltipTimeout) {
+                            clearTimeout(window.keyframeTooltipTimeout);
+                        }
+                        window.keyframeTooltipTimeout = setTimeout(() => {
+                            showKeyframeTooltip(kf, track, e);
+                        }, 50);
+                    });
+                    
+                    marker.addEventListener('mouseleave', () => {
+                        if (window.keyframeTooltipTimeout) {
+                            clearTimeout(window.keyframeTooltipTimeout);
+                            window.keyframeTooltipTimeout = null;
+                        }
+                        hideKeyframeTooltip();
+                    });
+                    
+                    marker.addEventListener('mousedown', () => {
+                        hideKeyframeTooltip();
+                    });
+                    
                     let info = `${kf.action.toUpperCase()} @ ${Math.round(kf.time)}ms`;
                     if (kf.action === 'translate') info += ` (${kf.params.x},${kf.params.y})`;
                     if (kf.action === 'rotate') info += ` (${kf.params.angle}°)`;
                     if (kf.action === 'scale') info += ` (${kf.params.scaleX},${kf.params.scaleY})`;
                     if (kf.action === 'visibility') info += kf.params.visible ? ' (SHOW)' : ' (HIDE)';
-                    if (kf.instant) info += ` ⚡ INSTANT`;
+                    if (kf.instant) info += `INSTANT`;
                     marker.title = info;
                     
                     canvas.appendChild(marker);
@@ -4006,10 +4095,13 @@
                         const spaceBelow = window.innerHeight - rect.bottom;
                         const spaceAbove = rect.top;
                         
-     
-                        dropdown.style.bottom = `${window.innerHeight - rect.top + 2}px`;
-                        dropdown.style.top = 'auto';
-                        
+                        if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+                            dropdown.style.top = `${rect.bottom + 2}px`;
+                            dropdown.style.bottom = 'auto';
+                        } else {
+                            dropdown.style.bottom = `${window.innerHeight - rect.top + 2}px`;
+                            dropdown.style.top = 'auto';
+                        }
                         dropdown.style.left = `${rect.left}px`;
                         dropdown.style.right = 'auto';
                         
@@ -4030,33 +4122,39 @@
                 const deleteItem = dropdown.querySelector('[data-action="delete"]');
                 const changeItem = dropdown.querySelector('[data-action="change"]');
                 
-                cloneItem.onclick = (e) => {
-                    e.stopPropagation();
-                    dropdown.classList.remove('active');
-                    cloneTrack(track.id);
-                };
+                if (cloneItem) {
+                    cloneItem.onclick = (e) => {
+                        e.stopPropagation();
+                        dropdown.classList.remove('active');
+                        cloneTrack(track.id);
+                    };
+                }
                 
-                deleteItem.onclick = (e) => {
-                    e.stopPropagation();
-                    dropdown.classList.remove('active');
-                    if (confirm(`Delete track "${track.name}"?`)) {
-                        saveUndoState();
-                        anim.tracks = anim.tracks.filter(t => t.id !== track.id);
-                        if (selectedTimelineId === track.id) {
-                            selectedTimelineId = null;
+                if (deleteItem) {
+                    deleteItem.onclick = (e) => {
+                        e.stopPropagation();
+                        dropdown.classList.remove('active');
+                        if (confirm(`Delete track "${track.name}"?`)) {
+                            saveUndoState();
+                            anim.tracks = anim.tracks.filter(t => t.id !== track.id);
+                            if (selectedTimelineId === track.id) {
+                                selectedTimelineId = null;
+                            }
+                            renderTimelineForAnimation();
+                            applyAnimationAtTime(currentAnimationTime);
+                            updateModelVisibilityForAnimation();
+                            draw();
                         }
-                        renderTimelineForAnimation();
-                        applyAnimationAtTime(currentAnimationTime);
-                        updateModelVisibilityForAnimation();
-                        draw();
-                    }
-                };
+                    };
+                }
                 
-                changeItem.onclick = (e) => {
-                    e.stopPropagation();
-                    dropdown.classList.remove('active');
-                    showChangeModelDialog(track);
-                };
+                if (changeItem) {
+                    changeItem.onclick = (e) => {
+                        e.stopPropagation();
+                        dropdown.classList.remove('active');
+                        showChangeModelDialog(track);
+                    };
+                }
             });
             
             // Close dropdowns when clicking elsewhere
@@ -4072,6 +4170,146 @@
             attachTimelineEventsForAnimation();
             updateTimelineStats();
             updateModelVisibilityForAnimation();
+        }
+
+        function showKeyframeTooltip(keyframe, track, event) {
+            // Clear any existing timeout
+            if (tooltipTimeout) {
+                clearTimeout(tooltipTimeout);
+            }
+            
+            // Remove existing tooltip
+            if (keyframeTooltip) {
+                keyframeTooltip.remove();
+                keyframeTooltip = null;
+            }
+            
+            // Build tooltip content based on keyframe type
+            let html = `<div class="title">${keyframe.action.toUpperCase()}</div>`;
+            
+            switch (keyframe.action) {
+                case 'translate':
+                    html += `
+                        <div class="row">
+                            <span class="label">X:</span>
+                            <span class="value">${keyframe.params.x || 0}</span>
+                            <span class="label">Y:</span>
+                            <span class="value">${keyframe.params.y || 0}</span>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'rotate':
+                    html += `
+                        <div class="row">
+                            <span class="label">Angle:</span>
+                            <span class="value">${keyframe.params.angle || 0}°</span>
+                        </div>
+                    `;
+                    if (keyframe.params.useModelCenter) {
+                        html += `<div class="row"><span class="label">Center:</span><span class="value">Model Center</span></div>`;
+                    } else if (keyframe.params.centerX !== undefined || keyframe.params.centerY !== undefined) {
+                        html += `<div class="row">
+                            <span class="label">Center:</span>
+                            <span class="value">(${keyframe.params.centerX || 32}, ${keyframe.params.centerY || 16})</span>
+                        </div>`;
+                    }
+                    break;
+                    
+                case 'scale':
+                    html += `
+                        <div class="row">
+                            <span class="label">Scale X:</span>
+                            <span class="value">${keyframe.params.scaleX || 1}</span>
+                        </div>
+                        <div class="row">
+                            <span class="label">Scale Y:</span>
+                            <span class="value">${keyframe.params.scaleY || 1}</span>
+                        </div>
+                    `;
+                    if (keyframe.params.useModelCenter) {
+                        html += `<div class="row"><span class="label">Center:</span><span class="value">Model Center</span></div>`;
+                    } else if (keyframe.params.centerX !== undefined || keyframe.params.centerY !== undefined) {
+                        html += `<div class="row">
+                            <span class="label">Center:</span>
+                            <span class="value">(${keyframe.params.centerX || 32}, ${keyframe.params.centerY || 16})</span>
+                        </div>`;
+                    }
+                    break;
+                    
+                case 'color':
+                    html += `
+                        <div class="row">
+                            <span class="label">Color:</span>
+                            <span class="value" style="display: inline-block; width: 12px; height: 12px; background: ${keyframe.params.color || '#ffffff'}; border: 1px solid #888; margin-left: 4px;"></span>
+                            <span class="value">${keyframe.params.color || '#ffffff'}</span>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'visibility':
+                    html += `
+                        <div class="row">
+                            <span class="label">State:</span>
+                            <span class="value" style="color: ${keyframe.params.visible !== false ? '#4CAF50' : '#ff6666'}">${keyframe.params.visible !== false ? 'VISIBLE' : 'HIDDEN'}</span>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'shader':
+                    const shaderName = (keyframe.params.shader || 'SHADER_NONE').replace('SHADER_', '');
+                    html += `
+                        <div class="row">
+                            <span class="label">Shader:</span>
+                            <span class="value">${shaderName}</span>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'reset':
+                    html += `<div class="row"><span class="value">Reset to original state</span></div>`;
+                    break;
+            }
+            
+            // Add time and instant info
+            html += `<div class="row"><span class="label">Time:</span><span class="value">${Math.round(keyframe.time)}ms</span></div>`;
+            
+            if (keyframe.instant) {
+                html += `<div class="instant">⚡ INSTANT (no interpolation)</div>`;
+            }
+            
+            // Create tooltip
+            keyframeTooltip = document.createElement('div');
+            keyframeTooltip.className = 'keyframe-tooltip';
+            keyframeTooltip.innerHTML = html;
+            document.body.appendChild(keyframeTooltip);
+            
+            // Position tooltip near mouse
+            const tooltipRect = keyframeTooltip.getBoundingClientRect();
+            let left = event.clientX + 15;
+            let top = event.clientY + 15;
+            
+            // Prevent going off screen
+            if (left + tooltipRect.width > window.innerWidth) {
+                left = event.clientX - tooltipRect.width - 15;
+            }
+            if (top + tooltipRect.height > window.innerHeight) {
+                top = event.clientY - tooltipRect.height - 15;
+            }
+            
+            keyframeTooltip.style.left = `${left}px`;
+            keyframeTooltip.style.top = `${top}px`;
+        }
+
+        function hideKeyframeTooltip() {
+            if (tooltipTimeout) {
+                clearTimeout(tooltipTimeout);
+                tooltipTimeout = null;
+            }
+            if (keyframeTooltip) {
+                keyframeTooltip.remove();
+                keyframeTooltip = null;
+            }
         }
 
         function showChangeModelDialog(track) {
@@ -4498,32 +4736,17 @@
                         renderTimelineForAnimation();
                         applyAnimationAtTime(currentAnimationTime);
                         draw();
+
+                        const feedback = document.getElementById('globalFeedback');
+                        if (feedback) {
+                            if (feedback._timeoutId) clearTimeout(feedback._timeoutId);
+                            feedback.remove();
+                        }
                         
                         // Exit paste mode
                         copyModeActive = false;
-                        document.body.style.cursor = '';
-                        
-                        // Show success feedback
-                        const feedback = document.createElement('div');
-                        feedback.style.cssText = `
-                            position: fixed;
-                            bottom: 20px;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            background: #4CAF50;
-                            color: white;
-                            padding: 8px 16px;
-                            border-radius: 4px;
-                            font-family: monospace;
-                            font-size: 12px;
-                            z-index: 10000;
-                            pointer-events: none;
-                            animation: fadeOut 1.5s forwards;
-                        `;
-                        feedback.textContent = '✓ Keyframe pasted!';
-                        document.body.appendChild(feedback);
-                        setTimeout(() => feedback.remove(), 1500);
-                        
+                        document.body.classList.remove('paste-mode');
+                                                
                         return;
                     }
                     
@@ -9618,6 +9841,14 @@
             if (e.key === 'Escape') {
                 e.preventDefault();
 
+
+                if (copyModeActive) {
+                    copyModeActive = false;
+                    document.body.classList.remove('paste-mode');
+                    const feedback = document.getElementById('globalFeedback');
+                    if (feedback) feedback.remove();
+                }
+
                 const feedback = document.getElementById('globalFeedback');
                 if (feedback) {
                     if (feedback._timeoutId) clearTimeout(feedback._timeoutId);
@@ -9666,7 +9897,7 @@
 
                 if (copyModeActive) {
                     copyModeActive = false;
-                    document.body.style.cursor = '';
+                    document.body.classList.remove('paste-mode');
                     const instruction = document.getElementById('pasteInstruction');
                     if (instruction) instruction.remove();
                 }
@@ -9812,29 +10043,8 @@
                     e.preventDefault();
                     // Enter paste mode
                     copyModeActive = true;
-                    document.body.style.cursor = 'copy';
-                    // Show instruction message
-                    const instruction = document.createElement('div');
-                    instruction.id = 'pasteInstruction';
-                    instruction.style.cssText = `
-                        position: fixed;
-                        bottom: 20px;
-                        left: 50%;
-                        transform: translateX(-50%);
-                        background: #ff9900;
-                        color: #111;
-                        padding: 8px 16px;
-                        border-radius: 4px;
-                        font-family: monospace;
-                        font-size: 12px;
-                        font-weight: bold;
-                        z-index: 10000;
-                        pointer-events: none;
-                        animation: fadeOut 3s forwards;
-                    `;
-                    instruction.textContent = 'Click on any timeline to paste keyframe';
-                    document.body.appendChild(instruction);
-                    setTimeout(() => instruction.remove(), 3000);
+                    document.body.classList.add('paste-mode');
+                    showFeedback("Click on any timeline to paste keyframe", 10000);
                 }
             }
             
@@ -11095,7 +11305,7 @@
                 
                 // Update UI without closing editor
                 renderTimelineForAnimation();
-                
+                applyAnimationAtTime(0);
                 applyAnimationAtTime(currentAnimationTime);
                 draw();
                 
@@ -11257,6 +11467,7 @@
                 const btn = document.getElementById('copyKeyframeBtn');
                 const originalText = btn.textContent;
                 btn.textContent = 'COPIED!';
+                showFeedback("Press ctrl-V to paste paste the copy", 1000)
                 btn.style.background = '#4CAF50';
                 setTimeout(() => {
                     btn.textContent = originalText;
