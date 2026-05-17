@@ -2417,6 +2417,63 @@
         }
 
 
+        .track-menu-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: all 0.1s;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .track-menu-btn:hover {
+            background: #555;
+            color: #ff9900;
+        }
+
+        .track-menu-dropdown {
+            animation: menuFadeIn 0.1s ease;
+            position: fixed;
+            background: #2d2d2d;
+            border: 1px solid #ff9900;
+            border-radius: 4px;
+            z-index: 10000;
+            min-width: 120px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: none;
+        }
+
+        .track-menu-dropdown.active {
+            display: block;
+        }
+
+        .track-menu-item {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 11px;
+            color: #ccc;
+            transition: all 0.1s;
+            white-space: nowrap;
+        }
+
+        .track-menu-item:hover {
+            background: #ff9900;
+            color: #111;
+        }
+
+        .track-menu-item.delete:hover {
+            background: #ff6666;
+            color: #111;
+        }
+
+
        
 
 
@@ -3640,18 +3697,145 @@
             drawRuler(canvas, duration);
         }
 
+        function showChangeModelDialog(track) {
+            // Create a dialog similar to the track creation modal
+            const dialog = document.createElement('div');
+            dialog.className = 'create-timeline-modal';
+            dialog.style.display = 'flex';
+            dialog.style.zIndex = '20000';
+            dialog.innerHTML = `
+                <div class="create-timeline-modal-content" style="width: 400px;">
+                    <div class="create-timeline-modal-header">
+                        <h3>🔄 CHANGE TARGET</h3>
+                        <button class="create-timeline-modal-close" id="changeModelClose">&times;</button>
+                    </div>
+                    <div class="create-timeline-modal-body">
+                        <select id="changeModelSelect" class="modal-select" style="margin-bottom: 10px;">
+                            ${models.map((model, idx) => `<option value="${idx}" ${track.modelIndex === idx ? 'selected' : ''}>📁 ${escapeHtml(model.name)}</option>`).join('')}
+                        </select>
+                        ${track.type === 'group' ? `
+                        <select id="changeGroupSelect" class="modal-select">
+                            ${models[track.modelIndex]?.pointGroups?.map((group, gidx) => `<option value="${gidx}" ${track.groupIndex === gidx ? 'selected' : ''}>👥 ${escapeHtml(group.name)}</option>`).join('') || '<option disabled>No groups available</option>'}
+                        </select>
+                        ` : ''}
+                        <div style="margin-top: 12px; padding: 8px; background: #1e1e1e; border-radius: 4px; font-size: 10px; color: #888;">
+                            ${track.type === 'group' ? 
+                                'Changing the model will update the group selection if the group exists in the new model.' : 
+                                'Select a new model for this track. Keyframes will be preserved but may need adjustment if the new model has different geometry.'}
+                        </div>
+                    </div>
+                    <div class="create-timeline-modal-footer">
+                        <button class="modal-btn cancel" id="changeModelCancel">CANCEL</button>
+                        <button class="modal-btn create" id="changeModelConfirm">CHANGE</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(dialog);
+            
+            const modelSelect = dialog.querySelector('#changeModelSelect');
+            const groupSelect = dialog.querySelector('#changeGroupSelect');
+            const closeBtn = dialog.querySelector('#changeModelClose');
+            const cancelBtn = dialog.querySelector('#changeModelCancel');
+            const confirmBtn = dialog.querySelector('#changeModelConfirm');
+            
+            // Update group select when model changes (for group tracks)
+            if (groupSelect) {
+                modelSelect.addEventListener('change', () => {
+                    const newModelIdx = parseInt(modelSelect.value);
+                    const newModel = models[newModelIdx];
+                    groupSelect.innerHTML = '';
+                    
+                    if (newModel.pointGroups && newModel.pointGroups.length > 0) {
+                        newModel.pointGroups.forEach((group, gidx) => {
+                            const option = document.createElement('option');
+                            option.value = gidx;
+                            option.textContent = `👥 ${escapeHtml(group.name)}`;
+                            groupSelect.appendChild(option);
+                        });
+                    } else {
+                        const option = document.createElement('option');
+                        option.disabled = true;
+                        option.textContent = 'No groups available';
+                        groupSelect.appendChild(option);
+                    }
+                });
+            }
+            
+            const closeDialog = () => {
+                dialog.remove();
+            };
+            
+            closeBtn.onclick = closeDialog;
+            cancelBtn.onclick = closeDialog;
+            dialog.onclick = (e) => {
+                if (e.target === dialog) closeDialog();
+            };
+            
+            confirmBtn.onclick = () => {
+                const newModelIdx = parseInt(modelSelect.value);
+                const newModel = models[newModelIdx];
+                
+                if (!newModel) {
+                    closeDialog();
+                    return;
+                }
+                
+                saveUndoState();
+                
+                const oldTrackName = track.name;
+                
+                // Update track model
+                track.modelIndex = newModelIdx;
+                
+                if (track.type === 'group') {
+                    const newGroupIdx = parseInt(groupSelect.value);
+                    if (newModel.pointGroups && newModel.pointGroups[newGroupIdx]) {
+                        track.groupIndex = newGroupIdx;
+                        track.name = `${newModel.name} → ${newModel.pointGroups[newGroupIdx].name}`;
+                    } else {
+                        // Fallback to model track if group doesn't exist in new model
+                        track.type = 'model';
+                        track.groupIndex = -1;
+                        track.name = newModel.name;
+                        showFeedback(`Group not found in "${newModel.name}", converted to model track`, 2000);
+                    }
+                } else {
+                    // Model track
+                    track.name = newModel.name;
+                }
+                
+                // Update track name in the tracks list to ensure uniqueness
+                const anim = getSelectedAnimation();
+                if (anim) {
+                    const sameNameCount = anim.tracks.filter(t => t !== track && t.name === track.name).length;
+                    if (sameNameCount > 0) {
+                        track.name = `${track.name} ${sameNameCount + 1}`;
+                    }
+                }
+                
+                renderTimelineForAnimation();
+                applyAnimationAtTime(currentAnimationTime);
+                updateModelVisibilityForAnimation();
+                draw();
+                
+                showFeedback(`Track changed from "${oldTrackName}" to "${track.name}"`, 2000);
+                closeDialog();
+            };
+        }
+
         function renderTimelineForAnimation() {
             const container = document.getElementById('timelinesContainer');
             if (!container) return;
             
-
             const anim = getSelectedAnimation();
-
+            
+            // Update the name input
             const nameInput = document.getElementById('animationNameInput');
             if (nameInput && anim) {
                 nameInput.value = anim.name;
             }
-
+            
             if (!anim || anim.tracks.length === 0) {
                 container.innerHTML = '<div class="empty-timelines-message">✨ No animation selected or no tracks. Click + to add a track, then drag tools to add keyframes.</div>';
                 updateTimelineStats();
@@ -3674,34 +3858,15 @@
             
             container.innerHTML = '';
             
-            // Helper function to update hover time display
-            function updateHoverTimeFromMouseEvent(e, canvasElement) {
-                const rect = canvasElement.getBoundingClientRect();
-                const scrollContainer = document.querySelector('.ruler-track-container');
-                const scrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
-                const mouseX = e.clientX - rect.left + scrollLeft;
-                const percent = Math.min(1, Math.max(0, mouseX / totalWidth));
-                const time = percent * anim.duration;
-                
-                const timeDisplaySpan = document.getElementById('timelineHoverTime');
-                if (timeDisplaySpan) {
-                    if (time >= 1000) {
-                        timeDisplaySpan.textContent = (time / 1000).toFixed(1) + 's';
-                    } else {
-                        timeDisplaySpan.textContent = Math.round(time) + 'ms';
-                    }
-                }
-            }
-            
-            // Define vertical offsets for different action types (in pixels)
+            // Define vertical offsets for different action types
             const actionVerticalOffsets = {
-                'translate': 0,
+                'translate': 4,
                 'rotate': -4,
                 'scale': 8,
                 'color': -8,
-                'visibility': -12,
-                'shader': 4,
-                'reset': 12
+                'visibility': 0,
+                'reset': 12,
+                'shader': 6
             };
             
             anim.tracks.forEach((track) => {
@@ -3736,11 +3901,28 @@
                 label.style.overflow = 'hidden';
                 
                 const icon = track.type === 'model' ? '📁' : '👥';
+                
+                // Create menu button instead of delete button
+                const menuBtn = document.createElement('button');
+                menuBtn.className = 'track-menu-btn';
+                menuBtn.innerHTML = '☰';
+                menuBtn.title = 'Track options';
+                
+                // Create dropdown menu
+                const dropdown = document.createElement('div');
+                dropdown.className = 'track-menu-dropdown';
+                dropdown.innerHTML = `
+                    <div class="track-menu-item" data-action="clone">📋 Clone Track</div>
+                    <div class="track-menu-item delete" data-action="delete">🗑️ Delete Track</div>
+                    <div class="track-menu-item" data-action="change">🔄 Change Model</div>
+                `;
+                
                 label.innerHTML = `
                     <span style="flex-shrink: 0;">${icon}</span>
                     <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(track.name)}</span>
-                    <button class="timeline-delete-btn" data-track-id="${track.id}" style="background:none; border:none; color:#666; cursor:pointer; font-size:10px; opacity:0.7; flex-shrink:0;">✕</button>
                 `;
+                label.appendChild(menuBtn);
+                label.appendChild(dropdown);
                 
                 const canvas = document.createElement('div');
                 canvas.className = 'timeline-canvas';
@@ -3752,26 +3934,12 @@
                 canvas.style.width = '100%';
                 canvas.setAttribute('data-track-id', track.id);
                 
-                // Add mouse move handler for this track canvas
-                canvas.onmousemove = function(e) {
-                    updateHoverTimeFromMouseEvent(e, canvas);
-                };
-                
-                canvas.onmouseleave = function() {
-                    const timeDisplaySpan = document.getElementById('timelineHoverTime');
-                    if (timeDisplaySpan) {
-                        timeDisplaySpan.textContent = '--';
-                    }
-                };
-                
-                // Add keyframe markers - position using percentage with vertical offset by type
+                // Add keyframe markers
                 (track.keyframes || []).forEach((kf, kfIdx) => {
                     const percent = kf.time / anim.duration;
                     const pixelX = percent * totalWidth;
                     const config = animationActionTypes[kf.action];
                     const markerColor = config ? config.color : '#ff9900';
-                    
-                    // Get vertical offset for this action type (default 0)
                     const yOffset = actionVerticalOffsets[kf.action] || 0;
                     
                     const marker = document.createElement('div');
@@ -3821,39 +3989,84 @@
                 row.appendChild(label);
                 row.appendChild(canvas);
                 container.appendChild(row);
-            });
-            
-            // Add mouse move handler for the ruler as well
-            const timelineRulerCanvas = document.getElementById('timelineRulerCanvas');
-            if (timelineRulerCanvas) {
-                // Store the totalWidth in a closure for the ruler handler
-                const rulerTotalWidth = totalWidth;
                 
-                timelineRulerCanvas.onmousemove = function(e) {
-                    const rect = timelineRulerCanvas.getBoundingClientRect();
-                    const scrollContainer = document.querySelector('.ruler-track-container');
-                    const scrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
-                    const mouseX = e.clientX - rect.left + scrollLeft;
-                    const percent = Math.min(1, Math.max(0, mouseX / rulerTotalWidth));
-                    const time = percent * anim.duration;
+                // Setup menu button click handler
+                menuBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    // Close all other dropdowns first
+                    document.querySelectorAll('.track-menu-dropdown.active').forEach(d => {
+                        if (d !== dropdown) d.classList.remove('active');
+                    });
+                    dropdown.classList.toggle('active');
                     
-                    const timeDisplaySpan = document.getElementById('timelineHoverTime');
-                    if (timeDisplaySpan) {
-                        if (time >= 1000) {
-                            timeDisplaySpan.textContent = (time / 1000).toFixed(1) + 's';
-                        } else {
-                            timeDisplaySpan.textContent = Math.round(time) + 'ms';
+                    if (dropdown.classList.contains('active')) {
+                        // Position the dropdown
+                        const rect = menuBtn.getBoundingClientRect();
+                        const dropdownHeight = dropdown.offsetHeight;
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        const spaceAbove = rect.top;
+                        
+     
+                        dropdown.style.bottom = `${window.innerHeight - rect.top + 2}px`;
+                        dropdown.style.top = 'auto';
+                        
+                        dropdown.style.left = `${rect.left}px`;
+                        dropdown.style.right = 'auto';
+                        
+                        // Ensure dropdown doesn't go off screen horizontally
+                        const dropdownRect = dropdown.getBoundingClientRect();
+                        if (dropdownRect.right > window.innerWidth) {
+                            const overflow = dropdownRect.right - window.innerWidth;
+                            dropdown.style.left = `${rect.left - overflow - 5}px`;
+                        }
+                        if (dropdownRect.left < 0) {
+                            dropdown.style.left = `${rect.left + 5}px`;
                         }
                     }
                 };
                 
-                timelineRulerCanvas.onmouseleave = function() {
-                    const timeDisplaySpan = document.getElementById('timelineHoverTime');
-                    if (timeDisplaySpan) {
-                        timeDisplaySpan.textContent = '--';
+                // Setup menu item click handlers
+                const cloneItem = dropdown.querySelector('[data-action="clone"]');
+                const deleteItem = dropdown.querySelector('[data-action="delete"]');
+                const changeItem = dropdown.querySelector('[data-action="change"]');
+                
+                cloneItem.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.remove('active');
+                    cloneTrack(track.id);
+                };
+                
+                deleteItem.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.remove('active');
+                    if (confirm(`Delete track "${track.name}"?`)) {
+                        saveUndoState();
+                        anim.tracks = anim.tracks.filter(t => t.id !== track.id);
+                        if (selectedTimelineId === track.id) {
+                            selectedTimelineId = null;
+                        }
+                        renderTimelineForAnimation();
+                        applyAnimationAtTime(currentAnimationTime);
+                        updateModelVisibilityForAnimation();
+                        draw();
                     }
                 };
-            }
+                
+                changeItem.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.remove('active');
+                    showChangeModelDialog(track);
+                };
+            });
+            
+            // Close dropdowns when clicking elsewhere
+            document.addEventListener('click', function closeDropdowns(e) {
+                if (!e.target.closest('.track-menu-btn')) {
+                    document.querySelectorAll('.track-menu-dropdown.active').forEach(d => {
+                        d.classList.remove('active');
+                    });
+                }
+            });
             
             syncRulerScroll();
             attachTimelineEventsForAnimation();
@@ -3861,6 +4074,194 @@
             updateModelVisibilityForAnimation();
         }
 
+        function showChangeModelDialog(track) {
+            // Create a modal similar to createTimelineModal
+            const modal = document.getElementById('createTimelineModal');
+            if (!modal) return;
+            
+            // Store original modal content and reuse
+            const originalContent = modal.innerHTML;
+            
+            // Get the select element
+            const select = document.getElementById('timelineTargetSelect');
+            if (!select) return;
+            
+            // Populate the select with models and groups
+            select.innerHTML = '';
+            
+            models.forEach((model, idx) => {
+                const opt = document.createElement('option');
+                opt.value = `model:${idx}`;
+                opt.textContent = `📁 ${model.name}`;
+                if (track.type === 'model' && track.modelIndex === idx) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+                
+                (model.pointGroups || []).forEach((group, gidx) => {
+                    const gopt = document.createElement('option');
+                    gopt.value = `group:${idx}:${gidx}`;
+                    gopt.textContent = `   └─ 👥 ${group.name}`;
+                    gopt.style.paddingLeft = '16px';
+                    if (track.type === 'group' && track.modelIndex === idx && track.groupIndex === gidx) {
+                        gopt.selected = true;
+                    }
+                    select.appendChild(gopt);
+                });
+            });
+            
+            // Change modal title and button text
+            const modalHeader = modal.querySelector('.create-timeline-modal-header h3');
+            const originalTitle = modalHeader ? modalHeader.innerHTML : '';
+            if (modalHeader) modalHeader.innerHTML = '🔄 CHANGE TARGET';
+            
+            const createBtn = document.getElementById('confirmCreateTimelineBtn');
+            const originalBtnText = createBtn ? createBtn.textContent : '';
+            if (createBtn) createBtn.textContent = 'CHANGE';
+            
+            const cancelBtn = document.getElementById('cancelTimelineBtn');
+            
+            // Store original onclick handlers
+            const originalCreateOnClick = createBtn ? createBtn.onclick : null;
+            const originalCancelOnClick = cancelBtn ? cancelBtn.onclick : null;
+            
+            // Override create button handler
+            if (createBtn) {
+                createBtn.onclick = () => {
+                    const val = select.value;
+                    if (!val) return;
+                    
+                    const parts = val.split(':');
+                    const type = parts[0];
+                    const modelIdx = parseInt(parts[1]);
+                    const groupIdx = parts[2] ? parseInt(parts[2]) : -1;
+                    
+                    const newModel = models[modelIdx];
+                    if (!newModel) return;
+                    
+                    saveUndoState();
+                    
+                    const oldTrackName = track.name;
+                    
+                    // Update track
+                    track.modelIndex = modelIdx;
+                    
+                    if (type === 'group') {
+                        if (newModel.pointGroups && newModel.pointGroups[groupIdx]) {
+                            track.type = 'group';
+                            track.groupIndex = groupIdx;
+                            track.name = `${newModel.name} → ${newModel.pointGroups[groupIdx].name}`;
+                        } else {
+                            // Fallback to model track
+                            track.type = 'model';
+                            track.groupIndex = -1;
+                            track.name = newModel.name;
+                            showFeedback(`Group not found, converted to model track`, 1500);
+                        }
+                    } else {
+                        track.type = 'model';
+                        track.groupIndex = -1;
+                        track.name = newModel.name;
+                    }
+                    
+                    renderTimelineForAnimation();
+                    applyAnimationAtTime(currentAnimationTime);
+                    updateModelVisibilityForAnimation();
+                    draw();
+                    
+                    showFeedback(`Track changed from "${oldTrackName}" to "${track.name}"`, 2000);
+                    
+                    // Close modal and restore original content
+                    modal.classList.remove('active');
+                    
+                    // Restore original modal content
+                    if (modalHeader) modalHeader.innerHTML = originalTitle;
+                    if (createBtn) {
+                        createBtn.textContent = originalBtnText;
+                        createBtn.onclick = originalCreateOnClick;
+                    }
+                    if (cancelBtn) cancelBtn.onclick = originalCancelOnClick;
+                    
+                    // Restore original select content
+                    select.innerHTML = '';
+                    models.forEach((model, idx) => {
+                        const opt = document.createElement('option');
+                        opt.value = `model:${idx}`;
+                        opt.textContent = `📁 ${model.name}`;
+                        select.appendChild(opt);
+                        (model.pointGroups || []).forEach((group, gidx) => {
+                            const gopt = document.createElement('option');
+                            gopt.value = `group:${idx}:${gidx}`;
+                            gopt.textContent = `   └─ 👥 ${group.name}`;
+                            gopt.style.paddingLeft = '16px';
+                            select.appendChild(gopt);
+                        });
+                    });
+                };
+            }
+            
+            // Override cancel button handler
+            if (cancelBtn) {
+                cancelBtn.onclick = () => {
+                    modal.classList.remove('active');
+                    
+                    // Restore original modal content
+                    if (modalHeader) modalHeader.innerHTML = originalTitle;
+                    if (createBtn) {
+                        createBtn.textContent = originalBtnText;
+                        createBtn.onclick = originalCreateOnClick;
+                    }
+                    cancelBtn.onclick = originalCancelOnClick;
+                    
+                    // Restore original select content
+                    select.innerHTML = '';
+                    models.forEach((model, idx) => {
+                        const opt = document.createElement('option');
+                        opt.value = `model:${idx}`;
+                        opt.textContent = `📁 ${model.name}`;
+                        select.appendChild(opt);
+                        (model.pointGroups || []).forEach((group, gidx) => {
+                            const gopt = document.createElement('option');
+                            gopt.value = `group:${idx}:${gidx}`;
+                            gopt.textContent = `   └─ 👥 ${group.name}`;
+                            gopt.style.paddingLeft = '16px';
+                            select.appendChild(gopt);
+                        });
+                    });
+                };
+            }
+            
+            // Show the modal
+            modal.classList.add('active');
+            select.focus();
+        }
+
+
+        function cloneTrack(trackId) {
+            const anim = getSelectedAnimation();
+            if (!anim) return;
+            
+            const originalTrack = anim.tracks.find(t => t.id === trackId);
+            if (!originalTrack) return;
+            
+            saveUndoState();
+            
+            const newTrack = {
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                name: originalTrack.name,
+                type: originalTrack.type,
+                modelIndex: originalTrack.modelIndex,
+                groupIndex: originalTrack.groupIndex,
+                keyframes: JSON.parse(JSON.stringify(originalTrack.keyframes))
+            };
+            
+            anim.tracks.push(newTrack);
+            selectedTimelineId = newTrack.id;
+            renderTimelineForAnimation();
+            applyAnimationAtTime(currentAnimationTime);
+            draw();
+            showFeedback(`Track cloned: ${newTrack.name}`, 1500);
+        }
         function setupDragAndDrop() {
             document.querySelectorAll('.compact-tool').forEach(tool => {
                 tool.setAttribute('draggable', 'true');
