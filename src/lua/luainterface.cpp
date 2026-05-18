@@ -850,6 +850,7 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("KEYFRAME_RESET",           (int)KEYFRAME_RESET);
   m_lua->setConstant("KEYFRAME_COLOR",           (int)KEYFRAME_COLOR);
   m_lua->setConstant("KEYFRAME_VISIBILITY",      (int)KEYFRAME_VISIBILITY);
+  m_lua->setConstant("KEYFRAME_SINE",            (int)KEYFRAME_SINE);
   m_lua->setConstant("KEYFRAME_SHADER",          (int)KEYFRAME_SHADER);
 
 

@@ -2993,7 +2993,7 @@
                 icon: "🎨",
                 color: "#E91E63",
                 fields: [
-                    { name: "color", label: "Target Color", default: "#ffffff", type: "color", autoSave: true }
+                    { name: "color", label: "Target Color", default: "#ffffff", type: "color" }
                 ],
                 useModelCenter: false
             },
@@ -3007,6 +3007,21 @@
                 ],
                 useModelCenter: false,
                 isInstant: findTriangleUnderMouse
+            },
+            "sine": {
+                name: "Sine Wave",
+                description: "Oscillate the target with sine/cosine waves",
+                icon: "〰️",
+                color: "#9C27B0",
+                fields: [
+                    { name: "amplitude_x", label: "Amplitude X", default: 0, type: "number", min: -100, max: 100, step: 1, unit: "px" },
+                    { name: "amplitude_y", label: "Amplitude Y", default: 0, type: "number", min: -100, max: 100, step: 1, unit: "px" },
+                    { name: "rotations_x", label: "Rotations X", default: 0, type: "number", min: -1000, max: 1000, step: 0.5 },
+                    { name: "rotations_y", label: "Rotations Y", default: 0, type: "number", min: -1000, max: 1000, step: 0.5 },
+                    { name: "x_sin", label: "X use SIN", default: true, type: "checkbox" },
+                    { name: "y_sin", label: "Y use SIN", default: true, type: "checkbox" }
+                ],
+                useModelCenter: false
             },
             "shader": {
                 name: "Shader",
@@ -3933,7 +3948,8 @@
                 'color': -8,
                 'visibility': 0,
                 'reset': 12,
-                'shader': 6
+                'shader': 6,
+                'sine': 2
             };
             
             anim.tracks.forEach((track) => {
@@ -5380,7 +5396,7 @@
 
         function resetTrackStateAfterReset(trackState, currentTime, keyframesByType) {
             // For each operation type, find the first keyframe at or after currentTime
-            for (const opType of ['translate', 'rotate', 'scale', 'color', 'visibility', 'shader']) {
+            for (const opType of ['translate', 'rotate', 'scale', 'color', 'visibility', 'shader', 'sine']) {
                 const kfList = keyframesByType[opType] || [];
                 let found = false;
                 for (let i = 0; i < kfList.length; i++) {
@@ -5400,6 +5416,7 @@
             animationFrameState.lastTime = 0;
             animationFrameState.frameSum = 0;
             animationFrameState.trackStates.clear();
+            resetAllSineKeyframes();
         }
 
         function forceRefreshAnimation() {
@@ -5476,7 +5493,8 @@
                             color: -1,
                             visibility: -1,
                             reset: -1,
-                            shader: -1
+                            shader: -1,
+                            sine: -1
                         },
                         colorInterpolationStarted: false,
                         startColor: null
@@ -5494,7 +5512,7 @@
                 }
                 
                 // Process each operation type
-                const operationTypes = ['translate', 'rotate', 'scale', 'color', 'visibility', 'reset', 'shader'];
+                const operationTypes = ['translate', 'rotate', 'scale', 'color', 'visibility', 'reset', 'shader', 'sine'];
 
                 for (const opType of operationTypes) {
                     const keyframes = track.keyframes.filter(kf => kf.action === opType).sort((a, b) => a.time - b.time);
@@ -5583,6 +5601,10 @@
                     let remaining = remainingDt;
                     let stepTime = currentTime;
                     let maxIter = 10;
+
+                    if (targetTime == 0) {
+                        nextKf._lastSineY = 0;
+                    }
                     
                     while (remaining > 0 && maxIter-- > 0) {
                         const timeToKeyframe = nextKf.time - stepTime;
@@ -5596,10 +5618,14 @@
                                 remaining = nextKf.deltaToNext;
                                 stepDt += diff;
                             }
-
+                            
+                            // Calculate elapsed time since this keyframe started
+                            const elapsedSinceKeyframe = stepTime - nextKf.time;
+                            
                             applyTransformationStep(
                                 track, opType, nextKf, stepDt, stepTime, true,
-                                trackState, animationModels, track.modelIndex, groupIndices
+                                trackState, animationModels, track.modelIndex, groupIndices,
+                                elapsedSinceKeyframe
                             );
                             
                             stepTime += stepDt;
@@ -5619,9 +5645,13 @@
                                 break;
                             }
                         } else {
+                            // Calculate elapsed time since this keyframe started for partial step
+                            const elapsedSinceKeyframe = stepTime - nextKf.time;
+                            
                             applyTransformationStep(
                                 track, opType, nextKf, remaining, stepTime, false,
-                                trackState, animationModels, track.modelIndex, groupIndices
+                                trackState, animationModels, track.modelIndex, groupIndices,
+                                elapsedSinceKeyframe
                             );
                             stepTime += remaining;
                             remaining = 0;
@@ -5636,21 +5666,42 @@
             draw();
         }
 
-        function applyTransformationStep(track, opType, kf, dt, currentTime, lastIteration, trackState, models, modelIndex, groupIndices) {
+
+        function resetAllSineKeyframes() {
+            animations.forEach(anim => {
+                anim.tracks.forEach(track => {
+                    track.keyframes.forEach(kf => {
+                        if (kf.action === 'sine') {
+                            kf._lastSineY = 0;
+                            kf._lastSineX = 0;
+                        }
+                    });
+                });
+            });
+        }
+
+        function applyTransformationStep(track, opType, kf, dt, currentTime, lastIteration, trackState, models, modelIndex, groupIndices, elapsedSinceKeyframe ) {
+            elapsedSinceKeyframe = kf.deltaToNext+elapsedSinceKeyframe+dt
             const model = models[modelIndex];
             if (!model) return;
             
-            let delta = 0;
+            let delta = 0; //Not same delta as the protopanda delta. This is just the step delta. If you want the real delta use the RealDelta
             if (kf.deltaToNext && kf.deltaToNext > 0) {
                 delta = dt / kf.deltaToNext;
             } else {
                 delta = 1.0;
             }
+            let realDelta = 0;
+            if (kf.deltaToNext && kf.deltaToNext > 0) {
+                realDelta = Math.min(1, Math.max(0, elapsedSinceKeyframe / kf.deltaToNext));
+            } else {
+                realDelta = 1.0;
+            }
             delta = Math.min(1, Math.max(0, delta));
             
             switch (opType) {
                 case 'translate': {
-                        
+
                     let px = delta * (kf.params.x || 0);
                     let py = delta * (kf.params.y || 0);
                     let shouldApply = true;
@@ -5673,7 +5724,7 @@
                                 tri.v3.x += px;
                                 tri.v3.y += py;
                             }
-                        } else if (track.type === 'group' && groupIndices) {
+                        } else if (track.type === 'group' && grouFndices) {
                             let pointIdx = 0;
                             for (let tri of model.triangles) {
                                 for (let v = 0; v < 3; v++) {
@@ -5972,6 +6023,92 @@
                     }
                     break;
                 }
+
+                case 'sine': {
+                    let amplitude_x = kf.params.amplitude_x || 0;
+                    let amplitude_y = kf.params.amplitude_y || 0;
+                    let rotations_x = kf.params.rotations_x || 0;
+                    let rotations_y = kf.params.rotations_y || 0;
+                    let x_sin = kf.params.x_sin !== false;  // Default true
+                    let y_sin = kf.params.y_sin !== false;  // Default true
+                    
+                    // Initialize last values if not exists
+                    if (kf._lastSineX === undefined) kf._lastSineX = 0;
+                    if (kf._lastSineY === undefined) kf._lastSineY = 0;
+                    
+                    // Calculate progress based on elapsed time
+                    let progress = 0;
+                    if (kf.deltaToNext && kf.deltaToNext > 0) {
+                        progress = Math.min(1, Math.max(0, elapsedSinceKeyframe / kf.deltaToNext));
+                    } else {
+                        progress = 1.0;
+                    }
+                    
+                    // Calculate target displacements
+                    let targetX = 0;
+                    let targetY = 0;
+                    
+                    // X axis
+                    if (rotations_x > 0) {
+                        let angleX = 2 * Math.PI * rotations_x * progress;
+                        if (x_sin) {
+                            targetX = amplitude_x * Math.sin(angleX);
+                        } else {
+                            targetX = amplitude_x * Math.cos(angleX);
+                        }
+                    }
+                    
+                    // Y axis
+                    if (rotations_y > 0) {
+                        let angleY = 2 * Math.PI * rotations_y * progress;
+                        if (y_sin) {
+                            targetY = amplitude_y * Math.sin(angleY);
+                        } else {
+                            targetY = amplitude_y * Math.cos(angleY);
+                        }
+                    }
+                    
+                    // Calculate deltas
+                    const deltaX = targetX - kf._lastSineX;
+                    const deltaY = targetY - kf._lastSineY;
+                    
+                    // Apply delta movement
+                    if (deltaX !== 0 || deltaY !== 0) {
+                        if (track.type === 'model') {
+                            for (let tri of model.triangles) {
+                                tri.v1.x += deltaX;
+                                tri.v1.y += deltaY;
+                                tri.v2.x += deltaX;
+                                tri.v2.y += deltaY;
+                                tri.v3.x += deltaX;
+                                tri.v3.y += deltaY;
+                            }
+                        } else if (track.type === 'group' && groupIndices) {
+                            let pointIdx = 0;
+                            for (let tri of model.triangles) {
+                                for (let v = 0; v < 3; v++) {
+                                    if (groupIndices.has(pointIdx)) {
+                                        const point = v === 0 ? tri.v1 : (v === 1 ? tri.v2 : tri.v3);
+                                        point.x += deltaX;
+                                        point.y += deltaY;
+                                    }
+                                    pointIdx++;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Store current values for next frame
+                    kf._lastSineX = targetX;
+                    kf._lastSineY = targetY;
+                    
+                    // Reset when keyframe ends
+                    if (lastIteration) {
+                        kf._lastSineX = 0;
+                        kf._lastSineY = 0;
+                    }
+                    break;
+                }
                 
                 case 'shader': {
                     const targetShader = kf.params.shader || "SHADER_NONE";
@@ -6118,7 +6255,8 @@
                 color: [],
                 visibility: [],
                 reset: [],
-                shader: []
+                shader: [],
+                sine: []
             };
             
             const sortedKeyframes = [...track.keyframes].sort((a, b) => a.time - b.time);
@@ -6247,8 +6385,9 @@
         function stopAnimationPlayback() {
             pauseAnimationPlayback();
             currentAnimationTime = 0;
-
+            
             resetAnimationState();
+            resetAllSineKeyframes();
             
             // Clear accumulated base when stopping
             accumulatedBaseModels = null;
@@ -6258,16 +6397,6 @@
             draw();
         }
 
-        function reapplyCurrentAnimation() {
-            if (!isAnimationMode) return;
-                        
-            // Apply animation at current time
-            if (selectedAnimationId) {
-                applyAnimationAtTime(currentAnimationTime);
-            }
-            
-            draw();
-        }
 
         function updatePlayheadPosition() {
             const anim = getSelectedAnimation();
@@ -9108,6 +9237,13 @@
                             keyframe.v = kf.params.visible !== false;
                         } else if (kf.action === 'reset') {
                             // Nothing extra needed for reset
+                        } else if (kf.action === 'sine') {
+                            keyframe.amplitude_x = kf.params.amplitude_x || 0;
+                            keyframe.amplitude_y = kf.params.amplitude_y || 0;
+                            keyframe.rotations_x = kf.params.rotations_x || 0;
+                            keyframe.rotations_y = kf.params.rotations_y || 0;
+                            keyframe.x_sin = kf.params.x_sin !== false;
+                            keyframe.y_sin = kf.params.y_sin !== false;
                         } else if (kf.action === 'shader') {
                             keyframe.shader = kf.params.shader || 'SHADER_NONE';
                         }
@@ -9361,6 +9497,15 @@
                                                 } else if (kf.t === 'reset') {
                                                     // No parameters needed for reset
                                                     keyframe.params = {};
+                                                } else if (kf.t === 'sine') {
+                                                    keyframe.params = {
+                                                        amplitude_x: kf.amplitude_x || 0,
+                                                        amplitude_y: kf.amplitude_y || 0,
+                                                        rotations_x: kf.rotations_x || 0,
+                                                        rotations_y: kf.rotations_y || 0,
+                                                        x_sin: kf.x_sin !== false,
+                                                        y_sin: kf.y_sin !== false
+                                                    };
                                                 } else if (kf.t === 'shader') {
                                                     keyframe.params = {
                                                         shader: kf.shader || 'SHADER_NONE'
@@ -11182,6 +11327,44 @@
                         This action resets the target to its original state
                     </div>
                 `;
+            } else if (kf.action === 'sine') {
+                html += `
+                    <div class="param-row">
+                        <div class="param-label">TIME (ms)</div>
+                        <input type="number" id="editKeyframeTime" value="${Math.round(kf.time)}" min="0" max="${animation.duration}" step="${snapInterval}">
+                    </div>
+                    <div style="border-bottom: 1px solid #444; margin: 8px 0;"></div>
+                    <div style="font-size: 10px; color: ${config.color}; font-weight: bold; margin-bottom: 6px;">X AXIS</div>
+                    <div class="param-row">
+                        <div class="param-label">AMPLITUDE X (px)</div>
+                        <input type="number" id="editParamAmplitudeX" value="${kf.params.amplitude_x || 0}" step="1" min="-100" max="100">
+                    </div>
+                    <div class="param-row">
+                        <div class="param-label">ROTATIONS X</div>
+                        <input type="number" id="editParamRotationsX" value="${kf.params.rotations_x || 0}" step="0.5" min="0" max="10">
+                    </div>
+                    <div class="instant-checkbox">
+                        <input type="checkbox" id="editParamXSin" ${(kf.params.x_sin !== false) ? 'checked' : ''}>
+                        <label for="editParamXSin">Use SIN (uncheck for COS)</label>
+                    </div>
+                    <div style="border-bottom: 1px solid #444; margin: 8px 0;"></div>
+                    <div style="font-size: 10px; color: ${config.color}; font-weight: bold; margin-bottom: 6px;">Y AXIS</div>
+                    <div class="param-row">
+                        <div class="param-label">AMPLITUDE Y (px)</div>
+                        <input type="number" id="editParamAmplitudeY" value="${kf.params.amplitude_y || 0}" step="1" min="-100" max="100">
+                    </div>
+                    <div class="param-row">
+                        <div class="param-label">ROTATIONS Y</div>
+                        <input type="number" id="editParamRotationsY" value="${kf.params.rotations_y || 0}" step="0.5" min="0" max="10">
+                    </div>
+                    <div class="instant-checkbox">
+                        <input type="checkbox" id="editParamYSin" ${(kf.params.y_sin !== false) ? 'checked' : ''}>
+                        <label for="editParamYSin">Use SIN (uncheck for COS)</label>
+                    </div>
+                    <div style="margin-top: 8px; padding: 6px; background: #1e1e1e; border-radius: 4px; font-size: 9px; color: #888; text-align: center;">
+                        <b>MAY NOT BE 100% ACCURATE IN THE EDITOR WHEN MANUALLY MOVING THE TIMELINE!</b>
+                    </div>
+                `;
             } else if (kf.action === 'shader') {
                 // Get shader options from the action type configuration
                 const shaderConfig = animationActionTypes['shader'];
@@ -11281,6 +11464,21 @@
                     if (radioSelected) {
                         newKf.params.visible = radioSelected.value === 'visible';
                     }
+                } else if (newKf.action === 'sine') {
+                    const amplitude_x = parseFloat(document.getElementById('editParamAmplitudeX')?.value);
+                    console.log(amplitude_x)
+                    const amplitude_y = parseFloat(document.getElementById('editParamAmplitudeY')?.value);
+                    const rotations_x = parseFloat(document.getElementById('editParamRotationsX')?.value);
+                    const rotations_y = parseFloat(document.getElementById('editParamRotationsY')?.value);
+                    const x_sin = document.getElementById('editParamXSin')?.checked;
+                    const y_sin = document.getElementById('editParamYSin')?.checked;
+                    
+                    if (!isNaN(amplitude_x)) newKf.params.amplitude_x = amplitude_x;
+                    if (!isNaN(amplitude_y)) newKf.params.amplitude_y = amplitude_y;
+                    if (!isNaN(rotations_x)) newKf.params.rotations_x = rotations_x;
+                    if (!isNaN(rotations_y)) newKf.params.rotations_y = rotations_y;
+                    newKf.params.x_sin = x_sin !== false;
+                    newKf.params.y_sin = y_sin !== false;
                 } else if (newKf.action === 'shader') {
                     const shaderSelect = document.getElementById('editParamShader');
                     if (shaderSelect) {
@@ -11347,6 +11545,13 @@
             document.getElementById('editParamCenterY')?.addEventListener('input', autoSave);
             document.getElementById('editUseModelCenter')?.addEventListener('change', autoSave);
             document.getElementById('editParamShader')?.addEventListener('change', autoSave);
+
+            document.getElementById('editParamAmplitudeX')?.addEventListener('input', autoSave);
+            document.getElementById('editParamAmplitudeY')?.addEventListener('input', autoSave);
+            document.getElementById('editParamRotationsX')?.addEventListener('input', autoSave);
+            document.getElementById('editParamRotationsY')?.addEventListener('input', autoSave);
+            document.getElementById('editParamXSin')?.addEventListener('change', autoSave);
+            document.getElementById('editParamYSin')?.addEventListener('change', autoSave);
             
             // Add immediate color change listener for color picker
             const colorInput = document.getElementById('editParamColor');

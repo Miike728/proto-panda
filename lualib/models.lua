@@ -72,6 +72,28 @@ local keyframeTypeMap = {
 		end	
     	return tr:AddKeyFrame(KeyFrame(KEYFRAME_VISIBILITY, obj.at, {x=0, y=0}, {x=0,y=0}, 0, true, obj.v)) 
 	end,
+	["sine"] = function(tr, obj) 
+		if type(obj.amplitude_x) ~= 'number' then  
+			return nil, 'amplitude_x is not a number ('..type(obj.amplitude_x)..')'
+		end	
+		if type(obj.amplitude_y) ~= 'number' then  
+			return nil, 'amplitude_y is not a number ('..type(obj.amplitude_y)..')'
+		end	
+		if type(obj.rotations_x) ~= 'number' then  
+			return nil, 'rotations_x is not a number ('..type(obj.rotations_x)..')'
+		end	
+		if type(obj.rotations_y) ~= 'number' then  
+			return nil, 'rotations_y is not a number ('..type(obj.rotations_y)..')'
+		end	
+		local mode = 0
+		if obj.x_sin == true then  
+			mode = 1
+		end
+		if obj.y_sin == true then  
+			mode = mode+2
+		end
+    	return tr:AddKeyFrame(KeyFrame(KEYFRAME_SINE, obj.at, {x=obj.amplitude_x, y=obj.amplitude_y}, {x=obj.rotations_x,y=obj.rotations_y}, mode, false, false)) 
+	end,
 	["shader"] = function(tr, obj) 
 		if type(obj.shader) ~= 'string' then  
 			return nil, 'shader is not a string ('..type(obj.string)..')'

@@ -14,6 +14,7 @@ enum KeyframeType{
     KEYFRAME_COLOR,
     KEYFRAME_VISIBILITY,
     KEYFRAME_SHADER,
+    KEYFRAME_SINE,
     KEYFRAME_TYPE_LAST,
 };
 
@@ -24,12 +25,13 @@ const std::map<std::string, KeyframeType> KeyframeTypeMap = {
     {"reset", KEYFRAME_RESET},
     {"color", KEYFRAME_COLOR},
     {"visibility", KEYFRAME_VISIBILITY},
+    {"sine", KEYFRAME_SINE},
     {"shader", KEYFRAME_SHADER},
 };
 
 class Keyframe{
     public:
-    Keyframe():type(KEYFRAME_NONE),playAt(0),deltaToNext(0),interpolationStartedAt(0),value(0.0f, 0.0f),center(0.0f,0.0f),ignoreInterpolation(false), dynamicCenter(false){};
+    Keyframe():type(KEYFRAME_NONE),playAt(0),deltaToNext(0),interpolationStartedAt(0),value(0.0f, 0.0f),center(0.0f,0.0f),ignoreInterpolation(false), dynamicCenter(false),m_storage({0.0f, 0.0f}){};
     Keyframe(KeyframeType mode, uint32_t at, Vec2f val, Vec2f cntr = Vec2(0.0f, 0.0f), uint16_t ccolor = 0, bool igInterp = false, bool dynamicCenterP=false):type(mode),playAt(at),value(val),center(cntr),color(ccolor),ignoreInterpolation(igInterp), dynamicCenter(dynamicCenterP){};
 
 
@@ -44,6 +46,7 @@ class Keyframe{
     Vec2f center;
     uint16_t color;
     bool ignoreInterpolation, dynamicCenter;
+    float m_storage[2];
 };
 
 class KeyframeTrack{

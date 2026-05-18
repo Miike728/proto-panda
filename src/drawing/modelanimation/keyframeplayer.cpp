@@ -230,7 +230,7 @@ void KeyframeTrack::UpdateTrack(uint32_t dt, uint32_t prevDt){
             uint32_t sumLocal = prevDt; //current time
             uint32_t remaining = dt;
 
-            Keyframe nextKf = keyframes[frameId];
+            Keyframe &nextKf = keyframes[frameId];
             int maxIter = 5;
             while (remaining > 0){
                 if (sumLocal+remaining > nextKf.playAt){
@@ -402,6 +402,59 @@ void KeyframeTrack::applyTransformations(uint32_t dt, uint32_t frameSum, Keyfram
         case KEYFRAME_VISIBILITY:{
             if (lastIteration){
                 obj->visible = nextKf.dynamicCenter;
+            }
+            break;
+        }
+        case KEYFRAME_SINE: {
+
+            
+            float delta = 0;
+            if (nextKf.deltaToNext != 0){
+                delta = ((float)(frameSum-nextKf.interpolationStartedAt))/(float)nextKf.deltaToNext;
+            }else{
+                delta = 1.0f;
+            }
+
+            if (delta == 0.0f || lastIteration) {
+                nextKf.m_storage[0] = 0;
+                nextKf.m_storage[1] = 0;
+            }
+            
+            float targetSineY, targetSineX;
+
+            float angleX = 2.0f * M_PI * nextKf.center.x * delta;
+            float angleY = 2.0f * M_PI * nextKf.center.y * delta;
+
+            if (nextKf.color&2 == 1){
+                targetSineY = nextKf.value.y * sin(angleY);
+            }else{
+                targetSineY = nextKf.value.y * cos(angleY);
+            }
+            if (nextKf.color&1 == 1){
+                targetSineX = nextKf.value.x * sin(angleX);
+            }else{
+                targetSineX = nextKf.value.x * cos(angleX);
+            }
+            // Get last sine value (stored in keyframe)
+            float lastSineX = nextKf.m_storage[0];
+            float lastSineY = nextKf.m_storage[1];
+
+            // Calculate delta from last frame
+            float deltaSineY = targetSineY - lastSineY;
+            float deltaSineX = targetSineX - lastSineX;
+            
+            if (usingModel) {
+                obj->Translate(Vec2f(deltaSineX, deltaSineY));
+            } else {
+                obj->TranslatePoints(pointGroup, Vec2f(deltaSineX, deltaSineY));
+            }
+            
+            nextKf.m_storage[0] = targetSineX;
+            nextKf.m_storage[1] = targetSineY;
+            
+            if (delta >= 1.0f || lastIteration) {
+                nextKf.m_storage[0] = 0;
+                nextKf.m_storage[1] = 0;
             }
             break;
         }
