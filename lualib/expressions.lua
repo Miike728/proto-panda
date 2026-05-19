@@ -105,19 +105,13 @@ function _M.Load()
 	local conf = configloader.Get()
 
 
-	local conf = configloader.Get()
-	if conf.models_folder then
-		local files = listFilesInFolder(conf.models_folder)
-		for i,file in pairs(files) do 
-			local fullPath = conf.models_folder..file 
-			local modelAnim = models.getModelAnimationList(fullPath)
-			if modelAnim then
-				for id , anim in pairs(modelAnim) do 
-					_M.loadSingleExpression(anim, fullPath, id)
-				end
-			end
+	local modelAnim = models.getModelAnimationList("/models.json")
+	if modelAnim then
+		for id , anim in pairs(modelAnim) do 
+			_M.loadSingleExpression(anim, fullPath, id)
 		end
 	end
+
 
 	generic.displaySplashMessage("Starting:\nExpressions")
 	for i ,b in pairs(conf.expressions) do 

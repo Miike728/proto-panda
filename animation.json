@@ -1,5 +1,4 @@
 {
-  "models_folder": "/models/",
   "frames": [
     {
       "pattern": "/expressions/blink/blink%d.png",

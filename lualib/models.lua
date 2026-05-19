@@ -227,18 +227,9 @@ end
 
 function _M.Load()
 	generic.displaySplashMessage("Starting:\nModels")
-	local conf = configloader.Get()
-	if conf.models_folder then
-		local files = listFilesInFolder(conf.models_folder)
-		for i,file in pairs(files) do  
-			local fullPath = conf.models_folder..file
-			local ok, err = _M.loadModelsFromJson(fullPath)
-			if not ok then 
-				error(err)
-			end
-		end
-	else
-		log("Skipping loading models for 'models_folder' not beeing defined")	
+	local ok, err =_M.loadModelsFromJson("/models.json")
+	if not ok then 
+		error(err)
 	end
 end
 
