@@ -3209,6 +3209,8 @@
         var pickModeTargetInput = null;
         var isPreviewMode  = false;
         var pendingUndoForPickMode = false;
+
+        let loadedFromServer = false;
                     
         
 
@@ -3630,7 +3632,7 @@
             // Update name input field
             const nameInput = document.getElementById('animationNameInput');
             if (nameInput) nameInput.value = finalName;
-            
+            updateModelVisibilityForAnimation();
             // Reset models to original and apply animation at time 0
             applyAnimationAtTime(0);
             draw();
@@ -3659,10 +3661,8 @@
         }
 
         function selectAnimation(animId) {
-            // If not in animation mode, switch first
             if (!isAnimationMode) {
                 toggleMode();
-                // Small delay to allow mode switch
                 setTimeout(() => {
                     selectedAnimationId = animId;
                     currentAnimationTime = 0;
@@ -3670,6 +3670,7 @@
                     renderAnimationList();
                     renderTimelineForAnimation();
                     if (selectedAnimationId) {
+                        updateModelVisibilityForAnimation(); // Add this
                         applyAnimationAtTime(0);
                     }
                     draw();
@@ -3681,6 +3682,7 @@
                 renderAnimationList();
                 renderTimelineForAnimation();
                 if (selectedAnimationId) {
+                    updateModelVisibilityForAnimation(); // Add this
                     applyAnimationAtTime(0);
                 }
                 draw();
@@ -5724,7 +5726,7 @@
                                 tri.v3.x += px;
                                 tri.v3.y += py;
                             }
-                        } else if (track.type === 'group' && grouFndices) {
+                        } else if (track.type === 'group' && groupIndices) {
                             let pointIdx = 0;
                             for (let tri of model.triangles) {
                                 for (let v = 0; v < 3; v++) {
@@ -9173,21 +9175,16 @@
             currentColor = e.target.value;
         });
 
-        document.getElementById('saveBtn').addEventListener('click', function() {
-            let modelsToSave;
+
+
+
+        function exportToJSON() {
+            let modelsToSave = isAnimationMode && savedPointsData ? models : models;
             
-            if (isAnimationMode && savedPointsData) {
-                modelsToSave = models;
-            } else {
-                modelsToSave = models;
-            }  
-            sanitizePointGroups();
-            
-            // Build animations in new format - WITHOUT resources array
+            // Build animations in new format
             const animationsData = [];
             
             animations.forEach(anim => {
-                // Build tracks array - each track is separate with its own keyframes
                 const tracksData = [];
                 
                 anim.tracks.forEach((track, trackIdx) => {
@@ -9203,14 +9200,12 @@
                         return;
                     }
                     
-                    // Build keyframes for this track
                     const keyframesData = track.keyframes.map(kf => {
                         const keyframe = {
                             t: kf.action,
                             at: Math.round(kf.time)
                         };
                         
-                        // Add parameters based on type
                         if (kf.action === 'translate') {
                             keyframe.x = kf.params.x || 0;
                             keyframe.y = kf.params.y || 0;
@@ -9226,7 +9221,6 @@
                             if (kf.params.centerY !== undefined) keyframe.cy = kf.params.centerY;
                             if (kf.params.useModelCenter) keyframe.umc = true;
                         } else if (kf.action === 'color') {
-                            // Convert hex color to RGB565 number
                             const hex = kf.params.color || '#ffffff';
                             const r = parseInt(hex.slice(1,3), 16);
                             const g = parseInt(hex.slice(3,5), 16);
@@ -9236,24 +9230,22 @@
                         } else if (kf.action === 'visibility') {
                             keyframe.v = kf.params.visible !== false;
                         } else if (kf.action === 'reset') {
-                            // Nothing extra needed for reset
-                        } else if (kf.action === 'sine') {
-                            keyframe.amplitude_x = kf.params.amplitude_x || 0;
-                            keyframe.amplitude_y = kf.params.amplitude_y || 0;
-                            keyframe.rotations_x = kf.params.rotations_x || 0;
-                            keyframe.rotations_y = kf.params.rotations_y || 0;
-                            keyframe.x_sin = kf.params.x_sin !== false;
-                            keyframe.y_sin = kf.params.y_sin !== false;
+                            // Nothing extra
                         } else if (kf.action === 'shader') {
                             keyframe.shader = kf.params.shader || 'SHADER_NONE';
+                        } else if (kf.action === 'sine') {
+                            keyframe.amplitude_x = kf.params.amplitude_x || 0;
+                            keyframe.amplitude_y = kf.params.amplitude_y || 10;
+                            keyframe.rotations_x = kf.params.rotations_x || 0;
+                            keyframe.rotations_y = kf.params.rotations_y || 1;
+                            keyframe.x_sin = kf.params.x_sin !== false;
+                            keyframe.y_sin = kf.params.y_sin !== false;
                         }
                         
                         if (kf.instant) keyframe.i = true;
-                        
                         return keyframe;
                     });
                     
-                    // Sort keyframes by time
                     keyframesData.sort((a, b) => a.at - b.at);
                     
                     tracksData.push({
@@ -9280,7 +9272,7 @@
                 return rgbToRGB565(r, g, b);
             }
             
-            var exportData = {
+            const exportData = {
                 models: modelsToSave.map(model => {
                     let xCoords = [];
                     let yCoords = [];
@@ -9302,14 +9294,355 @@
                 animations: animationsData
             };
             
-            var jsonStr = JSON.stringify(exportData, null, 2);
-            var blob = new Blob([jsonStr], {type: "application/json"});
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = "animation.json";
-            a.click();
-            URL.revokeObjectURL(url);
+            return JSON.stringify(exportData, null, 2);
+        }
+
+        function importFromJSON(jsonString) {
+            try {
+                const parsed = JSON.parse(jsonString);
+                
+                if (!parsed.models || !Array.isArray(parsed.models)) {
+                    throw new Error("Invalid JSON format: missing 'models' array");
+                }
+                
+                // Clear existing models
+                models.length = 0;
+                expandedGroups = {};
+
+                parsed.models.forEach((m, idx) => {
+                    let triangles = [];
+                    if (m.x && m.y && m.color && m.x.length === m.y.length && m.x.length % 3 === 0) {
+                        for (let i = 0; i < m.x.length; i += 3) {
+                            const rgb565 = m.color[i/3];
+                            const r = (rgb565 >> 11) & 0x1F;
+                            const g = (rgb565 >> 5) & 0x3F;
+                            const b = rgb565 & 0x1F;
+                            const r8 = (r << 3) | (r >> 2);
+                            const g8 = (g << 2) | (g >> 4);
+                            const b8 = (b << 3) | (b >> 2);
+                            const colorHex = '#' + ((1 << 24) + (r8 << 16) + (g8 << 8) + b8).toString(16).slice(1);
+                            triangles.push({
+                                v1: Vec2f(m.x[i], m.y[i]),
+                                v2: Vec2f(m.x[i+1], m.y[i+1]),
+                                v3: Vec2f(m.x[i+2], m.y[i+2]),
+                                color: colorHex
+                            });
+                        }
+                    }
+                    
+                    let pointGroups = [];
+                    if (m.pointGroups && Array.isArray(m.pointGroups)) {
+                        m.pointGroups.forEach((group, gIdx) => {
+                            if (typeof group === 'object' && group.name && group.indices) {
+                                pointGroups.push({
+                                    name: group.name,
+                                    pointIndices: group.indices
+                                });
+                            } else if (Array.isArray(group)) {
+                                pointGroups.push({
+                                    name: "Group " + (gIdx + 1),
+                                    pointIndices: group
+                                });
+                            }
+                        });
+                    }
+                    
+                    models.push({
+                        name: m.name || ("Model " + idx),
+                        visible: true,
+                        triangles: triangles,
+                        pointGroups: pointGroups
+                    });
+                    expandedGroups[idx] = false;
+                });
+                
+                if (models.length === 0) {
+                    models.push({
+                        name: "Model 0",
+                        visible: true,
+                        triangles: [
+                            { v1: Vec2f(5.0,19.0), v2: Vec2f(8.0,22.0), v3: Vec2f(12.0,20.0), color: "#0000ff" },
+                        ],
+                        pointGroups: []
+                    });
+                    expandedGroups[0] = false;
+                }
+                
+                selectedModelIndex = 0;
+                selectedGroupIndex = -1;
+                points = [];
+                state = 0;
+                selectedVertices = [];
+                selectionFromSelectTool = false;
+                
+                // Parse animations
+                const newAnimations = [];
+                
+                if (parsed.animations && Array.isArray(parsed.animations)) {
+                    parsed.animations.forEach(animData => {
+                        const tracks = [];
+                        
+                        if (animData.tracks && Array.isArray(animData.tracks)) {
+                            animData.tracks.forEach((trackData, trackIdx) => {
+                                const trackName = trackData.modelname;
+                                if (!trackName) return;
+                                
+                                let targetModelIndex = -1;
+                                let targetGroupIndex = -1;
+                                let trackType = null;
+                                
+                                const match = trackName.match(/\.(\d+)$/);
+                                if (match) {
+                                    const modelName = trackName.substring(0, trackName.lastIndexOf('.'));
+                                    const groupNumber = parseInt(match[1]) - 1;
+                                    
+                                    for (let i = 0; i < models.length; i++) {
+                                        const model = models[i];
+                                        if (model.name === modelName && model.pointGroups && groupNumber >= 0 && groupNumber < model.pointGroups.length) {
+                                            targetModelIndex = i;
+                                            targetGroupIndex = groupNumber;
+                                            trackType = 'group';
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    for (let i = 0; i < models.length; i++) {
+                                        if (models[i].name === trackName) {
+                                            targetModelIndex = i;
+                                            trackType = 'model';
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                if (targetModelIndex === -1) {
+                                    console.warn(`Track "${trackName}" not found, skipping`);
+                                    return;
+                                }
+                                
+                                const trackKeyframes = trackData.keyframes.map(kf => {
+                                    const keyframe = {
+                                        time: kf.at,
+                                        action: kf.t,
+                                        params: {}
+                                    };
+                                    
+                                    if (kf.t === 'translate') {
+                                        keyframe.params = { x: kf.x || 0, y: kf.y || 0 };
+                                    } else if (kf.t === 'rotate') {
+                                        keyframe.params = { angle: kf.a || 0 };
+                                        if (kf.cx !== undefined) keyframe.params.centerX = kf.cx;
+                                        if (kf.cy !== undefined) keyframe.params.centerY = kf.cy;
+                                        if (kf.umc) keyframe.params.useModelCenter = true;
+                                    } else if (kf.t === 'scale') {
+                                        keyframe.params = { scaleX: kf.sx || 1, scaleY: kf.sy || 1 };
+                                        if (kf.cx !== undefined) keyframe.params.centerX = kf.cx;
+                                        if (kf.cy !== undefined) keyframe.params.centerY = kf.cy;
+                                        if (kf.umc) keyframe.params.useModelCenter = true;
+                                    } else if (kf.t === 'visibility') {
+                                        keyframe.params = { visible: kf.v !== undefined ? kf.v : true };
+                                    } else if (kf.t === 'color') {
+                                        const rgb565 = kf.color;
+                                        const r = (rgb565 >> 11) & 0x1F;
+                                        const g = (rgb565 >> 5) & 0x3F;
+                                        const b = rgb565 & 0x1F;
+                                        const r8 = (r << 3) | (r >> 2);
+                                        const g8 = (g << 2) | (g >> 4);
+                                        const b8 = (b << 3) | (b >> 2);
+                                        keyframe.params.color = '#' + ((1 << 24) + (r8 << 16) + (g8 << 8) + b8).toString(16).slice(1);
+                                    } else if (kf.t === 'reset') {
+                                        keyframe.params = {};
+                                    } else if (kf.t === 'shader') {
+                                        keyframe.params = { shader: kf.shader || 'SHADER_NONE' };
+                                    } else if (kf.t === 'sine') {
+                                        keyframe.params = {
+                                            amplitude_x: kf.amplitude_x || 0,
+                                            amplitude_y: kf.amplitude_y || 10,
+                                            rotations_x: kf.rotations_x || 0,
+                                            rotations_y: kf.rotations_y || 1,
+                                            x_sin: kf.x_sin !== false,
+                                            y_sin: kf.y_sin !== false
+                                        };
+                                    }
+                                    
+                                    if (kf.i) keyframe.instant = true;
+                                    return keyframe;
+                                });
+                                
+                                trackKeyframes.sort((a, b) => a.time - b.time);
+                                
+                                const newTrack = {
+                                    id: Date.now() + '_' + Math.random().toString(36).substr(2, 6) + '_' + trackIdx,
+                                    name: trackName,
+                                    type: trackType,
+                                    modelIndex: targetModelIndex,
+                                    groupIndex: targetGroupIndex,
+                                    keyframes: trackKeyframes
+                                };
+                                
+                                updateKeyframeDeltasForTrack(newTrack);
+                                tracks.push(newTrack);
+                            });
+                        }
+                        
+                        if (tracks.length > 0) {
+                            const newAnim = {
+                                id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                                name: animData.name,
+                                duration: animData.duration || 3000,
+                                tracks: tracks,
+                                repeatEnabled: false,
+                                repeatBehavior: 'reset'
+                            };
+                            newAnimations.push(newAnim);
+                        }
+                    });
+                }
+                
+                storePristineModels();
+                
+                if (newAnimations.length > 0) {
+                    animations = newAnimations;
+                    selectedAnimationId = animations[0].id;
+                    currentAnimationTime = 0;
+                    
+                    const durationInput = document.getElementById('timelineDuration');
+                    if (durationInput) durationInput.value = animations[0].duration;
+                } else {
+                    animations = [];
+                    selectedAnimationId = null;
+                    currentAnimationTime = 0;
+                }
+                
+                renderModelList();
+                renderAnimationList();
+                renderTimelineForAnimation();
+                updateTotalTriangles();
+                
+                setTimeout(() => {
+                    if (selectedAnimationId) {
+                        const anim = animations.find(a => a.id === selectedAnimationId);
+                        if (anim) {
+                            const wasInAnimationMode = isAnimationMode;
+                            if (!isAnimationMode) toggleMode();
+                            updateRuler(anim.duration);
+                            renderTimelineForAnimation();
+                            updatePlayheadPosition();
+                            applyAnimationAtTime(0);
+                            syncRulerScroll();
+                            if (!wasInAnimationMode) toggleMode();
+                        }
+                    }
+                    updateCanvasScale();
+                    draw();
+                }, 100);
+                
+                if (isAnimationMode && selectedAnimationId) {
+                    applyAnimationAtTime(0);
+                }
+                
+                draw();
+                return true;
+                
+            } catch (err) {
+                console.error(err);
+                alert("Error parsing JSON: " + err);
+                return false;
+            }
+        }
+        
+
+        function showSaveChoiceDialog() {
+            return new Promise((resolve) => {
+                const dialog = document.createElement('div');
+                dialog.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: #2d2d2d;
+                    border: 2px solid #ff9900;
+                    border-radius: 8px;
+                    padding: 20px;
+                    z-index: 20001;
+                    min-width: 320px;
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+                    font-family: 'Courier New', monospace;
+                `;
+                
+                dialog.innerHTML = `
+                    <h3 style="color: #ff9900; margin: 0 0 10px 0; font-size: 14px;">💾 Save Configuration</h3>
+                    <p style="color: #ccc; font-size: 12px; margin-bottom: 20px;">
+                        This file was loaded from the device.<br>
+                        How would you like to save it?
+                    </p>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button id="save-to-device-btn" style="background: #ff9900; color: #111; border: none; border-radius: 4px; padding: 6px 16px; cursor: pointer; font-family: monospace; font-weight: bold;">💾 Save to Device</button>
+                        <button id="download-btn" style="background: #3c3c3c; color: #ccc; border: 1px solid #555; border-radius: 4px; padding: 6px 16px; cursor: pointer; font-family: monospace;">📥 Download as File</button>
+                        <button id="cancel-save-btn" style="background: #666; color: #eee; border: none; border-radius: 4px; padding: 6px 16px; cursor: pointer; font-family: monospace;">Cancel</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(dialog);
+                
+                const saveToDeviceBtn = dialog.querySelector('#save-to-device-btn');
+                const downloadBtn = dialog.querySelector('#download-btn');
+                const cancelBtn = dialog.querySelector('#cancel-save-btn');
+                
+                saveToDeviceBtn.onclick = () => {
+                    dialog.remove();
+                    resolve('device');
+                };
+                
+                downloadBtn.onclick = () => {
+                    dialog.remove();
+                    resolve('download');
+                };
+                
+                cancelBtn.onclick = () => {
+                    dialog.remove();
+                    resolve('cancel');
+                };
+                
+                // Close on Escape
+                const onEscape = (e) => {
+                    if (e.key === 'Escape') {
+                        dialog.remove();
+                        document.removeEventListener('keydown', onEscape);
+                        resolve('cancel');
+                    }
+                };
+                document.addEventListener('keydown', onEscape);
+                
+                // Click outside to close
+                const onClickOutside = (e) => {
+                    if (!dialog.contains(e.target)) {
+                        dialog.remove();
+                        document.removeEventListener('click', onClickOutside);
+                        resolve('cancel');
+                    }
+                };
+                setTimeout(() => {
+                    document.addEventListener('click', onClickOutside);
+                }, 100);
+            });
+        }
+
+        // Modified save button handler
+        document.getElementById('saveBtn').addEventListener('click', async function() {
+            if (loadedFromServer) {
+                const choice = await showSaveChoiceDialog();
+                
+                if (choice === 'device') {
+                    await saveToDevice();
+                } else if (choice === 'download') {
+                    downloadAsFile();
+                }
+                // if 'cancel', do nothing
+            } else {
+                // No server file loaded, just download
+                downloadAsFile();
+            }
         });
 
 
@@ -9324,292 +9657,133 @@
                     toggleMode();
                 }
                 reader.onload = function(ev) {
-                    try {
-                        var parsed = JSON.parse(ev.target.result);
-                        
-                        if (parsed.models && Array.isArray(parsed.models)) {
-                            // Clear existing models array completely
-                            models.length = 0;
-                            expandedGroups = {};
-
-                            parsed.models.forEach((m, idx) => {
-                                let triangles = [];
-                                if (m.x && m.y && m.color && m.x.length === m.y.length && m.x.length % 3 === 0) {
-                                    for (let i = 0; i < m.x.length; i += 3) {
-                                        const rgb565 = m.color[i/3];
-                                        const r = (rgb565 >> 11) & 0x1F;
-                                        const g = (rgb565 >> 5) & 0x3F;
-                                        const b = rgb565 & 0x1F;
-                                        // Convert 5-bit to 8-bit
-                                        const r8 = (r << 3) | (r >> 2);
-                                        const g8 = (g << 2) | (g >> 4);
-                                        const b8 = (b << 3) | (b >> 2);
-                                        const colorHex = '#' + ((1 << 24) + (r8 << 16) + (g8 << 8) + b8).toString(16).slice(1);
-                                        triangles.push({
-                                            v1: Vec2f(m.x[i], m.y[i]),
-                                            v2: Vec2f(m.x[i+1], m.y[i+1]),
-                                            v3: Vec2f(m.x[i+2], m.y[i+2]),
-                                            color: colorHex
-                                        });
-                                    }
-                                }
-                                
-                                let pointGroups = [];
-                                if (m.pointGroups && Array.isArray(m.pointGroups)) {
-                                    m.pointGroups.forEach((group, gIdx) => {
-                                        if (typeof group === 'object' && group.name && group.indices) {
-                                            pointGroups.push({
-                                                name: group.name,
-                                                pointIndices: group.indices
-                                            });
-                                        } else if (Array.isArray(group)) {
-                                            pointGroups.push({
-                                                name: "Group " + (gIdx + 1),
-                                                pointIndices: group
-                                            });
-                                        }
-                                    });
-                                }
-                                
-                                models.push({
-                                    name: m.name || ("Model " + idx),
-                                    visible: true,
-                                    triangles: triangles,
-                                    pointGroups: pointGroups
-                                });
-                                expandedGroups[idx] = false;
-                            });
-                            
-                            if (models.length === 0) {
-                                // If no models loaded, create a default one
-                                models.push({
-                                    name: "Model 0",
-                                    visible: true,
-                                    triangles: [
-                                        { v1: Vec2f(5.0,19.0), v2: Vec2f(8.0,22.0), v3: Vec2f(12.0,20.0), color: "#0000ff" },
-                                    ],
-                                    pointGroups: []
-                                });
-                                expandedGroups[0] = false;
-                            }
-                                                        
-                            // Reset selected model index
-                            selectedModelIndex = 0;
-                            selectedGroupIndex = -1;
-                            points = [];
-                            state = 0;
-                            selectedVertices = [];
-                            selectionFromSelectTool = false;
-                            
-                            // Parse animations from new format - GENERATE resources from track names
-                            const newAnimations = [];
-                            
-                            if (parsed.animations && Array.isArray(parsed.animations)) {
-                                parsed.animations.forEach(animData => {
-                                    // Create tracks for each track in the saved data
-                                    const tracks = [];
-                                    
-                                    if (animData.tracks && Array.isArray(animData.tracks)) {
-                                        animData.tracks.forEach((trackData, trackIdx) => {
-                                            // Use "modelname" field instead of "name"
-                                            const trackName = trackData.modelname;
-                                            if (!trackName) return;
-                                            
-                                            // Parse track name to find model and group
-                                            let targetModelIndex = -1;
-                                            let targetGroupIndex = -1;
-                                            let trackType = null;
-                                            
-                                            // Check if it's a point group (contains '.')
-                                            const match = trackName.match(/\.(\d+)$/);
-                                            if (match) {
-                                                // It's a point group: "ModelName.1"
-                                                const modelName = trackName.substring(0, trackName.lastIndexOf('.'));
-                                                const groupNumber = parseInt(match[1]) - 1;
-                                                
-                                                for (let i = 0; i < models.length; i++) {
-                                                    const model = models[i];
-                                                    if (model.name === modelName && model.pointGroups && groupNumber >= 0 && groupNumber < model.pointGroups.length) {
-                                                        targetModelIndex = i;
-                                                        targetGroupIndex = groupNumber;
-                                                        trackType = 'group';
-                                                        break;
-                                                    }
-                                                }
-                                            } else {
-                                                // It's a model
-                                                for (let i = 0; i < models.length; i++) {
-                                                    if (models[i].name === trackName) {
-                                                        targetModelIndex = i;
-                                                        trackType = 'model';
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                            
-                                            if (targetModelIndex === -1) {
-                                                console.warn(`Track "${trackName}" not found, skipping`);
-                                                return;
-                                            }
-                                            
-                                            // Convert keyframes to internal format
-                                            const trackKeyframes = trackData.keyframes.map(kf => {
-                                                const keyframe = {
-                                                    time: kf.at,
-                                                    action: kf.t,
-                                                    params: {}
-                                                };
-                                                
-                                                if (kf.t === 'translate') {
-                                                    keyframe.params = {
-                                                        x: kf.x || 0,
-                                                        y: kf.y || 0
-                                                    };
-                                                } else if (kf.t === 'rotate') {
-                                                    keyframe.params = {
-                                                        angle: kf.a || 0
-                                                    };
-                                                    if (kf.cx !== undefined) keyframe.params.centerX = kf.cx;
-                                                    if (kf.cy !== undefined) keyframe.params.centerY = kf.cy;
-                                                    if (kf.umc) keyframe.params.useModelCenter = true;
-                                                } else if (kf.t === 'scale') {
-                                                    keyframe.params = {
-                                                        scaleX: kf.sx || 1,
-                                                        scaleY: kf.sy || 1
-                                                    };
-                                                    if (kf.cx !== undefined) keyframe.params.centerX = kf.cx;
-                                                    if (kf.cy !== undefined) keyframe.params.centerY = kf.cy;
-                                                    if (kf.umc) keyframe.params.useModelCenter = true;
-                                                } else if (kf.t === 'visibility') {
-                                                    keyframe.params = {
-                                                        visible: kf.v !== undefined ? kf.v : true
-                                                    };
-                                                } else if (kf.t === 'color') {
-                                                    // Convert RGB565 number back to hex color
-                                                    const rgb565 = kf.color;
-                                                    const r = (rgb565 >> 11) & 0x1F;
-                                                    const g = (rgb565 >> 5) & 0x3F;
-                                                    const b = rgb565 & 0x1F;
-                                                    const r8 = (r << 3) | (r >> 2);
-                                                    const g8 = (g << 2) | (g >> 4);
-                                                    const b8 = (b << 3) | (b >> 2);
-                                                    keyframe.params.color = '#' + ((1 << 24) + (r8 << 16) + (g8 << 8) + b8).toString(16).slice(1);
-                                                } else if (kf.t === 'reset') {
-                                                    // No parameters needed for reset
-                                                    keyframe.params = {};
-                                                } else if (kf.t === 'sine') {
-                                                    keyframe.params = {
-                                                        amplitude_x: kf.amplitude_x || 0,
-                                                        amplitude_y: kf.amplitude_y || 0,
-                                                        rotations_x: kf.rotations_x || 0,
-                                                        rotations_y: kf.rotations_y || 0,
-                                                        x_sin: kf.x_sin !== false,
-                                                        y_sin: kf.y_sin !== false
-                                                    };
-                                                } else if (kf.t === 'shader') {
-                                                    keyframe.params = {
-                                                        shader: kf.shader || 'SHADER_NONE'
-                                                    };
-                                                }
-                                                
-                                                if (kf.i) keyframe.instant = true;
-                                                
-                                                return keyframe;
-                                            });
-                                            
-                                            // Sort keyframes by time
-                                            trackKeyframes.sort((a, b) => a.time - b.time);
-                                            
-                                            // Generate a unique ID for the track
-                                            const newTrack = {
-                                                id: Date.now() + '_' + Math.random().toString(36).substr(2, 6) + '_' + trackIdx,
-                                                name: trackName,
-                                                type: trackType,
-                                                modelIndex: targetModelIndex,
-                                                groupIndex: targetGroupIndex,
-                                                keyframes: trackKeyframes
-                                            };
-                                            
-                                            // Update deltaToNext for this track
-                                            updateKeyframeDeltasForTrack(newTrack);
-                                            
-                                            tracks.push(newTrack);
-                                        });
-                                    }
-                                    
-                                    // Create the animation
-                                    if (tracks.length > 0) {
-                                        const newAnim = {
-                                            id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                                            name: animData.name,
-                                            duration: animData.duration || 3000,
-                                            tracks: tracks,
-                                            repeatEnabled: false,
-                                            repeatBehavior: 'reset'
-                                        };
-                                        newAnimations.push(newAnim);
-                                    }
-                                });
-                            }
-                            storePristineModels();
-                            // Update animations
-                            if (newAnimations.length > 0) {
-                                animations = newAnimations;
-                                selectedAnimationId = animations[0].id;
-                                currentAnimationTime = 0;
-                                
-                                // Update duration input
-                                const durationInput = document.getElementById('timelineDuration');
-                                if (durationInput) durationInput.value = animations[0].duration;
-                            } else {
-                                animations = [];
-                                selectedAnimationId = null;
-                                currentAnimationTime = 0;
-                            }
-                            
-                            // Update UI
-                            sanitizePointGroups();
-                            renderModelList();
-                            renderAnimationList();
-                            renderTimelineForAnimation();
-                            updateTotalTriangles();
-
-                            // Force timeline refresh to fix collapsed tracks
-                            setTimeout(() => {
-                                if (selectedAnimationId) {
-                                    const anim = animations.find(a => a.id === selectedAnimationId);
-                                    if (anim) {
-                                        toggleMode();
-                                        updateRuler(anim.duration);
-                                        renderTimelineForAnimation();
-                                        updatePlayheadPosition();
-                                        applyAnimationAtTime(0);
-                                        syncRulerScroll();
-                                        toggleMode();
-                                    }
-                                }
-                                // Force canvas resize to fix any layout issues
-                                updateCanvasScale();
-                                draw();
-                            }, 100);
-                            
-                            if (isAnimationMode && selectedAnimationId) {
-                                applyAnimationAtTime(0);
-                            }
-                            
-                            draw();
-                        } else {
-                            alert("Invalid JSON format: missing 'models' array");
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        alert("Error parsing JSON: " + err);
-                    }
+                    importFromJSON(ev.target.result);
                 };
                 reader.readAsText(file);
             };
             input.click();
         });
+
+        function downloadAsFile() {
+            const jsonString = exportToJSON();
+            const blob = new Blob([jsonString], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "models.json";
+            a.click();
+            URL.revokeObjectURL(url);
+            showFeedback('File downloaded!', 1500);
+        }
+
+        async function autoLoadModels() {
+            try {
+                const response = await fetch('/models.json');
+                if (response.ok) {
+                    loadedFromServer = true;
+                    const jsonString = await response.text();
+                    const success = importFromJSON(jsonString);
+                    if (success) {
+                        showFeedback("Auto-loaded models.json from server", 2000);
+                    }
+                } else {
+                    loadedFromServer = false;
+                }
+            } catch (err) {
+                loadedFromServer = false;
+            }
+        }
+
+        async function saveToDevice() {
+            const configJson = exportToJSON();
+            
+            // Create modal for save progress
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #2d2d2d;
+                border: 2px solid #ff9900;
+                border-radius: 8px;
+                padding: 20px;
+                z-index: 20000;
+                min-width: 300px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+            `;
+            modal.innerHTML = `
+                <h3 style="color: #ff9900; margin: 0 0 15px 0;">Saving to Device...</h3>
+                <div id="save-status" style="color: #aaa; margin-bottom: 10px;">Starting save process...</div>
+                <div id="save-details" style="color: #888; font-size: 11px; max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+                <button id="close-save-modal" style="background: #666; color: #fff; border: none; border-radius: 4px; padding: 6px 12px; cursor: pointer; display: none;">Close</button>
+            `;
+            document.body.appendChild(modal);
+            
+            const statusElement = modal.querySelector('#save-status');
+            const detailsElement = modal.querySelector('#save-details');
+            const closeButton = modal.querySelector('#close-save-modal');
+            
+            try {
+                // Create backup
+                statusElement.textContent = 'Creating backup...';
+                detailsElement.innerHTML += '<div>Creating backup of current configuration...</div>';
+                
+                const now = new Date();
+                const timestamp = now.toISOString()
+                    .replace(/:/g, '-')
+                    .replace(/\..+Z$/, '')
+                    .replace('T', '_');
+                
+                const backupPath = `/backup/models-${timestamp}.json`;
+                
+                const backupResponse = await fetch(`/copy?src=${encodeURIComponent('/models.json')}&dst=${encodeURIComponent(backupPath)}`, {
+                    method: 'PUT'
+                });
+                
+                if (backupResponse.ok) {
+                    detailsElement.innerHTML += `<div style="color:green;">✓ Backup created: ${backupPath}</div>`;
+                } else if (backupResponse.status === 404) {
+                    detailsElement.innerHTML += `<div style="color:orange;">⚠ No existing config to backup (first save)</div>`;
+                } else {
+                    detailsElement.innerHTML += `<div style="color:orange;">⚠ Backup failed</div>`;
+                }
+                
+                // Upload new config
+                statusElement.textContent = 'Uploading models.json...';
+                detailsElement.innerHTML += '<div>Uploading new configuration...</div>';
+                
+                const formData = new FormData();
+                formData.append('path', '/');
+                formData.append('file', new Blob([configJson], { type: 'application/json' }), 'models.json');
+                
+                const uploadResponse = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!uploadResponse.ok) {
+                    throw new Error(`Failed to upload: ${await uploadResponse.text()}`);
+                }
+                
+                detailsElement.innerHTML += '<div style="color:green;">✓ Configuration saved successfully</div>';
+                statusElement.textContent = 'Save completed!';
+                
+                closeButton.style.display = 'block';
+                closeButton.onclick = () => modal.remove();
+                
+                showFeedback('Saved!', 2000);
+                
+            } catch (error) {
+                console.error('Error during save:', error);
+                statusElement.textContent = 'Save failed';
+                detailsElement.innerHTML += `<div style="color:red;">✗ Error: ${error.message}</div>`;
+                closeButton.style.display = 'block';
+                closeButton.onclick = () => modal.remove();
+                showFeedback('Save failed: ' + error.message, 3000);
+            }
+        }
+
 
         document.getElementById('addModelBtn').addEventListener('click', function() {
             if (!isAnimationMode) {
@@ -11704,23 +11878,29 @@
                 clearKeyframeHighlight();
             };
         }
+
         function updateModelVisibilityForAnimation() {
             if (!isAnimationMode) return;
             
-            // Get all models that have at least one timeline
-            const modelsWithTimelines = new Set();
-            
-            animations.forEach(anim => {
-                anim.tracks.forEach(track => {
-                    if (track.modelIndex !== undefined) {
-                        modelsWithTimelines.add(track.modelIndex);
-                    }
+            const anim = getSelectedAnimation();
+            if (!anim) {
+                models.forEach((model, index) => {
+                    model.visible = false;
                 });
+                draw();
+                return;
+            }
+            
+            const modelsUsedInAnimation = new Set();
+            
+            anim.tracks.forEach(track => {
+                if (track.modelIndex !== undefined) {
+                    modelsUsedInAnimation.add(track.modelIndex);
+                }
             });
             
-            // Set visibility: only show models that have timelines
             models.forEach((model, index) => {
-                model.visible = modelsWithTimelines.has(index);
+                model.visible = modelsUsedInAnimation.has(index);
             });
             
             draw();
@@ -12236,6 +12416,10 @@
                 canvas.style.objectFit = 'contain';
             }
         });
+
+        setTimeout(() => {
+            autoLoadModels();
+        }, 1500);
 
         function checkMobileWarning() {
             const warning = document.getElementById('mobileWarning');
