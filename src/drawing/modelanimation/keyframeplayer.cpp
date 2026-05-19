@@ -230,7 +230,8 @@ void KeyframeTrack::UpdateTrack(uint32_t dt, uint32_t prevDt){
             uint32_t sumLocal = prevDt; //current time
             uint32_t remaining = dt;
 
-            Keyframe &nextKf = keyframes[frameId];
+            Keyframe nextKf = keyframes[frameId];
+            float *storage = keyframes[frameId].m_storage;
             int maxIter = 5;
             while (remaining > 0){
                 if (sumLocal+remaining > nextKf.playAt){
@@ -243,10 +244,10 @@ void KeyframeTrack::UpdateTrack(uint32_t dt, uint32_t prevDt){
                         currentStepDt += diff;
                     }
                     if (nextKf.ignoreInterpolation){
-                        applyTransformations(currentStepDt + remaining, sumLocal, nextKf, true);
+                        applyTransformations(currentStepDt + remaining, sumLocal, nextKf, storage, true);
                         sumLocal += currentStepDt + remaining;
                     } else {
-                        applyTransformations(currentStepDt, sumLocal, nextKf, true);
+                        applyTransformations(currentStepDt, sumLocal, nextKf, storage, true);
                         sumLocal += currentStepDt;
                     }
                     //interpolations[operationName](track.r, currentStepDt, nextKf, true)
@@ -269,7 +270,7 @@ void KeyframeTrack::UpdateTrack(uint32_t dt, uint32_t prevDt){
                     //Logger::Info("[%d / %d] MINI STEP %d with step %d   AT %d  (sum %d)", maxIter, dt, frameId, remaining, nextKf.playAt, sumLocal);
                     uint32_t currentStepDt = nextKf.playAt-sumLocal;
                     if (!nextKf.ignoreInterpolation){
-                        applyTransformations(remaining, sumLocal, nextKf, false);
+                        applyTransformations(remaining, sumLocal, nextKf, storage, false);
                     }
                     //interpolations[operationName](track.r, remaining, nextKf, false)
                     sumLocal += remaining;
@@ -284,7 +285,7 @@ void KeyframeTrack::UpdateTrack(uint32_t dt, uint32_t prevDt){
     }
 }
 
-void KeyframeTrack::applyTransformations(uint32_t dt, uint32_t frameSum, Keyframe &nextKf, bool lastIteration){
+void KeyframeTrack::applyTransformations(uint32_t dt, uint32_t frameSum, Keyframe &nextKf, float *storage, bool lastIteration){
     switch (nextKf.type){
         case KEYFRAME_TRANSLATE:{
             float delta = 0.0f;
@@ -416,8 +417,8 @@ void KeyframeTrack::applyTransformations(uint32_t dt, uint32_t frameSum, Keyfram
             }
 
             if (delta == 0.0f || lastIteration) {
-                nextKf.m_storage[0] = 0;
-                nextKf.m_storage[1] = 0;
+                storage[0] = 0;
+                storage[1] = 0;
             }
             
             float targetSineY, targetSineX;
@@ -436,8 +437,8 @@ void KeyframeTrack::applyTransformations(uint32_t dt, uint32_t frameSum, Keyfram
                 targetSineX = nextKf.value.x * cos(angleX);
             }
             // Get last sine value (stored in keyframe)
-            float lastSineX = nextKf.m_storage[0];
-            float lastSineY = nextKf.m_storage[1];
+            float lastSineX = storage[0];
+            float lastSineY = storage[1];
 
             // Calculate delta from last frame
             float deltaSineY = targetSineY - lastSineY;
@@ -449,12 +450,12 @@ void KeyframeTrack::applyTransformations(uint32_t dt, uint32_t frameSum, Keyfram
                 obj->TranslatePoints(pointGroup, Vec2f(deltaSineX, deltaSineY));
             }
             
-            nextKf.m_storage[0] = targetSineX;
-            nextKf.m_storage[1] = targetSineY;
+            storage[0] = targetSineX;
+            storage[1] = targetSineY;
             
             if (delta >= 1.0f || lastIteration) {
-                nextKf.m_storage[0] = 0;
-                nextKf.m_storage[1] = 0;
+                storage[0] = 0;
+                storage[1] = 0;
             }
             break;
         }

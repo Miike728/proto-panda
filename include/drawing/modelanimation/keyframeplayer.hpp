@@ -31,7 +31,7 @@ const std::map<std::string, KeyframeType> KeyframeTypeMap = {
 
 class Keyframe{
     public:
-    Keyframe():type(KEYFRAME_NONE),playAt(0),deltaToNext(0),interpolationStartedAt(0),value(0.0f, 0.0f),center(0.0f,0.0f),ignoreInterpolation(false), dynamicCenter(false),m_storage({0.0f, 0.0f}){};
+    Keyframe():type(KEYFRAME_NONE),playAt(0),deltaToNext(0),interpolationStartedAt(0),value(0.0f, 0.0f),center(0.0f,0.0f),ignoreInterpolation(false), dynamicCenter(false){m_storage[0]=0.0f; m_storage[1]=0.0f;};
     Keyframe(KeyframeType mode, uint32_t at, Vec2f val, Vec2f cntr = Vec2(0.0f, 0.0f), uint16_t ccolor = 0, bool igInterp = false, bool dynamicCenterP=false):type(mode),playAt(at),value(val),center(cntr),color(ccolor),ignoreInterpolation(igInterp), dynamicCenter(dynamicCenterP){};
 
 
@@ -61,7 +61,7 @@ class KeyframeTrack{
         void UpdateTrack(uint32_t dt, uint32_t prevDt);
         void Reset();
 
-        void applyTransformations(uint32_t remaining, uint32_t frameSum, Keyframe &nextKf, bool instant);
+        void applyTransformations(uint32_t remaining, uint32_t frameSum, Keyframe &nextKf, float *storage, bool instant);
         
 
         bool usingModel;
