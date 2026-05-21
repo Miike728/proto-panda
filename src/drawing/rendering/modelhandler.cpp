@@ -3,7 +3,7 @@
 #include "tools/oledscreen.hpp"
 
 void ModelHandler::RenderModels(std::vector<Model*> mdls, uint8_t *bitmap){
-    ShaderProcessor::IncrFrame();
+    
     for (auto& model : mdls) {
         if (model->triangleCount == 0 || model->visible == false) continue;
         

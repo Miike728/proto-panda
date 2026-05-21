@@ -3615,7 +3615,7 @@
 
         function createNewAnimation(name) {
             saveUndoState();
-            closeKeyframeEditorF()
+            closeKeyframeEditorF();
             
             // Generate unique name
             let baseName = name || "Animation " + (animations.length + 1);
@@ -3658,7 +3658,7 @@
      
         function deleteAnimation(animId) {
             saveUndoState();
-            closeKeyframeEditorF()
+            closeKeyframeEditorF();
             const index = animations.findIndex(a => a.id === animId);
             if (index === -1) return;
             animations.splice(index, 1);
@@ -3675,7 +3675,7 @@
         }
 
         function selectAnimation(animId) {
-            closeKeyframeEditorF()
+            closeKeyframeEditorF();
             if (!isAnimationMode) {
                 toggleMode();
                 setTimeout(() => {
@@ -3760,11 +3760,9 @@
                 ctx.stroke();
                 
                 let labelText;
-                if (t >= 1000) {
-                    labelText = (t/1000).toFixed(1) + 's';
-                } else {
-                    labelText = t + 'ms';
-                }
+
+                labelText = t + 'ms';
+                
                 ctx.fillStyle = '#888';
                 ctx.fillText(labelText, x, 24);
             }
@@ -4877,11 +4875,7 @@
                     timeTooltip.style.top = (ballY - 5) + 'px';
                     
                     if (displayTime !== null) {
-                        if (displayTime >= 1000) {
-                            timeTooltip.textContent = (displayTime / 1000).toFixed(1) + 's';
-                        } else {
-                            timeTooltip.textContent = displayTime + 'ms';
-                        }
+                        timeTooltip.textContent = displayTime + 'ms';
                     } else {
                         timeTooltip.textContent = '--';
                     }
@@ -5269,11 +5263,8 @@
             timeTooltip.style.top = (e.clientY - 20) + 'px';
             
             // Format time display
-            if (newTime >= 1000) {
-                timeTooltip.textContent = (newTime / 1000).toFixed(1) + 's';
-            } else {
-                timeTooltip.textContent = Math.round(newTime) + 'ms';
-            }
+            timeTooltip.textContent = Math.round(newTime) + 'ms';
+            
             timeTooltip.style.display = 'block';
             
             // Update the editor if it's open for this keyframe
@@ -6433,11 +6424,9 @@
                 
                 // Draw label
                 let labelText;
-                if (t >= 1000) {
-                    labelText = (t/1000).toFixed(1) + 's';
-                } else {
-                    labelText = t + 'ms';
-                }
+
+                labelText = t + 'ms';
+                
                 ctx.fillStyle = '#888';
                 ctx.fillText(labelText, x, 24);
             }
@@ -7852,7 +7841,7 @@
                         currentMousePosY = Math.min(31, Math.max(0, physY / SCALE));
                     } else {
                         // Snap to nearby points for preview
-                        let nearestPoint = findNearestPoint(currentMousePosX, currentMousePosY, 0.5);
+                        let nearestPoint = findNearestPointForSnapping(currentMousePosX, currentMousePosY);
                         if (nearestPoint) {
                             currentMousePosX = nearestPoint.x;
                             currentMousePosY = nearestPoint.y;
@@ -8035,14 +8024,26 @@
             
             if (showPixelated && mouseX >= 0 && mouseX < 64 && mouseY >= 0 && mouseY < 32) {
                 let physX, physY;
+                let targetX = mouseX;
+                let targetY = mouseY;
                 
                 if (ctrlKeyPressed && fineMouseX >= 0 && fineMouseY >= 0) {
-                    // When Ctrl is held, show the actual fine position
+                    // When Ctrl is held, show the actual fine position (no snapping)
+                    let rect = c.getBoundingClientRect();
+                    let scaleX = c.width / rect.width;
+                    let scaleY = c.height / rect.height;
                     physX = fineMouseX;
                     physY = fineMouseY;
                 } else {
-                    physX = mouseX * SCALE + SCALE/2;
-                    physY = mouseY * SCALE + SCALE/2;
+                    // Normal mode - snap to nearest point (which may have fractional coordinates)
+                    let nearestPoint = findNearestPointForSnapping(mouseX, mouseY, 0.8);
+                    if (nearestPoint) {
+                        targetX = nearestPoint.x;
+                        targetY = nearestPoint.y;
+                    }
+                    // Convert to screen coordinates (preserving fractional values)
+                    physX = targetX * SCALE + SCALE/2;
+                    physY = targetY * SCALE + SCALE/2;
                 }
                 
                 let invColor = getInverseColor(Math.floor(physX / SCALE), Math.floor(physY / SCALE));
@@ -8778,42 +8779,12 @@
             return null;
         }
 
-        function findVerticesAtPosition(x, y) {
-            if (models.length === 0 || selectedModelIndex < 0) return [];
+        function findNearestPointForSnapping(x, y, maxDistance = 0.8) {
+            if (models.length === 0 || selectedModelIndex < 0) return null;
             
-            let activeModel = models[selectedModelIndex];
-            let vertices = [];
-            let globalIdx = 0;
-            
-            for (let i = 0; i < activeModel.triangles.length; i++) {
-                let tri = activeModel.triangles[i];
-                let verts = [tri.v1, tri.v2, tri.v3];
-                for (let j = 0; j < 3; j++) {
-                    let v = verts[j];
-                    if (Math.abs(v.x - x) < 0.5 && Math.abs(v.y - y) < 0.5) {
-                        vertices.push({
-                            triIndex: i,
-                            vertexIndex: j,
-                            globalPointIndex: globalIdx,
-                            v: v
-                        });
-                    }
-                    globalIdx++;
-                }
-            }
-            
-            return vertices;
-        }
-
-
-        function findVertexUnderMouse(x, y) {
-            if (models.length === 0) return null;
-            var active = models[selectedModelIndex];
-            if (!active) return null;
-            
-            let globalIdx = 0;
-            let closestDist = 0.5;
-            let closestHit = null;
+            let active = models[selectedModelIndex];
+            let closestDist = maxDistance;
+            let closestPoint = null;
             
             for (let i = 0; i < active.triangles.length; i++) {
                 let tri = active.triangles[i];
@@ -8826,20 +8797,56 @@
                     
                     if (dist < closestDist) {
                         closestDist = dist;
-                        closestHit = {
+                        closestPoint = { x: v.x, y: v.y, dist: dist };
+                    }
+                }
+            }
+            
+            return closestPoint;
+        }
+
+        // Unified vertex detection for hover and selection
+        function findVerticesNearPosition(x, y, threshold = 0.8) {
+            if (models.length === 0 || selectedModelIndex < 0) return [];
+            
+            let activeModel = models[selectedModelIndex];
+            let vertices = [];
+            let globalIdx = 0;
+            
+            for (let i = 0; i < activeModel.triangles.length; i++) {
+                let tri = activeModel.triangles[i];
+                let verts = [tri.v1, tri.v2, tri.v3];
+                for (let j = 0; j < 3; j++) {
+                    let v = verts[j];
+                    let dx = Math.abs(v.x - x);
+                    let dy = Math.abs(v.y - y);
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (dist <= threshold) {
+                        vertices.push({
                             triIndex: i,
                             vertexIndex: j,
                             globalPointIndex: globalIdx,
-                            distance: dist,
-                            vx: v.x,
-                            vy: v.y
-                        };
+                            v: v,
+                            distance: dist
+                        });
                     }
                     globalIdx++;
                 }
             }
             
-            return closestHit;
+            // Sort by distance (closest first)
+            vertices.sort((a, b) => a.distance - b.distance);
+            return vertices;
+        }
+
+        function findVerticesAtPosition(x, y) {
+            return findVerticesNearPosition(x, y, 0.8);
+        }
+
+        function findVertexUnderMouse(x, y) {
+            let vertices = findVerticesNearPosition(x, y, 0.8);
+            return vertices.length > 0 ? vertices[0] : null;
         }
         
         function selectVerticesInRect(start, end) {
@@ -10357,31 +10364,6 @@
             }
         });
 
-        function findNearestPoint(x, y, maxDistance = 0.5) {
-            if (models.length === 0 || selectedModelIndex < 0) return null;
-            
-            let active = models[selectedModelIndex];
-            let closestDist = maxDistance;
-            let closestPoint = null;
-            
-            for (let i = 0; i < active.triangles.length; i++) {
-                let tri = active.triangles[i];
-                let vertices = [tri.v1, tri.v2, tri.v3];
-                for (let j = 0; j < 3; j++) {
-                    let v = vertices[j];
-                    let dx = Math.abs(v.x - x);
-                    let dy = Math.abs(v.y - y);
-                    let dist = Math.sqrt(dx*dx + dy*dy);
-                    
-                    if (dist < closestDist) {
-                        closestDist = dist;
-                        closestPoint = { x: v.x, y: v.y, dist: dist };
-                    }
-                }
-            }
-            
-            return closestPoint;
-        }
 
         c.addEventListener('mousemove', function(e) {
             var rect = c.getBoundingClientRect();
@@ -10499,7 +10481,7 @@
                     currentMouseY = mouseY;
                     
                     // Snap to nearby points
-                    let nearestPoint = findNearestPoint(currentMouseX, currentMouseY, 0.5);
+                    let nearestPoint = findNearestPointForSnapping(currentMouseX, currentMouseY);
                     if (nearestPoint) {
                         currentMouseX = nearestPoint.x;
                         currentMouseY = nearestPoint.y;
@@ -10557,7 +10539,7 @@
                     currentMouseY = mouseY;
                     
                     // Snap to nearby points
-                    let nearestPoint = findNearestPoint(currentMouseX, currentMouseY, 0.5);
+                    let nearestPoint = findNearestPointForSnapping(currentMouseX, currentMouseY);
                     if (nearestPoint) {
                         currentMouseX = nearestPoint.x;
                         currentMouseY = nearestPoint.y;
@@ -11018,7 +11000,7 @@
                         posY = mouseY;
                         
                         // Snap to nearby points (within 0.5 grid units)
-                        let nearestPoint = findNearestPoint(posX, posY, 0.5);
+                        let nearestPoint = findNearestPointForSnapping(posX, posY);
                         if (nearestPoint) {
                             posX = nearestPoint.x;
                             posY = nearestPoint.y;
@@ -11186,19 +11168,11 @@
                 listDiv.appendChild(item);
             });
         }
-        function closeKeyframeEditorF(){
-            const editor = document.getElementById('keyframeEditor');
-            if (editor && editor.style.display === 'block') {
-                editor.style.display = 'none';
-                currentEditingKeyframe = null;
-                clearKeyframeHighlight();
-            }
-        }        
 
         function moveAnimationUp(index) {
             if (index <= 0) return;
             saveUndoState();
-            closeKeyframeEditorF()
+            closeKeyframeEditorF();
             // Swap animations
             [animations[index - 1], animations[index]] = [animations[index], animations[index - 1]];
             
@@ -11222,7 +11196,7 @@
         function moveAnimationDown(index) {
             if (index >= animations.length - 1) return;
             saveUndoState();
-            closeKeyframeEditorF()
+            closeKeyframeEditorF();
             // Swap animations
             [animations[index], animations[index + 1]] = [animations[index + 1], animations[index]];
             
@@ -11242,6 +11216,17 @@
             
             draw();
         }
+        
+        function closeKeyframeEditorF(){
+
+            const editor = document.getElementById('keyframeEditor');
+            if (editor && editor.style.display === 'block') {
+                editor.style.display = 'none';
+                currentEditingKeyframe = null;
+                clearKeyframeHighlight();
+            }
+        }        
+
 
         function exportAnimationsToFormat() {
             const animationData = [];

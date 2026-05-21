@@ -56,7 +56,7 @@ void AnimationSequence::ResetIfNeeded(){
 }
 
 AnimationFrameAction AnimationSequence::Update(uint32_t dt, int m_interruptPin, bool isManaged, ShaderType &shdr, float &strenght){
-
+    ShaderProcessor::IncrFrame();
     if (m_isModel){
         //Timing is handled here.
         g_kf.PlayAnimationId(m_frame, true, shdr, strenght);

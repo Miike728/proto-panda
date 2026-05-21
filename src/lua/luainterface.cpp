@@ -860,8 +860,9 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("SHADER_RAINBOW",      (int)SHADER_RAINBOW);
   m_lua->setConstant("SHADER_FIRE",         (int)SHADER_FIRE);
   m_lua->setConstant("SHADER_TEXTURE",      (int)SHADER_TEXTURE);
+  m_lua->setConstant("SHADER_TRANS",        (int)SHADER_TRANS);
   
-  m_lua->setConstant("SHADER_LAST",         (int)SHADER_TEXTURE);
+  m_lua->setConstant("SHADER_LAST",         (int)SHADER_TRANS);
 
 
   m_lua->setConstant("MODEL_FRAME_ID_OFFSET",      (int)MODEL_FRAME_ID_OFFSET);

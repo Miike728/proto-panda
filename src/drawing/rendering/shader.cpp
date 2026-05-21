@@ -149,12 +149,18 @@ void ShaderProcessor::ShaderFire(int16_t &x, int16_t &y, uint8_t &r, uint8_t &g,
         fireB = (uint8_t)std::min(255, fireB + 80);
         fireG = (uint8_t)std::min(255, fireG + 40);
     }
+
+    float brightness = std::max(r,std::max(g,b)) / 255.0f;
     
-    // Blend with original color
+    float rr = (fireR * brightness);
+    float gg = (fireG * brightness);
+    float bb = (fireB * brightness);
+    
+    // Blend with original color based on shader strength
     float strength = std::clamp(shaderStrength, 0.0f, 1.0f);
-    r = (uint8_t)(r * (1.0f - strength) + fireR * strength);
-    g = (uint8_t)(g * (1.0f - strength) + fireG * strength);
-    b = (uint8_t)(b * (1.0f - strength) + fireB * strength);
+    r = (uint8_t)(r * (1.0f - strength) + rr * strength);
+    g = (uint8_t)(g * (1.0f - strength) + gg * strength);
+    b = (uint8_t)(b * (1.0f - strength) + bb * strength);
 }
 
 void ShaderProcessor::ShaderTexture(int16_t &x, int16_t &y, uint8_t &r, uint8_t &g, uint8_t &b, ShaderType &shdr, float &shaderStrength){
@@ -171,6 +177,92 @@ void ShaderProcessor::ShaderTexture(int16_t &x, int16_t &y, uint8_t &r, uint8_t 
         g = (uint8_t)(g * (1.0f - strength) + textureG * strength);
         b = (uint8_t)(b * (1.0f - strength) + textureB * strength);
     }
+}
+
+
+uint8_t colors_r[5] = {51, 255, 190, 255, 51};
+uint8_t colors_g[5] = {255, 153, 190, 153, 255};
+uint8_t colors_b[5] = {255, 190, 190, 190, 255};
+    
+
+void ShaderProcessor::ShaderTrans(int16_t &x, int16_t &y, uint8_t &r, uint8_t &g, uint8_t &b, ShaderType &shdr, float &shaderStrength){
+    //Fuck transphobes
+    float time = ShaderProcessor::Time * 0.001f;
+    
+    const int screenHeight = 32;
+    const int transitionWidth = 3;  
+    const int bandHeight = (screenHeight - (4 * transitionWidth)) / 5; 
+
+    float scrollSpeed = 10.0f;  // Pixels per second
+    int scrollOffset = (int)(time * scrollSpeed) % screenHeight;
+    int yPos = (y + scrollOffset) % screenHeight;
+    
+    int band = 0;
+    float blend = 0.0f;
+
+    
+    if (yPos < bandHeight) {
+        band = 0;
+        blend = 0.0f;
+    } 
+    else if (yPos < bandHeight + transitionWidth) {
+        band = 0;
+        blend = (float)(yPos - bandHeight) / transitionWidth;
+    }
+    else if (yPos < bandHeight * 2 + transitionWidth) {
+        // Band 1
+        band = 1;
+        blend = 0.0f;
+    }
+    else if (yPos < bandHeight * 2 + transitionWidth * 2) {
+        band = 1;
+        blend = (float)(yPos - (bandHeight * 2 + transitionWidth)) / transitionWidth;
+    }
+    else if (yPos < bandHeight * 3 + transitionWidth * 2) {
+        band = 2;
+        blend = 0.0f;
+    }
+    else if (yPos < bandHeight * 3 + transitionWidth * 3) {
+        band = 2;
+        blend = (float)(yPos - (bandHeight * 3 + transitionWidth * 2)) / transitionWidth;
+    }
+    else if (yPos < bandHeight * 4 + transitionWidth * 3) {
+        band = 3;
+        blend = 0.0f;
+    }
+    else if (yPos < bandHeight * 4 + transitionWidth * 4) {
+        band = 3;
+        blend = (float)(yPos - (bandHeight * 4 + transitionWidth * 3)) / transitionWidth;
+    }
+    else {
+        band = 4;
+        blend = 0.0f;
+    }
+    
+    uint8_t targetR, targetG, targetB;
+    
+    if (blend > 0.0f && band < 4) {
+        targetR = (uint8_t)(colors_r[band] * (1.0f - blend) + colors_r[band + 1] * blend);
+        targetG = (uint8_t)(colors_g[band] * (1.0f - blend) + colors_g[band + 1] * blend);
+        targetB = (uint8_t)(colors_b[band] * (1.0f - blend) + colors_b[band + 1] * blend);
+    } else {
+        targetR = colors_r[band];
+        targetG = colors_g[band];
+        targetB = colors_b[band];
+    }
+    
+    float brightness = std::max(r,std::max(g,b)) / 255.0f;  
+
+    // Modulate the target color by the original brightness
+    float rr = (targetR * brightness);
+    float gg = (targetG * brightness);
+    float bb = (targetB * brightness);
+    
+    // Blend with original color based on shader strength
+    float strength = std::clamp(shaderStrength, 0.0f, 1.0f);
+    r = (uint8_t)(r * (1.0f - strength) + rr * strength);
+    g = (uint8_t)(g * (1.0f - strength) + gg * strength);
+    b = (uint8_t)(b * (1.0f - strength) + bb * strength);
 }
 
 void ShaderProcessor::UpdateColorByShader(int16_t &x, int16_t &y, uint8_t &r, uint8_t &g, uint8_t &b, ShaderType &shdr, float &shaderStrength){
@@ -190,6 +282,10 @@ void ShaderProcessor::UpdateColorByShader(int16_t &x, int16_t &y, uint8_t &r, ui
     
     case SHADER_TEXTURE:
         ShaderTexture(x, y, r, g, b, shdr, shaderStrength);  
+        break;
+    
+    case SHADER_TRANS:
+        ShaderTrans(x, y, r, g, b, shdr, shaderStrength);  
         break;
     
     default:
