@@ -839,7 +839,6 @@
     },
     {
       "name": "model_angy_intro",
-      "transition": true,
       "duration": 1500,
       "tracks": [
         {
@@ -1019,11 +1018,11 @@
             }
           ]
         }
-      ]
+      ],
+      "transition": true
     },
     {
       "name": "model_angry",
-      "intro": "model_angy_intro",
       "duration": 3000,
       "tracks": [
         {
@@ -1207,7 +1206,269 @@
             }
           ]
         }
-      ]
+      ],
+      "intro": "model_angy_intro",
+      "outro": "model_angry_outro"
+    },
+    {
+      "name": "model_angry_outro",
+      "duration": 1500,
+      "tracks": [
+        {
+          "modelname": "eye",
+          "keyframes": [
+            {
+              "t": "color",
+              "at": 0,
+              "color": 63488,
+              "i": true
+            },
+            {
+              "t": "rotate",
+              "at": 0,
+              "a": 10,
+              "cx": 32,
+              "cy": 16,
+              "umc": true,
+              "i": true
+            },
+            {
+              "t": "rotate",
+              "at": 800,
+              "a": -10,
+              "cx": 32,
+              "cy": 16,
+              "umc": true
+            },
+            {
+              "t": "color",
+              "at": 1450,
+              "color": 31
+            },
+            {
+              "t": "sine",
+              "at": 1500,
+              "amplitude_x": 0.2,
+              "amplitude_y": 0.2,
+              "rotations_x": 1,
+              "rotations_y": 1,
+              "x_sin": true,
+              "y_sin": false
+            }
+          ]
+        },
+        {
+          "modelname": "eyebrow",
+          "keyframes": [
+            {
+              "t": "color",
+              "at": 0,
+              "color": 63488,
+              "i": true
+            },
+            {
+              "t": "translate",
+              "at": 750,
+              "x": 0,
+              "y": -20
+            },
+            {
+              "t": "color",
+              "at": 1450,
+              "color": 31
+            }
+          ]
+        },
+        {
+          "modelname": "nose",
+          "keyframes": [
+            {
+              "t": "color",
+              "at": 0,
+              "color": 63488,
+              "i": true
+            },
+            {
+              "t": "color",
+              "at": 1450,
+              "color": 31
+            }
+          ]
+        },
+        {
+          "modelname": "eye.2",
+          "keyframes": [
+            {
+              "t": "translate",
+              "at": 0,
+              "x": 0,
+              "y": -1,
+              "i": true
+            },
+            {
+              "t": "translate",
+              "at": 1050,
+              "x": 0,
+              "y": 1
+            }
+          ]
+        },
+        {
+          "modelname": "eye.1",
+          "keyframes": [
+            {
+              "t": "translate",
+              "at": 0,
+              "x": 0,
+              "y": 1,
+              "i": true
+            },
+            {
+              "t": "translate",
+              "at": 1050,
+              "x": 0,
+              "y": -1
+            }
+          ]
+        },
+        {
+          "modelname": "mouth",
+          "keyframes": [
+            {
+              "t": "color",
+              "at": 0,
+              "color": 63488,
+              "i": true
+            },
+            {
+              "t": "color",
+              "at": 1450,
+              "color": 31
+            },
+            {
+              "t": "sine",
+              "at": 1500,
+              "amplitude_x": 0.2,
+              "amplitude_y": 0.2,
+              "rotations_x": 1,
+              "rotations_y": 1,
+              "x_sin": true,
+              "y_sin": false
+            }
+          ]
+        },
+        {
+          "modelname": "mouth.5",
+          "keyframes": [
+            {
+              "t": "translate",
+              "at": 0,
+              "x": -4,
+              "y": 2,
+              "i": true
+            },
+            {
+              "t": "translate",
+              "at": 900,
+              "x": 4,
+              "y": -2
+            }
+          ]
+        },
+        {
+          "modelname": "mouth.1",
+          "keyframes": [
+            {
+              "t": "rotate",
+              "at": 0,
+              "a": -20,
+              "cx": 32,
+              "cy": 16,
+              "umc": true
+            },
+            {
+              "t": "translate",
+              "at": 0,
+              "x": -2,
+              "y": 2,
+              "i": true
+            },
+            {
+              "t": "rotate",
+              "at": 950,
+              "a": 20,
+              "cx": 32,
+              "cy": 16,
+              "umc": true
+            },
+            {
+              "t": "translate",
+              "at": 1000,
+              "x": 2,
+              "y": -2
+            }
+          ]
+        },
+        {
+          "modelname": "mouth.3",
+          "keyframes": [
+            {
+              "t": "translate",
+              "at": 0,
+              "x": 0,
+              "y": 3
+            },
+            {
+              "t": "translate",
+              "at": 1000,
+              "x": 0,
+              "y": -3,
+              "i": true
+            }
+          ]
+        },
+        {
+          "modelname": "mouth.4",
+          "keyframes": [
+            {
+              "t": "rotate",
+              "at": 0,
+              "a": 20,
+              "cx": 32,
+              "cy": 16,
+              "umc": true
+            },
+            {
+              "t": "translate",
+              "at": 0,
+              "x": 0,
+              "y": 2
+            },
+            {
+              "t": "rotate",
+              "at": 750,
+              "a": 0,
+              "cx": 32,
+              "cy": 16
+            },
+            {
+              "t": "translate",
+              "at": 900,
+              "x": 0,
+              "y": -2
+            },
+            {
+              "t": "rotate",
+              "at": 1050,
+              "a": -20,
+              "cx": 32,
+              "cy": 16,
+              "umc": true
+            }
+          ]
+        }
+      ],
+      "transition": true
     }
   ]
 }

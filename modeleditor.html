@@ -2540,6 +2540,46 @@
         }
 
 
+        .checkbox-label {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 10px 0 !important;
+            cursor: pointer !important;
+            width: auto !important;
+        }
+        .checkbox-label input {
+            cursor: pointer !important;
+            accent-color: #ff9900 !important;
+            margin: 0 !important;
+            width: auto !important;
+            flex-shrink: 0 !important;
+        }
+        .checkbox-label span {
+            color: #aaa !important;
+            font-size: 11px !important;
+            white-space: nowrap !important;
+        }
+        .settings-divider {
+            height: 1px;
+            background: #444;
+            margin: 12px 0;
+        }
+        .modal-textarea {
+            width: 100%;
+            padding: 6px;
+            background: #1e1e1e;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 11px;
+            box-sizing: border-box;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+
        
 
 
@@ -2693,28 +2733,30 @@
                         <span style="color:#444; margin: 0 4px;">|</span>
                         
                         <div class="repeat-controls">
-                            <label class="repeat-checkbox">
-                                <input type="checkbox" id="repeatToggle"><span style="color:#ff9900; font-size: 11px; font-weight: bold; margin-left: 4px;">LOOP</span>
-                            </label>
-                            <select id="repeatBehavior" class="repeat-select" disabled>
-                                <option value="reset">Reset</option>
-                                <option value="accumulate">Accumulate</option>
-                            </select>
-                        </div>
-                        
-                        <span style="color:#444; margin: 0 4px;">|</span>
-                        
-                        <span style="color:#ff9900; font-size: 11px; font-weight: bold;">Name:</span>
-                        <input type="text" id="animationNameInput" value="Animation 1" style="background:#3c3c3c; border:1px solid #555; color:#fff; border-radius:3px; padding:3px 6px; font-size:11px; width:120px; font-family:monospace;">
+                        <label class="repeat-checkbox">
+                            <input type="checkbox" id="repeatToggle"><span style="color:#ff9900; font-size: 11px; font-weight: bold; margin-left: 4px;">LOOP</span>
+                        </label>
+                        <select id="repeatBehavior" class="repeat-select" disabled>
+                            <option value="reset">Reset</option>
+                            <option value="accumulate">Accumulate</option>
+                        </select>
                     </div>
 
-                    <div class="timeline-tools-compact">
+                    <span style="color:#444; margin: 0 4px;">|</span>
+
+                    <span style="color:#ff9900; font-size: 11px; font-weight: bold;">Name:</span>
+                    <input type="text" id="animationNameInput" value="Animation 1" style="background:#3c3c3c; border:1px solid #555; color:#fff; border-radius:3px; padding:3px 6px; font-size:11px; width:120px; font-family:monospace;">
+
+                    <button id="animationSettingsBtn" style="background:#3c3c3c; border:1px solid #555; border-radius:3px; padding:3px 8px; cursor:pointer; font-family:monospace; font-size:11px; color:#ccc; margin-left:8px;">⚙️ Settings</button>
+                </div>
+
+                <div class="timeline-tools-compact">
                     
-                    </div>
+                </div>
 
-                    <div id="timelineOverlay" class="timeline-overlay" style="display: none;">
-                        <button id="switchToAnimModeBtn" class="switch-mode-btn">SWITCH TO ANIMATION MODE</button>
-                    </div>
+                <div id="timelineOverlay" class="timeline-overlay" style="display: none;">
+                    <button id="switchToAnimModeBtn" class="switch-mode-btn">SWITCH TO ANIMATION MODE</button>
+                </div>
             </div>
                 
                 <!-- Ruler with spacer for model names -->
@@ -2847,6 +2889,55 @@
         <div class="model-settings-dialog-buttons">
             <button class="model-settings-dialog-btn cancel" id="settingsDialogCancel">CANCEL</button>
             <button class="model-settings-dialog-btn save" id="settingsDialogSave">SAVE</button>
+        </div>
+    </div>
+
+    <div id="animationSettingsDialog" class="model-settings-dialog" style="min-width: 350px;">
+        <h3 id="animationSettingsTitle" style="color:#ff9900; margin:0 0 15px 0;">Animation Settings</h3>
+        <div id="animationSettingsContent">
+            <div class="settings-row">
+                <label>Intro</label>
+                <select id="settingIntro" class="modal-select"></select>
+            </div>
+            <div class="settings-row">
+                <label>Outro</label>
+                <select id="settingOutro" class="modal-select"></select>
+            </div>
+            
+            <label class="checkbox-label">
+                <input type="checkbox" id="settingTransition">
+                <span><b>Transition</b> (Dont show in the menu<br>Use to transition between two animations)</span>
+            </label>
+            
+            <div class="settings-divider"></div>
+            
+            <label class="checkbox-label">
+                <input type="checkbox" id="settingHidden">
+                <span><b>Hidden</b> (Dont show in the face selection)</span>
+            </label>
+            
+  
+            <div class="settings-divider"></div>
+            
+            <label class="checkbox-label">
+                <input type="checkbox" id="enableOnEnter">
+                <span>On Enter script</span>
+            </label>
+            <div id="onEnterContainer" style="margin-bottom:10px; display:none;">
+                <textarea id="settingOnEnter" class="modal-textarea" placeholder="Lua script"></textarea>
+            </div>
+            
+            <label class="checkbox-label">
+                <input type="checkbox" id="enableOnLeave">
+                <span>On Leave script</span>
+            </label>
+            <div id="onLeaveContainer" style="margin-bottom:10px; display:none;">
+                <textarea id="settingOnLeave" class="modal-textarea" placeholder="Lua script"></textarea>
+            </div>
+        </div>
+        <div class="model-settings-dialog-buttons">
+            <button class="model-settings-dialog-btn cancel" id="animationSettingsClose">CLOSE</button>
+            <button class="model-settings-dialog-btn save" id="animationSettingsSave">SAVE</button>
         </div>
     </div>
 
@@ -6910,6 +7001,13 @@
                     }
                 });
             }
+            
+            const settingsBtn = document.getElementById('animationSettingsBtn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', openAnimationSettings);
+            }
+
+          
         }
         setTimeout(initAnimationSystem, 100);
         
@@ -9225,6 +9323,14 @@
                     duration: anim.duration,
                     tracks: tracksData
                 });
+
+                if (anim.intro) animationsData[animationsData.length - 1].intro = anim.intro;
+                if (anim.outro) animationsData[animationsData.length - 1].outro = anim.outro;
+                if (anim.transition) animationsData[animationsData.length - 1].transition = anim.transition;
+                if (anim.onEnter) animationsData[animationsData.length - 1].onEnter = anim.onEnter;
+                if (anim.onLeave) animationsData[animationsData.length - 1].onLeave = anim.onLeave;
+                if (anim.hidden) animationsData[animationsData.length - 1].hidden = anim.hidden;
+                //if (anim.backwards) animationsData[animationsData.length - 1].backwards = anim.backwards;
             });
             
             function rgbToRGB565(r, g, b) {
@@ -9457,9 +9563,14 @@
                                 name: animData.name,
                                 duration: animData.duration || 3000,
                                 tracks: tracks,
-                                repeatEnabled: false,
-                                repeatBehavior: 'reset'
                             };
+                            if (animData.intro) newAnim.intro = animData.intro;
+                            if (animData.outro) newAnim.outro = animData.outro;
+                            if (animData.transition) newAnim.transition = animData.transition;
+                            if (animData.onEnter) newAnim.onEnter = animData.onEnter;
+                            if (animData.onLeave) newAnim.onLeave = animData.onLeave;
+                            if (animData.hidden) newAnim.hidden = animData.hidden;
+                            //if (animData.backwards) newAnim.backwards = animData.backwards;
                             newAnimations.push(newAnim);
                         }
                     });
@@ -9642,6 +9753,8 @@
             showFeedback('File downloaded!', 1500);
         }
 
+        let expressionsArray = [];
+
         async function autoLoadModels() {
             try {
                 const response = await fetch('/models.json');
@@ -9652,12 +9765,39 @@
                     if (success) {
                         showFeedback("Auto-loaded models.json from server", 2000);
                     }
+
+                    try {
+                        const response = await fetch('/animation.json');
+                        if (response.ok) {
+                            const jsonString = await response.text();
+                            const parsed = JSON.parse(jsonString);
+                            
+                            if (parsed.expressions && Array.isArray(parsed.expressions)) {
+                                expressionsArray = parsed.expressions;
+                                console.log(`Loaded ${expressionsArray.length} expressions from animation.json`);
+                            } else {
+                                expressionsArray = [];
+                                console.log("No expressions array found in animation.json, using empty array");
+                            }
+                        } else {
+                            expressionsArray = [];
+                            console.log("No animation.json found, expressions array initialized as empty");
+                        }
+                    } catch (err) {
+                        console.log("Could not load animation.json:", err);
+                        expressionsArray = [];
+                    }
                 } else {
                     loadedFromServer = false;
                 }
             } catch (err) {
                 loadedFromServer = false;
             }
+
+            if (!expressionsArray) {
+                expressionsArray = [];
+            }
+            
         }
 
         async function saveToDevice() {
@@ -11115,39 +11255,93 @@
                 const trackCount = anim.tracks.length;
                 const kfCount = anim.tracks.reduce((s, t) => s + (t.keyframes?.length || 0), 0);
                 
+                // Create menu button (reusing track-menu-btn class)
+                const menuBtn = document.createElement('button');
+                menuBtn.className = 'track-menu-btn';
+                menuBtn.innerHTML = '☰';
+                menuBtn.title = 'Animation options';
+                
+                // Create dropdown menu (reusing track-menu-dropdown class)
+                const dropdown = document.createElement('div');
+                dropdown.className = 'track-menu-dropdown';
+                dropdown.innerHTML = `
+                    <div class="track-menu-item" data-action="clone">📋 Clone Animation</div>
+                    <div class="track-menu-item delete" data-action="delete">🗑️ Delete Animation</div>
+                `;
+                
                 item.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; align-items:center; gap:6px;">
                             <div style="display:flex; flex-direction:column; gap:2px;">
-                                <button class="anim-order-btn up-btn" data-id="${anim.id}" data-index="${idx}" ${idx === 0 ? 'disabled' : ''} style="background:#3c3c3c; border:1px solid #555; border-radius:3px; width:18px; height:14px; display:flex; align-items:center; justify-content:center; cursor:${idx === 0 ? 'not-allowed' : 'pointer'}; color:#ccc; font-size:8px; transition:all 0.1s;">▲</button>
-                                <button class="anim-order-btn down-btn" data-id="${anim.id}" data-index="${idx}" ${idx === animations.length - 1 ? 'disabled' : ''} style="background:#3c3c3c; border:1px solid #555; border-radius:3px; width:18px; height:14px; display:flex; align-items:center; justify-content:center; cursor:${idx === animations.length - 1 ? 'not-allowed' : 'pointer'}; color:#ccc; font-size:8px; transition:all 0.1s;">▼</button>
+                                <button class="anim-order-btn up-btn" data-id="${anim.id}" data-index="${idx}" ${idx === 0 ? 'disabled' : ''} style="background:#3c3c3c; border:1px solid #555; border-radius:3px; width:18px; height:14px; display:flex; align-items:center; justify-content:center; cursor:${idx === 0 ? 'not-allowed' : 'pointer'}; color:#ccc; font-size:8px;">▲</button>
+                                <button class="anim-order-btn down-btn" data-id="${anim.id}" data-index="${idx}" ${idx === animations.length - 1 ? 'disabled' : ''} style="background:#3c3c3c; border:1px solid #555; border-radius:3px; width:18px; height:14px; display:flex; align-items:center; justify-content:center; cursor:${idx === animations.length - 1 ? 'not-allowed' : 'pointer'}; color:#ccc; font-size:8px;">▼</button>
                             </div>
                             <span style="color:#ffaa33; font-weight:bold;">${escapeHtml(anim.name)}</span>
                         </div>
-                        <button class="anim-delete-btn" data-id="${anim.id}" style="background:#ff6666; border:none; border-radius:3px; width:22px; height:22px; cursor:pointer; font-weight:bold; color:#111;">✕</button>
                     </div>
                     <div style="font-size:9px; color:#aaa; margin-top:4px;">${trackCount} track(s) · ${kfCount} keyframe(s) · ${anim.duration}ms</div>
                 `;
                 
-                item.onclick = (e) => {
-                    if (e.target.classList.contains('anim-delete-btn')) return;
-                    if (e.target.classList.contains('anim-order-btn')) return;
-                    selectAnimation(anim.id);
-                };
-                
-                const delBtn = item.querySelector('.anim-delete-btn');
-                delBtn.onclick = (e) => {
+                // Add menu button and dropdown
+                const topDiv = item.querySelector('div:first-child');
+                topDiv.appendChild(menuBtn);
+                item.appendChild(dropdown);
+
+                // Menu button click handler
+                menuBtn.onclick = (e) => {
                     e.stopPropagation();
-                    if (isAnimationMode) {
-                        deleteAnimation(anim.id);
-                    } else {
-                        toggleMode();
-                        setTimeout(() => {
-                            deleteAnimation(anim.id);
-                        }, 50);
+                    document.querySelectorAll('.track-menu-dropdown.active').forEach(d => {
+                        if (d !== dropdown) d.classList.remove('active');
+                    });
+                    dropdown.classList.toggle('active');
+                    
+                    if (dropdown.classList.contains('active')) {
+                        const rect = menuBtn.getBoundingClientRect();
+                        const dropdownHeight = dropdown.offsetHeight;
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        const spaceAbove = rect.top;
+                        
+                        // Position vertically
+                        if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+                            dropdown.style.top = `${rect.bottom + 2}px`;
+                            dropdown.style.bottom = 'auto';
+                        } else {
+                            dropdown.style.bottom = `${window.innerHeight - rect.top + 2}px`;
+                            dropdown.style.top = 'auto';
+                        }
+                        
+                        // Align to the LEFT of the button instead of right
+                        dropdown.style.right = `${window.innerWidth - rect.left}px`;
+                        dropdown.style.left = 'auto';
+                        
+                        // Ensure dropdown doesn't go off screen horizontally
+                        const dropdownRect = dropdown.getBoundingClientRect();
+                        if (dropdownRect.left < 0) {
+                            dropdown.style.left = '5px';
+                            dropdown.style.right = 'auto';
+                        }
                     }
                 };
                 
+                // Menu item handlers
+                const cloneItem = dropdown.querySelector('[data-action="clone"]');
+                const deleteItem = dropdown.querySelector('[data-action="delete"]');
+                
+                cloneItem.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.remove('active');
+                    cloneAnimation(anim.id);
+                };
+                
+                deleteItem.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.remove('active');
+                    if (confirm(`Delete animation "${anim.name}"?`)) {
+                        deleteAnimation(anim.id);
+                    }
+                };
+                
+                // Order buttons
                 const upBtn = item.querySelector('.up-btn');
                 const downBtn = item.querySelector('.down-btn');
                 
@@ -11165,8 +11359,69 @@
                     };
                 }
                 
+                item.onclick = (e) => {
+                    if (e.target.classList.contains('track-menu-btn')) return;
+                    if (e.target.classList.contains('track-menu-item')) return;
+                    if (e.target.classList.contains('up-btn')) return;
+                    if (e.target.classList.contains('down-btn')) return;
+                    selectAnimation(anim.id);
+                };
+                
                 listDiv.appendChild(item);
             });
+            
+            // Close dropdowns when clicking elsewhere
+            document.addEventListener('click', function closeAnimationDropdowns(e) {
+                if (!e.target.closest('.track-menu-btn')) {
+                    document.querySelectorAll('.track-menu-dropdown.active').forEach(d => {
+                        d.classList.remove('active');
+                    });
+                }
+            });
+        }
+
+        function cloneAnimation(animId) {
+            const originalAnim = animations.find(a => a.id === animId);
+            if (!originalAnim) return;
+            
+            saveUndoState();
+            
+            // Generate unique name
+            let baseName = originalAnim.name + " (copy)";
+            let finalName = baseName;
+            let counter = 1;
+            while (animations.some(a => a.name === finalName)) {
+                counter++;
+                finalName = `${baseName} ${counter}`;
+            }
+            
+            const clonedAnim = {
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                name: finalName,
+                duration: originalAnim.duration,
+                tracks: JSON.parse(JSON.stringify(originalAnim.tracks)),
+                repeatEnabled: originalAnim.repeatEnabled || false,
+                repeatBehavior: originalAnim.repeatBehavior || 'reset',
+                // Clone custom settings
+                ...(originalAnim.intro && { intro: originalAnim.intro }),
+                ...(originalAnim.outro && { outro: originalAnim.outro }),
+                ...(originalAnim.transition && { transition: originalAnim.transition }),
+                ...(originalAnim.onEnter && { onEnter: originalAnim.onEnter }),
+                ...(originalAnim.onLeave && { onLeave: originalAnim.onLeave }),
+                ...(originalAnim.hidden && { hidden: originalAnim.hidden }),
+                ...(originalAnim.backwards && { backwards: originalAnim.backwards })
+            };
+            
+            // Generate new IDs for cloned tracks
+            clonedAnim.tracks.forEach(track => {
+                track.id = Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            });
+            
+            animations.push(clonedAnim);
+            renderAnimationList();
+            renderTimelineForAnimation();
+            
+            showFeedback(`Cloned animation: "${finalName}"`, 1500);
         }
 
         function moveAnimationUp(index) {
@@ -12052,7 +12307,7 @@
             }, 50);
         }
         // ===========================================
-        // REPEAT/LOOP FUNCTIONALITY
+        // Animation settings
         // ===========================================
 
         function initRepeatProperties(anim) {
@@ -12061,6 +12316,152 @@
                 anim.repeatBehavior = 'reset';
             }
             return anim;
+        }
+
+        function openAnimationSettings() {
+            const anim = getSelectedAnimation();
+            if (!anim) {
+                showFeedback("No animation selected", 1500);
+                return;
+            }
+            
+            const dialog = document.getElementById('animationSettingsDialog');
+            document.getElementById('animationSettingsTitle').textContent = `Settings for "${anim.name}"`;
+            
+            // Build dropdown options
+            let options = '<option value="">(none)</option>';
+            if (expressionsArray && expressionsArray.length > 0) {
+                expressionsArray.forEach(expr => {
+                    options += `<option value="${escapeHtml(expr.name)}">${escapeHtml(expr.name)}</option>`;
+                });
+            }
+            if (animations && animations.length > 0) {
+                animations.forEach(animItem => {
+                    if (animItem.id !== anim.id) {
+                        options += `<option value="${escapeHtml(animItem.name)}">${escapeHtml(animItem.name)}</option>`;
+                    }
+                });
+            }
+            
+            document.getElementById('settingIntro').innerHTML = options;
+            document.getElementById('settingOutro').innerHTML = options;
+            
+            // Set values
+            document.getElementById('settingIntro').value = anim.intro || '';
+            document.getElementById('settingOutro').value = anim.outro || '';
+            document.getElementById('settingTransition').checked = anim.transition || false;
+            document.getElementById('settingHidden').checked = anim.hidden || false;
+            //document.getElementById('settingBackwards').checked = anim.backwards || false;
+            
+            const enableOnEnter = document.getElementById('enableOnEnter');
+            const enableOnLeave = document.getElementById('enableOnLeave');
+            const onEnterContainer = document.getElementById('onEnterContainer');
+            const onLeaveContainer = document.getElementById('onLeaveContainer');
+            const settingOnEnter = document.getElementById('settingOnEnter');
+            const settingOnLeave = document.getElementById('settingOnLeave');
+            
+            enableOnEnter.checked = !!anim.onEnter;
+            enableOnLeave.checked = !!anim.onLeave;
+            settingOnEnter.value = anim.onEnter || '';
+            settingOnLeave.value = anim.onLeave || '';
+            
+            onEnterContainer.style.display = enableOnEnter.checked ? 'block' : 'none';
+            onLeaveContainer.style.display = enableOnLeave.checked ? 'block' : 'none';
+            
+            dialog.classList.add('active');
+        }
+
+        // Event listeners
+        document.getElementById('enableOnEnter').addEventListener('change', function() {
+            document.getElementById('onEnterContainer').style.display = this.checked ? 'block' : 'none';
+            if (!this.checked) document.getElementById('settingOnEnter').value = '';
+        });
+
+        document.getElementById('enableOnLeave').addEventListener('change', function() {
+            document.getElementById('onLeaveContainer').style.display = this.checked ? 'block' : 'none';
+            if (!this.checked) document.getElementById('settingOnLeave').value = '';
+        });
+
+
+        document.getElementById('animationSettingsSave').onclick = function() {
+            const anim = getSelectedAnimation();
+            if (!anim) return;
+            
+            const newSettings = {
+                intro: document.getElementById('settingIntro').value || undefined,
+                outro: document.getElementById('settingOutro').value || undefined,
+                transition: document.getElementById('settingTransition').checked || undefined,
+                hidden: document.getElementById('settingHidden').checked || undefined,
+                //: document.getElementById('settingBackwards').checked || undefined,
+                onEnter: document.getElementById('enableOnEnter').checked ? document.getElementById('settingOnEnter').value : undefined,
+                onLeave: document.getElementById('enableOnLeave').checked ? document.getElementById('settingOnLeave').value : undefined
+            };
+            
+            for (const [key, value] of Object.entries(newSettings)) {
+                if (value !== undefined && value !== '' && value !== false) {
+                    anim[key] = value;
+                } else {
+                    delete anim[key];
+                }
+            }
+            
+            showFeedback(`Settings saved for "${anim.name}"`, 1500);
+            document.getElementById('animationSettingsDialog').classList.remove('active');
+        };
+
+        document.getElementById('animationSettingsClose').onclick = function() {
+            document.getElementById('animationSettingsDialog').classList.remove('active');
+        };
+
+        document.getElementById('enableOnEnter').addEventListener('change', function() {
+            document.getElementById('onEnterContainer').style.display = this.checked ? 'block' : 'none';
+            if (!this.checked) document.getElementById('settingOnEnter').value = '';
+        });
+
+        document.getElementById('enableOnLeave').addEventListener('change', function() {
+            document.getElementById('onLeaveContainer').style.display = this.checked ? 'block' : 'none';
+            if (!this.checked) document.getElementById('settingOnLeave').value = '';
+        });
+
+        document.getElementById('animationSettingsClose').onclick = function() {
+            document.getElementById('animationSettingsDialog').classList.remove('active');
+        };
+
+        function closeAnimationSettings() {
+            const dialog = document.getElementById('animationSettingsDialog');
+            dialog.classList.remove('active');
+        }
+
+        // Save custom settings to animation object
+        function saveAnimationSettings(anim, settings) {
+            if (!anim) return;
+            
+            // Store settings directly on the animation object
+            // Only store settings that are not undefined/null
+            for (const [key, value] of Object.entries(settings)) {
+                if (value !== undefined && value !== null) {
+                    anim[key] = value;
+                } else {
+                    delete anim[key];
+                }
+            }
+        }
+
+        // Load custom settings from animation object
+        function loadAnimationSettings(anim) {
+            if (!anim) return {};
+            
+            const settings = {};
+            // Known setting keys (to be expanded later)
+            const knownKeys = []; // Add setting keys here when implemented
+            
+            for (const key of knownKeys) {
+                if (anim[key] !== undefined) {
+                    settings[key] = anim[key];
+                }
+            }
+            
+            return settings;
         }
 
         // ===========================================

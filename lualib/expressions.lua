@@ -105,17 +105,16 @@ function _M.Load()
 	local conf = configloader.Get()
 
 
+	generic.displaySplashMessage("Starting:\nExpressions")
+	for i ,b in pairs(conf.expressions) do 
+		_M.loadSingleExpression(b, "/animation.json", i)
+	end
+
 	local modelAnim = models.getModelAnimationList("/models.json")
 	if modelAnim then
 		for id , anim in pairs(modelAnim) do 
 			_M.loadSingleExpression(anim, fullPath, id)
 		end
-	end
-
-
-	generic.displaySplashMessage("Starting:\nExpressions")
-	for i ,b in pairs(conf.expressions) do 
-		_M.loadSingleExpression(b, "/animation.json", i)
 	end
 
 	local res = {}
