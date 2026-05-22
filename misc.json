@@ -1,4 +1,7 @@
 {
+    "starting_animation": "normal",
+    "edit_mode_cycle_animation": true,
+    
     "boop": {
         "//comment": "The trigger_mode can accept either 'gpio' or 'lidar'",
         "trigger_mode": "gpio", 

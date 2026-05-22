@@ -46,6 +46,10 @@ function onPreflight()
     ledsSetManaged(true)
     setPanelManaged(true)
     expressions.Next()
+    if not configloader.Get().starting_animation then
+        expressions.SetExpression(configloader.Get().starting_animation)
+    end
+
     input.Start() 
     setPoweringMode(BUILT_IN_POWER_MODE)
     ledsGentlySeBrightness(tonumber(dictGet("led_brightness") ) or 64)
@@ -57,10 +61,9 @@ end
 function onLoop(dt)
     drivers.update()
     input.update()
+    expressions.update()
     if not scripts.Handle(dt) then
         return
     end
     menu.handleMenu(dt)
-
-    
 end

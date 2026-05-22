@@ -5,6 +5,7 @@ local _M = {
 	by_name = {},
 	by_frame = {},
 	count = 0,
+	editbutton_state=0,
 }
 
 function _M.loadSingleExpression(data, filename, i)
@@ -91,12 +92,24 @@ function _M.loadSingleExpression(data, filename, i)
 			end
 			data.onLeave = f
 		end
-			_M.by_name[data.name] = id
+		_M.by_name[data.name] = id
 		if not data.transition then 
 			_M.count = _M.count+1
 		end
 		_M.animations[#_M.animations+1] = data
 	end
+end
+
+function _M.update()
+	local mode = digitalRead(EDIT_MODE_PIN)
+	if _M.editbutton_state ~= mode then  
+		if mode == 0 and configloader.Get().edit_mode_cycle_animation == true then  
+			_M.Next()
+			log("Internal button pressed. Cycle animation")
+		end
+		_M.editbutton_state = mode
+	end
+	
 end
 
 function _M.Load()
