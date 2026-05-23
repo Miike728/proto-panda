@@ -140,7 +140,7 @@ void reorder_rgb(ColorMode mode, uint8_t *r, uint8_t *g, uint8_t *b){
     }
 }
 
-void Animation::drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &flip_left, uint8_t &flip_right, int &byteIdOled){
+void Animation::drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &flip_left, uint8_t &flip_right, int &byteIdOled, ColorMode& modeLeft, ColorMode& modeRight){
     if ((color & 0x8610) != 0) { 
         OledScreen::DisplayFace[0][byteIdOled] = 1;
     }else{
@@ -148,20 +148,30 @@ void Animation::drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r,
     }
     byteIdOled++;
 
+    uint8_t ra = r;
+    uint8_t ga = g;
+    uint8_t ba = b;
+
+    uint8_t rb = r;
+    uint8_t gb = g;
+    uint8_t bb = b;
+
+    reorder_rgb(modeLeft, &rb, &gb, &bb);
     if (flip_left&1){
-        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH-1)-x, y, r, g, b);
+        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH-1)-x, y, rb, gb, bb);
     }else{
-        Devices::Display->updateMatrixDMABuffer_2(x, y, r, g, b);
+        Devices::Display->updateMatrixDMABuffer_2(x, y, rb, gb, bb);
     }
 
+    reorder_rgb(modeRight, &ra, &ga, &ba);
     if (flip_right&1){
-        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1)-x, y, r, g, b);
+        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH+PANEL_WIDTH-1)-x, y, ra, ga, ba);
     }else{
-        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH)+x, y, r, g, b);
+        Devices::Display->updateMatrixDMABuffer_2((PANEL_WIDTH)+x, y, ra, ga, ba);
     }
 }
 
-void Animation::adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, ColorMode &currentMode, int16_t &frameId){
+void Animation::adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int16_t &frameId){
     Devices::Display->color565to888(color, r, g, b);
     //1100011100011000    = 0xC718
     //We know each color has 5 6 and 5 bits. So to check if the color is strong enough, we're using this mask that discards
@@ -170,7 +180,6 @@ void Animation::adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r,
     /*if (m_shader == 1 || (r == 57 && g == 121 && b == 181)){
 
     }*/
-    reorder_rgb(currentMode, &r, &g, &b);
     ShaderProcessor::UpdateColorByShader(x, y, r, g, b, m_shader, m_shaderStrenght);
 }
 
@@ -333,7 +342,8 @@ void Animation::DrawFrame(int i){
     m_frameLoadDuration = micros()-ld;
     ld = micros();
 
-    auto currentMode = m_colorMode;
+    auto currentModeLeft = m_colorMode;
+    auto currentModeRight = m_colorMode;
 
     
     uint8_t r, g, b;
@@ -346,7 +356,8 @@ void Animation::DrawFrame(int i){
     uint8_t flip_left = buffer[1];
     uint8_t flip_right = buffer[2];
     if (m_colorMode == 0){
-        m_colorMode = (ColorMode)buffer[3];
+        currentModeLeft = (ColorMode)buffer[3];
+        currentModeRight = (ColorMode)buffer[4];
     }
 
 
@@ -375,10 +386,10 @@ void Animation::DrawFrame(int i){
                 iter--;
                 color |= (readBuffer[compressionReadPos++] << 8); 
 
-                adjustColor(x, y, color, r, g, b, currentMode, frameId);
+                adjustColor(x, y, color, r, g, b, frameId);
                 
                 for (int iddx=0;iddx<lenght;iddx++){
-                    drawPixelAt(x, y, color, r, g, b, flip_left, flip_right, byteIdOled);
+                    drawPixelAt(x, y, color, r, g, b, flip_left, flip_right, byteIdOled, currentModeLeft, currentModeRight);
                     x++;
                     if (x >= PANEL_WIDTH){
                         x = 0;
@@ -405,8 +416,8 @@ void Animation::DrawFrame(int i){
 
         for (int16_t idx=begin;idx<finish;idx++){
             uint16_t color = readBuffer[idx];
-            adjustColor(x, y, color, r, g, b, currentMode, frameId);
-            drawPixelAt(x, y, color, r, g, b, flip_left, flip_right, byteIdOled);
+            adjustColor(x, y, color, r, g, b, frameId);
+            drawPixelAt(x, y, color, r, g, b, flip_left, flip_right, byteIdOled, currentModeLeft, currentModeRight);
             x++;
             if (x >= PANEL_WIDTH){
                 x = 0;

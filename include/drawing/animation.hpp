@@ -119,8 +119,8 @@ class Animation{
         uint32_t getDrawDuration() { return m_frameDrawDuration;};
         uint32_t getLoadDuration() { return m_frameLoadDuration;};
     private:
-        inline void drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &flip_left, uint8_t &flip_right, int &byteIdOled);
-        inline void adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, ColorMode &colorMode, int16_t &frameId);
+        inline void drawPixelAt(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &flip_left, uint8_t &flip_right, int &byteIdOled, ColorMode &colorModeLeft, ColorMode &colorModeRight);
+        inline void adjustColor(int16_t &x, int16_t &y, uint16_t &color, uint8_t &r, uint8_t &g, uint8_t &b, int16_t &frameId);
         std::stack<AnimationSequence> m_animations;
         bool internalUpdate(uint32_t dt, AnimationSequence &seq);
         ShaderType m_shader;
