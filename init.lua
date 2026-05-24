@@ -30,7 +30,7 @@ function onSetup()
     scripts.Load()
     boop.Load()
 
-    -- Load LED config from hardware.json
+    -- Load LED/brightness config from hardware.json
     local ledCfg = {}
     local fp = io.open("/hardware.json", "r")
     if fp then
@@ -39,13 +39,14 @@ function onSetup()
         local hw = json.decode(content) or {}
         ledCfg = hw.leds or {}
     end
+
     local led1Count  = ledCfg.count_1     or 6
     local led2Count  = ledCfg.count_2     or 6
-    local defaultHue = ledCfg.default_hue or 15   -- #e75b12 naranja
+    local defaultHue = ledCfg.default_hue or 15
     local defaultSat = ledCfg.default_sat or 235
     local defaultVal = ledCfg.default_val or 231
 
-    -- On first run set default hue from hardware.json
+    -- On first run set defaults
     if dictGet("led_hue") == nil or dictGet("led_hue") == "" then
         dictSet("led_hue", tostring(defaultHue))
         dictSet("led_effect", tostring(BEHAVIOR_STATIC_HSV))
@@ -71,6 +72,9 @@ function onSetup()
 
     generic.displaySplashMessage("Starting:\nMenu")
     menu.setup()
+
+    -- Share hw config with menu AFTER setup() so applyBrightnessPreset works
+    menu.hw = ledCfg
 end
 
 function onPreflight()
@@ -83,8 +87,9 @@ function onPreflight()
 
     input.Start()
     setPoweringMode(BUILT_IN_POWER_MODE)
-    ledsGentlySeBrightness(tonumber(dictGet("led_brightness")) or 64)
-    gentlySetPanelBrightness(tonumber(dictGet("panel_brightness")) or 64)
+
+    -- Apply brightness: if preset is Manual use saved values, else preset values
+    menu.applyBrightnessPreset(menu.hw)
 end
 
 function onLoop(dt)

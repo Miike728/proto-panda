@@ -49,6 +49,8 @@ function _M.setup(expressions)
     _M.led_brightness = tonumber(dictGet("led_brightness")) or 64
     _M.led_hue = tonumber(dictGet("led_hue")) or 16
     _M.led_effect = tonumber(dictGet("led_effect")) or BEHAVIOR_STATIC_HSV
+    _M.brightness_preset = tonumber(dictGet("brightness_preset")) or 0
+    _M.hw = {}
     _M.has_boop = dictGet("has_boop") == "1" 
     _M.inverted_left_right = dictGet("inverted_left_right") == "1" 
     _M.reapplyButtons()
@@ -77,6 +79,9 @@ function _M.setup(expressions)
     _M.settings.addElement(function() return "Led Color [H:".._M.led_hue.."]" end, function() _M.enterLedColorMenu() end)
 
     _M.settings.addElement(function() return "Led Effect" end, function() _M.enterLedEffectMenu() end)
+
+    local presetNames = {"Manual", "Night", "Outdoor"}
+    _M.settings.addElement(function() return "Brightness ["..(presetNames[_M.brightness_preset+1] or "Manual").."]" end, function() _M.enterBrightnessPresetMenu() end)
 
     _M.settings.addElement(function() return "Faces [".._M.face_selection_style.."]" end,  function()
         if _M.face_selection_style == "GRID" then 
@@ -199,6 +204,57 @@ function _M.enterLedBrightnessMenu()
     _M.mode = MODE_CHANGE_LED_BRIGHTNESS
 end
 
+
+function _M.enterBrightnessPresetMenu()
+    _M.mode = MODE_BRIGHTNESS_PRESET
+    _M.selected = _M.brightness_preset + 1
+end
+
+function _M.applyBrightnessPreset(hw)
+    local cfg = hw or _M.hw or {}
+    _M.hw = cfg
+    local preset = _M.brightness_preset or 0
+    if preset == 0 then
+        ledsGentlySeBrightness(_M.led_brightness or 64)
+        gentlySetPanelBrightness(_M.brigthness or 64)
+    elseif preset == 1 then
+        local panelNight = cfg.night_panel or 26   -- ~10%
+        local ledNight   = cfg.night_leds  or 51   -- ~20%
+        ledsGentlySeBrightness(ledNight)
+        gentlySetPanelBrightness(panelNight)
+    elseif preset == 2 then
+        local panelOut = cfg.outdoor_panel or 204  -- ~80%
+        local ledOut   = cfg.outdoor_leds  or 204  -- ~80%
+        ledsGentlySeBrightness(ledOut)
+        gentlySetPanelBrightness(panelOut)
+    end
+end
+
+function _M.handleBrightnessPresetMenu(dt)
+    if input.readButtonStatus(BUTTON_BACK) == BUTTON_JUST_PRESSED then
+        _M.enterSettingMenu()
+        return
+    end
+    if input.readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then
+        toneDuration(340, 100)
+        _M.selected = _M.selected + 1
+        if _M.selected > 3 then _M.selected = 1 end
+    end
+    if input.readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then
+        toneDuration(540, 100)
+        _M.selected = _M.selected - 1
+        if _M.selected < 1 then _M.selected = 3 end
+    end
+    if input.readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
+        toneDuration(440, 100)
+        _M.brightness_preset = _M.selected - 1
+        dictSet("brightness_preset", tostring(_M.brightness_preset))
+        dictSave()
+        _M.applyBrightnessPreset(_M.hw)
+        _M.enterSettingMenu()
+        return
+    end
+end
 
 function _M.enterLedColorMenu()
     _M.mode = MODE_LED_COLOR
@@ -441,6 +497,17 @@ function _M.draw()
         oledSetCursor(48, 64-8)
         oledDrawText("< +  [OK] - >")
         oledDisplay()
+    elseif _M.mode == MODE_BRIGHTNESS_PRESET then
+        local presetNames = {"Manual", "Night", "Outdoor"}
+        oledSetCursor(0, 2)
+        oledSetFontSize(1)
+        oledDrawText("Brightness Mode:")
+        for i, name in ipairs(presetNames) do
+            oledSetCursor(4, 2 + i * 9)
+            local prefix = (_M.selected == i) and "> " or "  "
+            oledDrawText(prefix..name)
+        end
+        oledDisplay()
     elseif _M.mode == MODE_LED_COLOR then
         oledSetCursor(0, 2)
         local deg = math.floor((_M.led_hue / 255) * 360)
@@ -571,6 +638,8 @@ function _M.handleMenu(dt)
         _M.handleBrightnessMenu(dt)
     elseif _M.mode == MODE_CHANGE_LED_BRIGHTNESS then 
         _M.handleLedBrightnessMenu(dt)
+    elseif _M.mode == MODE_BRIGHTNESS_PRESET then
+        _M.handleBrightnessPresetMenu(dt)
     elseif _M.mode == MODE_LED_COLOR then
         _M.handleLedColorMenu(dt)
     elseif _M.mode == MODE_LED_EFFECT then
@@ -836,6 +905,7 @@ function _M.setDictDefaultValues()
     dictSet("panel_brightness", "64")
     dictSet("led_hue", "16")
     dictSet("led_effect", tostring(BEHAVIOR_STATIC_HSV))
+    dictSet("brightness_preset", "0")
     dictSet("created", "1")
 end
 

@@ -7,3 +7,4 @@ build/*
 .vscode
 remote-control/Output/
 remote-control/*.emSession
+ideas.md

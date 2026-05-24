@@ -22,3 +22,16 @@
 - Default color: #e75b12 orange (HSV h=15, s=235, v=231)
 - init.lua reads hardware.json at boot, applies saved effect/color
   from NVS or falls back to hardware.json defaults on first run
+
+[feat] Brightness presets: Manual / Night / Outdoor (menu.lua + init.lua + hardware.json)
+- New mode MODE_BRIGHTNESS_PRESET (10) in menu.lua
+- New Settings entry "Brightness [Manual/Night/Outdoor]" — navigates
+  with up/down, confirms with OK, saves to NVS via dictSet
+- Manual: uses existing saved panel/led brightness values (unchanged behavior)
+- Night:  low brightness, default ~10% panel (26/255) and ~20% leds (51/255)
+- Outdoor: capped at ~80% panel and leds (204/255) to avoid burn-in
+- All preset values configurable in hardware.json under "leds":
+    night_panel, night_leds, outdoor_panel, outdoor_leds
+- init.lua shares hw config table with menu (menu.hw = ledCfg) so
+  applyBrightnessPreset reads hardware.json values at runtime
+- onPreflight applies saved preset on boot instead of raw brightness values

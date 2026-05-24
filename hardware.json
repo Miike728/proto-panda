@@ -25,6 +25,10 @@
         "count_2": 6,
         "default_hue": 15,
         "default_sat": 235,
-        "default_val": 231
+        "default_val": 231,
+        "night_panel":  26,
+        "night_leds":   51,
+        "outdoor_panel": 204,
+        "outdoor_leds":  204
     }
 }
