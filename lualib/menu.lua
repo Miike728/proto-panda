@@ -6,6 +6,8 @@ MODE_CHANGE_PANEL_BRIGHTNESS = 4
 MODE_CHANGE_LED_BRIGHTNESS = 5
 MODE_SCRIPTS = 6
 MODE_CALIBRATE_BOOP = 7
+MODE_LED_COLOR = 8
+MODE_LED_EFFECT = 9
 
 local scripts = require("scripts")
 local ui = require("ui")
@@ -26,6 +28,8 @@ local _M = {
     settings={},
     maxTextShowSize = 20,
     shader = SHADER_NONE,
+    led_hue = 16,
+    led_effect = BEHAVIOR_STATIC_HSV,
     infoShown=1,
     swapTimer = millis()+5*1000,
     rssi = {},
@@ -43,6 +47,8 @@ function _M.setup(expressions)
     _M.original_right = BUTTON_RIGHT
     _M.brigthness = tonumber(dictGet("panel_brightness")) or 64
     _M.led_brightness = tonumber(dictGet("led_brightness")) or 64
+    _M.led_hue = tonumber(dictGet("led_hue")) or 16
+    _M.led_effect = tonumber(dictGet("led_effect")) or BEHAVIOR_STATIC_HSV
     _M.has_boop = dictGet("has_boop") == "1" 
     _M.inverted_left_right = dictGet("inverted_left_right") == "1" 
     _M.reapplyButtons()
@@ -67,6 +73,10 @@ function _M.setup(expressions)
     _M.settings.addElement(function() return "P. Brightness [".._M.brigthness.."]" end, _M.enterPanelBrightnessMenu)
 
     _M.settings.addElement(function() return "Led Brightness [".._M.led_brightness.."]" end, _M.enterLedBrightnessMenu)
+
+    _M.settings.addElement(function() return "Led Color [H:".._M.led_hue.."]" end, function() _M.enterLedColorMenu() end)
+
+    _M.settings.addElement(function() return "Led Effect" end, function() _M.enterLedEffectMenu() end)
 
     _M.settings.addElement(function() return "Faces [".._M.face_selection_style.."]" end,  function()
         if _M.face_selection_style == "GRID" then 
@@ -188,6 +198,99 @@ end
 function _M.enterLedBrightnessMenu()
     _M.mode = MODE_CHANGE_LED_BRIGHTNESS
 end
+
+
+function _M.enterLedColorMenu()
+    _M.mode = MODE_LED_COLOR
+end
+
+function _M.enterLedEffectMenu()
+    _M.mode = MODE_LED_EFFECT
+    _M.selected = 1
+end
+
+_M.effectList = {
+    BEHAVIOR_STATIC_HSV, BEHAVIOR_PRIDE, BEHAVIOR_ROTATE,
+    BEHAVIOR_RANDOM_COLOR, BEHAVIOR_FADE_CYCLE, BEHAVIOR_NOISE, BEHAVIOR_RANDOM_BLINK
+}
+_M.effectNames = {
+    [BEHAVIOR_STATIC_HSV]    = "Fixed color",
+    [BEHAVIOR_PRIDE]         = "Pride",
+    [BEHAVIOR_ROTATE]        = "Rotate",
+    [BEHAVIOR_RANDOM_COLOR]  = "Random",
+    [BEHAVIOR_FADE_CYCLE]    = "Fade cycle",
+    [BEHAVIOR_NOISE]         = "Noise",
+    [BEHAVIOR_RANDOM_BLINK]  = "Blink",
+}
+
+function _M.applyLedEffect()
+    if _M.led_effect == BEHAVIOR_STATIC_HSV then
+        ledsSegmentBehavior(0, BEHAVIOR_STATIC_HSV, _M.led_hue, 255, 200)
+        ledsSegmentBehavior(1, BEHAVIOR_STATIC_HSV, _M.led_hue, 255, 200)
+    else
+        ledsSegmentBehavior(0, _M.led_effect, 0, 0, 0)
+        ledsSegmentBehavior(1, _M.led_effect, 0, 0, 0)
+    end
+end
+
+function _M.handleLedColorMenu(dt)
+    if input.readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED or
+       input.readButtonStatus(BUTTON_BACK) == BUTTON_JUST_PRESSED then
+        _M.enterSettingMenu()
+        dictSet("led_hue", tostring(_M.led_hue))
+        dictSave()
+        _M.applyLedEffect()
+        return
+    end
+    _M.timer = _M.timer - dt
+    if input.readButtonStatus(BUTTON_LEFT) == BUTTON_PRESSED then
+        if (_M.timer < 0) then
+            _M.timer = 10
+            toneDuration(340, 10)
+            _M.led_hue = _M.led_hue - 1
+            if (_M.led_hue < 0) then _M.led_hue = 255 end
+            ledsSegmentBehavior(0, BEHAVIOR_STATIC_HSV, _M.led_hue, 255, 200)
+            ledsSegmentBehavior(1, BEHAVIOR_STATIC_HSV, _M.led_hue, 255, 200)
+        end
+    end
+    if input.readButtonStatus(BUTTON_RIGHT) == BUTTON_PRESSED then
+        if (_M.timer < 0) then
+            _M.timer = 10
+            toneDuration(540, 10)
+            _M.led_hue = _M.led_hue + 1
+            if (_M.led_hue > 255) then _M.led_hue = 0 end
+            ledsSegmentBehavior(0, BEHAVIOR_STATIC_HSV, _M.led_hue, 255, 200)
+            ledsSegmentBehavior(1, BEHAVIOR_STATIC_HSV, _M.led_hue, 255, 200)
+        end
+    end
+end
+
+function _M.handleLedEffectMenu(dt)
+    if input.readButtonStatus(BUTTON_BACK) == BUTTON_JUST_PRESSED then
+        _M.enterSettingMenu()
+        return
+    end
+    if input.readButtonStatus(BUTTON_DOWN) == BUTTON_JUST_PRESSED then
+        toneDuration(340, 100)
+        _M.selected = _M.selected + 1
+        if _M.selected > #_M.effectList then _M.selected = 1 end
+    end
+    if input.readButtonStatus(BUTTON_UP) == BUTTON_JUST_PRESSED then
+        toneDuration(540, 100)
+        _M.selected = _M.selected - 1
+        if _M.selected < 1 then _M.selected = #_M.effectList end
+    end
+    if input.readButtonStatus(BUTTON_CONFIRM) == BUTTON_JUST_PRESSED then
+        toneDuration(440, 100)
+        _M.led_effect = _M.effectList[_M.selected]
+        dictSet("led_effect", tostring(_M.led_effect))
+        dictSave()
+        _M.applyLedEffect()
+        _M.enterSettingMenu()
+        return
+    end
+end
+
 
 function _M.enterFaceMenu()
     if _M.face_selection_style == "GRID" then
@@ -338,6 +441,25 @@ function _M.draw()
         oledSetCursor(48, 64-8)
         oledDrawText("< +  [OK] - >")
         oledDisplay()
+    elseif _M.mode == MODE_LED_COLOR then
+        oledSetCursor(0, 2)
+        local deg = math.floor((_M.led_hue / 255) * 360)
+        oledSetFontSize(2)
+        oledDrawText("Led Color\n"..deg.."deg")
+        oledSetFontSize(1)
+        oledSetCursor(48, 56)
+        oledDrawText("< +  [OK] - >")
+        oledDisplay()
+    elseif _M.mode == MODE_LED_EFFECT then
+        oledSetCursor(0, 2)
+        oledSetFontSize(1)
+        oledDrawText("Led Effect:")
+        for i, eff in ipairs(_M.effectList) do
+            oledSetCursor(4, 2 + i * 9)
+            local prefix = (_M.selected == i) and "> " or "  "
+            oledDrawText(prefix..(_M.effectNames[eff] or tostring(eff)))
+        end
+        oledDisplay()
     elseif _M.mode == MODE_SCRIPTS then 
         _M.scripts.draw()
     elseif _M.mode == MODE_CALIBRATE_BOOP then 
@@ -449,6 +571,10 @@ function _M.handleMenu(dt)
         _M.handleBrightnessMenu(dt)
     elseif _M.mode == MODE_CHANGE_LED_BRIGHTNESS then 
         _M.handleLedBrightnessMenu(dt)
+    elseif _M.mode == MODE_LED_COLOR then
+        _M.handleLedColorMenu(dt)
+    elseif _M.mode == MODE_LED_EFFECT then
+        _M.handleLedEffectMenu(dt)
     elseif _M.mode == MODE_SCRIPTS then 
         if not _M.scripts.handle(dt) then 
             return
@@ -708,6 +834,8 @@ function _M.setDictDefaultValues()
     dictSet("face_selection_style", "GRID")
     dictSet("led_brightness", "64")
     dictSet("panel_brightness", "64")
+    dictSet("led_hue", "16")
+    dictSet("led_effect", tostring(BEHAVIOR_STATIC_HSV))
     dictSet("created", "1")
 end
 

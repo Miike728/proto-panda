@@ -19,6 +19,12 @@
     "servos": {
         "enabled": false,
         "pins": [1,2]
+    },
+    "leds": {
+        "count_1": 6,
+        "count_2": 6,
+        "default_hue": 15,
+        "default_sat": 235,
+        "default_val": 231
     }
 }
-
