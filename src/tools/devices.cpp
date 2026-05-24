@@ -91,6 +91,7 @@ float Devices::internalT = 0;
         
 void Devices::Begin(){
     Wire.begin(I2C_SDA, I2C_SLC);
+    Wire.setClock(800000);
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_CS);
 }
 

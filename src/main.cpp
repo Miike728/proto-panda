@@ -33,7 +33,9 @@ BleManager g_remoteControls;
 Animation g_animation;
 LuaInterface g_lua;
 TaskHandle_t g_secondCore;
+#ifdef ENABLE_EDIT_MODE
 EditMode g_editMode;
+#endif
 InfraRedManager g_InfraRed;
 ModelDict g_models;
 ModelHandler g_modelHandler;
@@ -74,6 +76,7 @@ void setup() {
   OledScreen::Start();
   Sensors::Start();
   
+  #ifdef ENABLE_EDIT_MODE
   g_editMode.CheckBeginEditMode();
 
   if (g_editMode.IsOnEditMode()){
@@ -84,6 +87,7 @@ void setup() {
     Devices::BuzzerNoTone();
     return;
   }
+  #endif
 
   while (!Storage::Begin()){
     OledScreen::display.clearDisplay();
@@ -172,6 +176,7 @@ void setup() {
   
   
   Devices::CalculateMemmoryUsageDifference("completed setup");
+  digitalWrite(PIN_ENABLE_REGULATOR, HIGH);
 }
 
 void second_loop(void*){
@@ -198,10 +203,12 @@ void second_loop(void*){
 
 void loop() {
   Devices::BeginFrame();
+  #ifdef ENABLE_EDIT_MODE
   if (g_editMode.IsOnEditMode()){
     g_editMode.LoopEditMode();
     return;
   }
+  #endif
 
   if (Devices::AutoCheckPowerLevel() && !Devices::CheckPowerLevel()){
     Devices::WaitForPower();
@@ -214,8 +221,13 @@ void loop() {
   g_InfraRed.update();
   g_remoteControls.sendUpdatesToLua();
 
-
+  static int meme = 0;
+  int salada = millis();
   g_lua.CallFunctionT("onLoop", Devices::getDeltaTime());
+  if (meme < millis()){
+    meme = millis()+1000;
+    Serial.printf("FPs: %f (%d)\n", Devices::getFps(), millis()-salada);
+  }
   #ifdef SINGLE_CORE_RUN
   g_animation.Update(g_frameRepo.takeFile());
   g_frameRepo.freeFile();

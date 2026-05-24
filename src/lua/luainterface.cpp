@@ -805,15 +805,25 @@ void LuaInterface::RegisterConstants()
   m_lua->setConstant("PANEL_HEIGHT", PANEL_HEIGHT);
   m_lua->setConstant("MAX_LED_GROUPS", MAX_LED_GROUPS);
   m_lua->setConstant("EDIT_MODE_PIN", EDIT_MODE_PIN);
+  #ifdef ENABLE_EDIT_MODE
+  m_lua->setConstant("ENABLE_EDIT_MODE", 1);
+  #else 
+  m_lua->setConstant("ENABLE_EDIT_MODE", 0);
+  #endif
+  m_lua->setConstant("EDIT_ENABLE_LOGIC_LEVEL", EDIT_ENABLE_LOGIC_LEVEL);
   m_lua->setConstant("PANEL_CHAIN", PANEL_CHAIN);
 
   #ifdef ENABLE_HUB75_PANEL
+  m_lua->setConstant("ENABLE_HUB75_PANEL", 1);
+  m_lua->setConstant("COLOR_MODE_RGB", (int)COLOR_MODE_RGB);
   m_lua->setConstant("COLOR_MODE_RGB", (int)COLOR_MODE_RGB);
   m_lua->setConstant("COLOR_MODE_RBG", (int)COLOR_MODE_RBG);
   m_lua->setConstant("COLOR_MODE_GRB", (int)COLOR_MODE_GRB);
   m_lua->setConstant("COLOR_MODE_GBR", (int)COLOR_MODE_GBR);
   m_lua->setConstant("COLOR_MODE_BRG", (int)COLOR_MODE_BRG);
   m_lua->setConstant("COLOR_MODE_BGR", (int)COLOR_MODE_BGR);
+  #else
+  m_lua->setConstant("ENABLE_HUB75_PANEL", 0);
   #endif
 
   m_lua->setConstant("ESP_PWR_LVL_N24", (int)ESP_PWR_LVL_N24);

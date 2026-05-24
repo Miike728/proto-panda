@@ -1,4 +1,5 @@
 #include "editmode/editmode.hpp"
+#ifdef ENABLE_EDIT_MODE
 #include "tools/config_default.hpp"
 #include "tools/devices.hpp"
 #include "drawing/framerepository.hpp"
@@ -942,3 +943,4 @@ void startWifiServer(int port){
   Serial.printf("[Memory] %.1f%% free - %lu of %lu bytes free (psram: %lu / %lu  -> %.1f%%)", percentageHeapFree, freeHeapBytes, totalHeapBytes, totalPsramBytes, freePsramBytes, percentagePsramFree);
   server->begin();
 }
+#endif
