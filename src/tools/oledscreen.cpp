@@ -9,7 +9,7 @@
 
 
 extern Animation g_animation;
-Adafruit_SSD1306 OledScreen::display(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, -1);
+Adafruit_SSD1306 OledScreen::display(OLED_SCREEN_WIDTH, OLED_SCREEN_HEIGHT, &Wire, -1, OLED_SCREEN_CLOCK_FREQ);
 bool OledScreen::consoleMode = false;
 std::list<std::string> OledScreen::lines;
 uint8_t *OledScreen::DisplayFace[2] = {nullptr, nullptr};

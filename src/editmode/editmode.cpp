@@ -1,5 +1,5 @@
 #include "editmode/editmode.hpp"
-
+#ifdef ENABLE_EDIT_MODE
 #include "tools/config_default.hpp"
 #include "tools/logger.hpp"
 #include "drawing/framerepository.hpp"
@@ -84,7 +84,7 @@ void EditMode::CheckBeginEditMode(){
 
   OledScreen::SetConsoleMode(true);
   
-  if (digitalRead(EDIT_MODE_PIN) == 0)
+  if (digitalRead(EDIT_MODE_PIN) == EDIT_ENABLE_LOGIC_LEVEL)
   {
     for (int i = 0; i < 10; i++)
     {
@@ -97,7 +97,7 @@ void EditMode::CheckBeginEditMode(){
       
       OledScreen::display.display();
       delay(200);
-      if (digitalRead(EDIT_MODE_PIN) == 1)
+      if (digitalRead(EDIT_MODE_PIN) != EDIT_ENABLE_LOGIC_LEVEL)
       {
         DoBegin(false);
         return;
@@ -301,3 +301,4 @@ void EditMode::LoopEditMode(){
     handleClient(client);
   }
 }
+#endif

@@ -1,6 +1,6 @@
 #pragma once 
 #include "config.hpp"
-
+#ifdef ENABLE_EDIT_MODE
 void startWifiServer(int port);
 
 class EditMode{
@@ -13,3 +13,4 @@ class EditMode{
     private:
         bool m_running;
 };
+#endif

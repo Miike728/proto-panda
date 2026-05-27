@@ -88,6 +88,7 @@ Cache file version to invalidate cache in case of firmware update
 #define OLED_SCREEN_HEIGHT 64 
 #define OLED_SCREEN_ADDRESS 0x3C 
 #define OLED_SCREEN_ROTATION 2
+#define OLED_SCREEN_CLOCK_FREQ 800000
 
 
 #define USE_LIDAR
@@ -112,9 +113,9 @@ Cache file version to invalidate cache in case of firmware update
 /*
     Edit mode pin
 */
-
+//#define ENABLE_EDIT_MODE
 #define EDIT_MODE_PIN 39
-
+#define EDIT_ENABLE_LOGIC_LEVEL 1
 /* 
 Servos
 */
