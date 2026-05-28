@@ -19,6 +19,25 @@
     "servos": {
         "enabled": false,
         "pins": [1,2]
+    },
+    "leds": { 
+        "pin_mode": "double",
+        "_comment": "Modes allowed are: 'double' and 'single'. If using extra led strips, they'll all attach at the right led pin if double is set",
+
+        "groups":[
+            {
+                "_comment": "If pin_side is undefined, it defaults to 'left'",
+                "pin_side": "left",
+                "led_count": 16,
+                "mode": "pride"
+            },
+            {
+                "pin_side": "right",
+                "led_count": 16,
+                "mode": "pride"
+            }
+        ]
+
     }
 }
 

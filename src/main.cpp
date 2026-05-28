@@ -221,13 +221,8 @@ void loop() {
   g_InfraRed.update();
   g_remoteControls.sendUpdatesToLua();
 
-  static int meme = 0;
-  int salada = millis();
   g_lua.CallFunctionT("onLoop", Devices::getDeltaTime());
-  if (meme < millis()){
-    meme = millis()+1000;
-    Serial.printf("FPs: %f (%d)\n", Devices::getFps(), millis()-salada);
-  }
+
   #ifdef SINGLE_CORE_RUN
   g_animation.Update(g_frameRepo.takeFile());
   g_frameRepo.freeFile();
