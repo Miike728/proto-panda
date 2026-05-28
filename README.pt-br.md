@@ -12,12 +12,13 @@ Protopanda é uma plataforma open source (firmware e hardware) para controlar pr
 2. [Alimentação](#alimentação)  
 3. [Painéis](#painéis)  
 4. [Tela e Expressões](#tela-e-expressões)  
-5. [Tiras de LED](#tiras-de-led)  
-6. [Bluetooth](#bluetooth)  
-7. [Hardware](#hardware)   
-8. [Montando os eletronicos](#montando-o-seu-protopanda)
-9. [Imprimindo e montando as peças](./doc/print-guide.pt-br.md)
-10. [Programação em Lua](#programação-em-lua)  
+5. [Compilando o firmware](./doc/flashing-guide.pt-br.md)
+6. [Fitas de LED](#fitas-de-led)  
+7. [Bluetooth](#bluetooth)  
+8. [Hardware](#hardware)   
+9. [Montando os eletronicos](#montando-o-seu-protopanda)
+10. [Imprimindo e montando as peças](./doc/print-guide.pt-br.md)
+11. [Programação em Lua](#programação-em-lua)  
 
 # Features  
 
@@ -186,9 +187,13 @@ As animações são processadas pelo Núcleo 1, então você não precisa perder
 Durante o modo gerenciado, o desenho dos quadros é tratado pelo Núcleo 1.  
 ![alt text](mdoc/managed.png "Modo Gerenciado")  
 
-# Tiras de LED  
+# Compilando
 
-O Protopanda suporta o protocolo de LED endereçável WS2812B e fornece um sistema simples para definir alguns comportamentos para a tira/matriz.  
+O guia completo está aqui: [Compilando o firmware](./doc/flashing-guide.pt-br.md)
+
+# Fitas de LED  
+
+O Protopanda suporta o protocolo de LED endereçável WS2812B e fornece um sistema simples para definir alguns comportamentos para a fita/matriz.  
 ![alt text](doc/A7301542.JPG)  
 ![alt text](doc/ewm.drawio.png)  
 
