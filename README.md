@@ -15,12 +15,13 @@ Protopanda is a open source patform (firmware and hardware), for controling prot
 2. [Powering](#powering)
 3. [Panels](#panels)
 4. [Face and Expressions](#face-and-expressions)
-5. [LED Strips](#led-strips)
+5. [Compiling and flashing firmware](./doc/flashing-guide.md)
+6. [LED Strips](#led-strips)
 7. [Bluetooth](#bluetooth)
-7. [Hardware](#hardware)
-8. [DIY](#DIY)
-9. [Printing and assembling guide](./doc/print-guide.md)
-10. [Programming in Lua](#programming-in-lua)
+8. [Hardware](#hardware)
+9. [DIY](#DIY)
+10. [Printing and assembling guide](./doc/print-guide.md)
+11. [Programming in Lua](#programming-in-lua)
 
 # Features
 
@@ -221,6 +222,11 @@ The animations are processed by Core 0, so you don't have to waste some precious
 It is possible to change the frame using Lua scripts... But it's also wasteful. So leave it to the other core, and you only have to worry about selecting which expressions you want!
 During managed mode, the frame drawing is handled by Core 0.
 ![alt text](mdoc/managed.png "Title")
+
+
+# Compiling
+
+Full guide here: [Compiling and flashing firmware](./doc/flashing-guide.md)
 
 # LED strips
 

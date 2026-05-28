@@ -113,9 +113,9 @@ Cache file version to invalidate cache in case of firmware update
 /*
     Edit mode pin
 */
-//#define ENABLE_EDIT_MODE
+#define ENABLE_EDIT_MODE
 #define EDIT_MODE_PIN 39
-#define EDIT_ENABLE_LOGIC_LEVEL 1
+#define EDIT_ENABLE_LOGIC_LEVEL 0
 /* 
 Servos
 */
