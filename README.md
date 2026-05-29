@@ -26,19 +26,31 @@ Protopanda is a open source patform (firmware and hardware), for controling prot
 
 # Features
 
-- Dual 32bit Xtensa LX7 cores running up to 240Mhz
-- 16MB ram
-- Support several HUB75 panels
-- WLED support
-- Can be programmed using Lua
-- Data stored in a SD card
-- Expressions can be shove in to the sd card as a png file
-- Can reach 60fps easily
-- BLE support for remote control
+- Run with a esp32s3 dual core at 240Mhz
+- 16MB Ram
+- RGB 16bit color depth using two HUB75 panels
+- Support WS2812 led stips
+- Customization using Lua
+- Large part of the code and data stored in a SD card
+- Expressions are .png sprites
+- Around 60~80FPS
+- BLE support for remote control with Lua custom drivers
 - USB-C pd trigger support
 - Up to 5V 5A output while on PD mode
 - Supports internal oled 128x64 screen for menu and UI
+- Wifi mode where you can change configurations
 - gay 🏳️‍🌈
+
+# Guides
+
+There are several guides with images and all!
+
+* [Printing and aassembling guide](./doc/print-guide.md)
+* [Building your own protopanda (DIY)](./doc/diy-guide.md)
+* [Flashing and compiling the firmware](./doc/flashing-guide.md)
+* [Assembling the front frame with all parts](./doc/front-frame-guide.md)
+* [Lua function reference](doc/lua-doc.md)
+
 
 # Powering 
 

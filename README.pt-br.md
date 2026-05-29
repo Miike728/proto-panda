@@ -21,21 +21,33 @@ Protopanda é uma plataforma open source (firmware e hardware) para controlar pr
 11. [Imprimindo e montando as peças](./doc/print-guide.pt-br.md)
 12. [Programação em Lua](#programação-em-lua)  
 
-# Features  
+# Features
 
-- Dois núcleos Xtensa LX7 de 32 bits 240 MHz  
-- 16 MB RAM  
-- Suporte a vários painéis HUB75  
-- Suporte a WLED  
-- Usa Lua  
-- Dados armazenados em um cartão SD  
-- Expressões podem ser adicionadas ao cartão SD como arquivos PNG  
-- Pode facilmente atingir 60 FPS  
-- Suporte a BLE para controle remoto  
-- Suporte a USB-C com PD (Power Delivery)  
-- Saída de até 5V e 5A no modo PD  
-- Suporte a tela OLED interna de 128x64 pixels para menu e interface  
-- gay 🏳️‍🌈  
+- Roda em um esp32s3 dual core 240Mhz
+- 16MB Ram
+- RGB 16bit com 2 paineis HUB75
+- Supporta fita de led endereçavel WS2812
+- Customização usando Lua
+- Maior parte do código fica no cartoa SD dispensando atualização de firmware na maioria dos casos
+- Expressões são apenas sprites em PNG
+- 60~80FPS
+- Comunicação usando BLE e drivers escritos em Lua
+- USB-C pd trigger support
+- Telinha interna com menu e interface bonitinha
+- Modo WIFI onde você pode mudar configurações
+- gay 🏳️‍🌈
+
+# Guias
+
+Tem vários guias prontos com imagens e tudo! 
+
+* [Guia de impressão e montagem das peças em 3d](./doc/print-guide.pt-br.md)
+* [Fazendo um protopanda do 0 (DIY)](./doc/diy-guide.pt-br.md)
+* [Atualizando o firmware e compilando](./doc/flashing-guide.pt-br.md)
+* [Montando oss eletronicos no painel frontal](./doc/front-frame-guide.pt-br.md)
+* [Referencia de funções lua](doc/lua-doc.pt-br.md)
+
+
 
 # Alimentação  
 
