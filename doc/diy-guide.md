@@ -84,6 +84,7 @@ Here's what we're going to build.
 ## Power
 
 > IMPORTANT: Any wires used in the 5V or the 9V rail should be thicker. Get like AWG 20 or something bigger.
+> If you solder the capacitor and the 5V stops showing, that means the module has a faulty over current protection, you might be fine without it. So if that happens, just remove the capacitor!
 
 First, make sure to use some abrasive tool, like steel straw or a fine sandpaper to clean the perf board copper side. Copper oxides really really fast, and that oxide layer prevents solder from sticking on the board surface.
 
@@ -138,7 +139,8 @@ Now check the output of the DC converter. It should say between 4.9~5.2v.
 
 Once this is done, let's solder the capacitor. First, carefully look on the capacitor, there is a usually white band. That indicates where the negative pole is. Place it in the board with the polarity in the correct way!!!! **This is important. DO NOT PLACE THE CAPACITOR BACKWARDS**
 
-> If you solder the capacitor and the 5V stops showing, that means the module has a faulty over current protection, you might be fine without it. So if that happens, just remove the capacitor!
+**If you solder the capacitor and the 5V stops showing, that means the module has a faulty over current protection, you might be fine without it. So if that happens, just remove the capacitor!**
+
 
 ![](./diy-assembly14.png)
 
@@ -252,7 +254,7 @@ And when completed:
 ![](./diy-assembly31.png)
 
 Now after you double check, put the SD card (make sure you put all the required files in the SD card as it says in the [flashing guide](./flashing-guide.md#what-goes-in-the-sd-card)). 
-Powering on it should detect the card. If it does not, check if you did the [configuration part of the SD card for the DIY mode](./flashing-guide#configuration).
+Powering on it should detect the card. If it does not, check if you did the [configuration part of the SD card for the DIY mode](./flashing-guide.md#configuration).
 
 If everything goes well, the protopanda should boot correctly and all the procedures should show this:
 

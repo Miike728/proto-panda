@@ -84,6 +84,7 @@ Aqui está o que vamos construir.
 ## Alimentação
 
 > IMPORTANTE: Qualquer fio usado na trilha de 5V ou 9V deve ser mais grosso. Use algo como AWG 20 ou maior.
+> Se você soldar o capacitor e o 5V parar de aparecer, significa que o módulo tem uma proteção contra sobrecorrente defeituosa, você pode ficar sem ele. Então se isso acontecer, apenas remova o capacitor!
 
 Primeiro, certifique-se de usar alguma ferramenta abrasiva, como palha de aço ou lixa fina para limpar o lado do cobre da placa perfurada. O cobre oxida muito, muito rápido, e essa camada de óxido impede a solda de grudar na superfície da placa.
 
@@ -252,7 +253,7 @@ E quando concluído:
 ![](./diy-assembly31.png)
 
 Agora, depois de verificar duas vezes, coloque o cartão SD (certifique-se de colocar todos os arquivos necessários no cartão SD como diz no [guia de gravação](./flashing-guide.md#o-que-vai-no-cartão-sd)).
-Ao ligar, ele deve detectar o cartão. Se não detectar, verifique se você fez a [parte de configuração do cartão SD para o modo DIY](./flashing-guide#configuração).
+Ao ligar, ele deve detectar o cartão. Se não detectar, verifique se você fez a [parte de configuração do cartão SD para o modo DIY](./flashing-guide.md#configuração).
 
 Se tudo correr bem, o protopanda deve inicializar corretamente e todos os procedimentos devem mostrar isto:
 
