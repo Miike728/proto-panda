@@ -9,16 +9,17 @@
 Protopanda é uma plataforma open source (firmware e hardware) para controlar protogens. A ideia é ser simples o suficiente para que você só precise de um pouco de conhecimento técnico para fazê-lo funcionar, mas ao mesmo tempo flexível para que uma pessoa com o mínimo conhecimento de Lua possa fazer quase de tudo.
 
 1. [Features](#features)   
-2. [Alimentação](#alimentação)  
-3. [Painéis](#painéis)  
-4. [Tela e Expressões](#tela-e-expressões)  
-5. [Compilando o firmware](./doc/flashing-guide.pt-br.md)
-6. [Fitas de LED](#fitas-de-led)  
-7. [Bluetooth](#bluetooth)  
-8. [Hardware](#hardware)   
-9. [Montando os eletronicos](#montando-o-seu-protopanda)
-10. [Imprimindo e montando as peças](./doc/print-guide.pt-br.md)
-11. [Programação em Lua](#programação-em-lua)  
+2. [Guides](#guias)   
+3. [Alimentação](#alimentação)  
+4. [Painéis](#painéis)  
+5. [Tela e Expressões](#tela-e-expressões)  
+6. [Compilando o firmware](./doc/flashing-guide.pt-br.md)
+7. [Fitas de LED](#fitas-de-led)  
+8. [Bluetooth](#bluetooth)  
+9. [Hardware](#hardware)   
+10. [Montando os eletronicos](#montando-o-seu-protopanda)
+11. [Imprimindo e montando as peças](./doc/print-guide.pt-br.md)
+12. [Programação em Lua](#programação-em-lua)  
 
 # Features  
 
@@ -261,20 +262,10 @@ O segundo núcleo lida com tarefas não relacionadas à tela. Ele possui a rotin
 
 Sei que fazer uma PCB do zero, usar componentes SDM é complicado. Porém, você pode usar peças que dá para comprar no aliexpresse montar uma versão reduzida do protopanda.
 
+Pois bem, existe um [guia para montar o seu próprio protopanda!](./doc/diy-guide.pt-br.md)
+
+
 ![Diagrama](doc/diy-schematic.png "Esquema elétrico")  
-
-### Peças
-
-* [5v 3A buck converter](https://aliexpress.com/item/1005005505907937.html)
-* [PD trigger](https://aliexpress.com/item/1005007889747084.html)
-* [SD Card modulo](https://aliexpress.com/item/1005008723789216.html)
-* [Tela oled](https://aliexpress.com/item/1005006141235306.html)
-* [ESP32 N16R9 dev board](https://aliexpress.com/item/1005009906920237.html)
-* [Buzzer 5 or 3.3v](https://aliexpress.com/item/1005006201550296.html)
-* [Connector para o painel HUB75](https://aliexpress.com/item/1005007851512814.html) (Get the 16 pin one)
-For external use:
-* 2x [hub75 screen](https://aliexpress.com/item/4000002686894.html)
-* [Adderessable led strip](https://aliexpress.com/item/1005004752499978.html) (optional)
 
 
 # Imprimindo e montando as peças 

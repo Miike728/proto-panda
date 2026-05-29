@@ -105,6 +105,24 @@ Successfully created esp32s3 image.
 
 There you go, you built it!
 
+## Configuration
+
+There is a file in the folder `include/tools/config_defaults.hpp`. There you can change some settings from the project.
+If you're building protopanda for a DIY version, you MUST change these two configs:
+
+```cpp
+#define PANDA_SD_MODE 2
+#define SPI_MAX_CLOCK (80 * 1000 * 1000)
+```
+Change them to:
+```cpp
+#define PANDA_SD_MODE 1
+#define SPI_MAX_CLOCK (40 * 1000 * 1000)
+```
+Thats because long wires can cause noise, so the sd card need to run slower. And the SD mode to change from SD_MMC to SPI. Most of the SD card modules out there short two pins to ground, that can make impossible to use the SD_MMC mode, so changing PANDA_SD_MODE to 1, changes back to SPI.
+
+Every time you change something in this file its necessary to recompile and flash the firmware again.
+
 ## Flashing
 
 Now you have it built, make sure the device is plugged and you [configured correctly the com port](#step-3---plugging-the-device). If you did it correctly, at the side of the ✅ there is an arrow facing right. Click it!

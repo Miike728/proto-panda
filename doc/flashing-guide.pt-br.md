@@ -107,6 +107,27 @@ Successfully created esp32s3 image.
 
 Pronto, você compilou!
 
+## Configuração
+
+Existe um arquivo `include/tools/config_defaults.hpp`. Nele você pode alterar algumas configurações do projeto.
+Se você decidiu montar o seu próprio protopanda, então você DEVE modificar essas configurações:
+
+```cpp
+#define PANDA_SD_MODE 2
+#define SPI_MAX_CLOCK (80 * 1000 * 1000)
+```
+Mude para:
+```cpp
+#define PANDA_SD_MODE 1
+#define SPI_MAX_CLOCK (40 * 1000 * 1000)
+```
+
+Isso por que quando se usa fios, especialmente mais longos, pode causar ruido quando se opera em altas velocidade. Trocando o clock para a metade impede que esse ruido seja significativo ao ponto de atrapalhar a operação.
+
+Além disso alguns módulos SD tem uma modificação que um ou dois pinos estão ligado ao GND, fazendo assim impossivel que ele opere no modo SD_MMC. Para trocar de volta para o modo SPI basta alterar PANDA_SD_MODE para 1. O modo SPI é mais lento porém funciona na maioria dos casos
+
+Sempre que alterar algo nesse arquivo é necessário recompilar e gravar novamente o firmware.
+
 ## Gravando (Flashing)
 
 Agora que você compilou, certifique-se de que o dispositivo está conectado e que você [configurou corretamente a porta COM](#passo-3---conectando-o-dispositivo). Se fez tudo certo, ao lado do ✅ há uma seta apontando para a direita. Clique nela!
